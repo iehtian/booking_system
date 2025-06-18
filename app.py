@@ -2,7 +2,10 @@ from flask import Flask, request, jsonify, send_file
 import json
 import os
 
+from flask_cors import CORS
+
 app = Flask(__name__)
+CORS(app)
 # 储存预约数据: { 'system_id': { '2025-06-01': { '09:00-09:15': '张三' } } }
 # 使用嵌套字典结构，第一层是系统ID，然后是日期，然后是时间段
 bookings = {
