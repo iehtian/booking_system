@@ -1,30 +1,70 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta charset="utf-8">
+    <title>恭喜，站点创建成功！</title>
+    <style>
+        .container {
+            width: 60%;
+            margin: 10% auto 0;
+            background-color: #f0f0f0;
+            padding: 2% 5%;
+            border-radius: 10px
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        ul li {
+            line-height: 2.3
+        }
+
+        a {
+            color: #20a53a
+        }
+
+        h1 {
+            text-align: center;
+            color: #20a53a;
+            font-size: 2em;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+            /* 从浅蓝到淡紫的渐变 */
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+    </style>
 </head>
 
 <body>
-    <script>
-        fetch('http://127.0.0.1:5000/api/names')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log(data);
-                document.body.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-            })
-            .catch(error => {
-                console.error('There has been a problem with your fetch operation:', error);
-                document.body.innerHTML = `<p>Error: ${error.message}</p>`;
-            });
-    </script>
+    <div class="container">
+        <h1>A仪器预约系统</h1>
+        <div><input type="date" name="appointment_date" id="appointment_date"></div>
+        <script>
+            //fetch数据，包含错误处理
+            // 读取本地 JSON 文件
+            fetch('./data/names.json')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.names); // ["田浩", "陈莹"]
+                })
+                .catch(error => {
+                    console.error('获取数据失败:', error);
+                });
+
+        </script>
+    </div>
 </body>
 
 </html>

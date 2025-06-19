@@ -69,15 +69,6 @@ def get_names():
     with open(name_file, 'r', encoding='utf-8') as f:
         names = json.load(f)
     return jsonify(names)
-
-def test_save_info_basic():
-    """基本保存测试"""
-    test_data = {
-        "name": "张三",
-        "system": "a_device",
-        "date": "2025-06-01",
-        "slot": "09:00-09:15"
-    }
     
     result = save_info(test_data)
     
