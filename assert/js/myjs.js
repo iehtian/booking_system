@@ -1,3 +1,4 @@
+let selectName;
 fetch("./data/names.json")
   .then((response) => response.json())
   .then((data) => {
@@ -8,6 +9,10 @@ fetch("./data/names.json")
       option.value = name;
       option.textContent = name;
       namesSelect.appendChild(option);
+    });
+    namesSelect.addEventListener("change", (event) => {
+      selectName = event.target.value;
+      console.log("选中的名字:", selectName);
     });
   })
   .catch((error) => {
@@ -29,7 +34,6 @@ function generateTimeIntervalsSimple() {
   }
 
   const timeSlots = [];
-  // 循环到倒数第二个元素，以防止访问越界
   for (let i = 0; i < intervals.length - 1; i++) {
     timeSlots.push(intervals[i] + "-" + intervals[i + 1]);
   }
@@ -54,23 +58,61 @@ function get_tomorrow_date() {
 }
 const tomorrow = get_tomorrow_date();
 console.log(formatDate(tomorrow)); // 输出明天的日期（YYYY-MM-DD）
+const selectedTimeSlots = []; // 用于存储选中的时间段
 
 document.getElementById("appointment-date").value = formatDate(tomorrow); // 设置 input 的值为当前日期
 let i = 0;
 let timeSlots = document.getElementById("time-slot");
-console.log(timeSlots); // 输出 timeSlots 元素
 time_slots.forEach((slot) => {
   const div = document.createElement("div");
   div.className = "time-slot-item";
+
   const option = document.createElement("input");
   option.type = "checkbox";
   option.value = slot;
   option.className = "time-slot-option";
   option.id = "time-slot-" + i++;
+
+  // 添加选中事件监听器
+  option.addEventListener('change', function(event) {
+    const timeSlot = event.target.value;
+    
+    if (event.target.checked) {
+      // 复选框被选中
+      selectedTimeSlots.push(timeSlot);
+      console.log(`选中时间段: ${timeSlot}`);
+    } else {
+      // 复选框被取消选中
+      const index = selectedTimeSlots.indexOf(timeSlot);
+      if (index > -1) {
+        selectedTimeSlots.splice(index, 1);
+      }
+      console.log(`取消选中时间段: ${timeSlot}`);
+    }
+    
+    console.log('当前选中的时间段:', selectedTimeSlots);
+    
+    // 你可以在这里添加其他逻辑，比如：
+    // - 更新UI显示
+    // - 发送请求到服务器
+    // - 验证选择是否合理等
+  });
+
   const label = document.createElement("label");
   label.htmlFor = option.id;
   label.textContent = slot;
   div.appendChild(option);
   div.appendChild(label);
   timeSlots.appendChild(div);
+
 });
+
+const submitButton = document.getElementById("submit-button");
+submitButton.addEventListener("click", () => {
+  console.log("提交预约");
+  console.log("选中的名字:", selectName);
+  console.log("选中的日期:", document.getElementById("appointment-date").value);
+  console.log("选中的时间段:", selectedTimeSlots);
+});
+
+
