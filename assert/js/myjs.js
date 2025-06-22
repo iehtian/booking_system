@@ -1,15 +1,19 @@
-fetch('https://order.iehtian.top/api/names')
+fetch('./data/names.json')
   .then((response) => response.json())
   .then((data) => {
     console.log(data.names); // ["田浩", "陈莹"]
+    const namesSelect = document.getElementById('names');
+    data.names.forEach(name => {
+      const option = document.createElement('option');
+      option.value = name;
+      option.textContent = name;
+      namesSelect.appendChild(option);
+    });
   })
   .catch((error) => {
     console.error("获取数据失败:", error);
   });
 
-const now = new Date();
-const tomorrow = new Date(now);
-tomorrow.setDate(now.getDate() + 1);
 
 // 格式化为 YYYY-MM-DD
 function formatDate(date) {
@@ -18,7 +22,14 @@ function formatDate(date) {
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
-
+function get_tomorrow_date() {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
+  formatDate(tomorrow); // 格式化日期
+  return tomorrow;
+}
+const tomorrow = get_tomorrow_date();
 console.log(formatDate(tomorrow)); // 输出明天的日期（YYYY-MM-DD）
 
 document.getElementById('appointment-date').value = formatDate(tomorrow); // 设置 input 的值为当前日期

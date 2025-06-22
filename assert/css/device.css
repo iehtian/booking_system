@@ -1,22 +1,15 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 .container {
-  width: 80%;
+  width: 95%;
   margin: 5% auto 0;
   background-color: #f0f0f0;
   border-radius: 0.625rem;
 }
-
-ul {
-  padding-left: 1.25rem;
-}
-
-ul li {
-  line-height: 2.3;
-}
-
-a {
-  color: #20a53a;
-}
-
 h1 {
   text-align: center;
   color: #20a53a;
@@ -70,25 +63,25 @@ body {
   display: none;
 }
 
+.time-slot-item input[type="checkbox"] {
+  display: none;
+}
+
 .time-slot {
   display: flex;
-  flex-wrap: wrap; /* 允许按钮换行 */
-  align-items: center;
-  justify-content: space-around;
-  margin: 0.625rem 0;
-  height: 100%;
+  flex-wrap: wrap;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-right: none;
+  border-bottom: none;
 }
 
 .time-slot-item {
-  display: inline-block;
-  width: 10rem;
-  height: 3rem;
-  /* margin: 0.5rem 1rem; */
+  width: 25%; /* 每行 4 个，响应式可改为 calc(100% / N) */
   height: 3.75rem;
-}
-
-.time-slot-item input[type="checkbox"] {
-  display: none;
+  box-sizing: border-box;
+  border-right: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
 }
 
 .time-slot-item label {
@@ -98,13 +91,12 @@ body {
   width: 100%;
   height: 100%;
   background: rgb(240, 253, 244);
-  border: 2px solid #e9ecef;
-  border-radius: 0.5rem;
   cursor: pointer;
+  user-select: none;
 }
 
 .time-slot-item input[type="checkbox"]:checked + label {
   background: rgb(59, 130, 246);
   color: white;
-  border-color: rgb(59, 130, 246);
+  border: none;
 }
