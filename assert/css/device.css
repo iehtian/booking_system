@@ -107,3 +107,7 @@ body {
   pointer-events: none; /* 禁用所有鼠标事件，使其不可点击 */
   background: #fee2e2;
 }
+
+label {
+  font-size: 0.75rem;
+}
