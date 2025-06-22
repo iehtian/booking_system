@@ -61,7 +61,7 @@ const selectedTimeSlots = []; // 用于存储选中的时间段
 
 async function orderd_time(date) {
   try {
-    const response = await fetch(`https://order.iehtian.top/api/orderd?date=${date}`, {
+    const response = await fetch(`${host}/api/orderd?date=${date}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -167,8 +167,8 @@ async function submitAppointment() {
     };
     
     console.log('发送的数据:', appointmentData);
-    
-    const response = await fetch('http://order.iehtian.top/api/info_save', {
+
+    const response = await fetch(`${host}/api/info_save`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
