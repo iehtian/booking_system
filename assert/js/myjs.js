@@ -53,14 +53,46 @@ function get_tomorrow_date() {
   const now = new Date();
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
-  formatDate(tomorrow); // 格式化日期
-  return tomorrow;
+  return formatDate(tomorrow); // 格式化日期
 }
 const tomorrow = get_tomorrow_date();
-console.log(formatDate(tomorrow)); // 输出明天的日期（YYYY-MM-DD）
+console.log(tomorrow);
 const selectedTimeSlots = []; // 用于存储选中的时间段
 
-document.getElementById("appointment-date").value = formatDate(tomorrow); // 设置 input 的值为当前日期
+async function orderd_time(date) {
+  try {
+    const response = await fetch(`http://127.0.0.1:5000/api/orderd?date=${date}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    Object.entries(data.bookings).forEach(([key, value]) => {
+      console.log(`时间段: ${key}, 预约人: ${value}`);
+      const checkbox = document.getElementById(`time-slot-${key}`);
+      if (checkbox) {
+        if (checkbox.parentElement) {
+          checkbox.parentElement.classList.add('disabled-slot'); // 添加禁用样式
+        }
+        const slotLabel = checkbox.nextElementSibling;
+        if (slotLabel) {
+          slotLabel.textContent += ` 已被 ${value} 预约`; // 在标签后添加已预约信息
+
+        }
+      }
+    });
+  } catch (error) {
+    console.error('获取已预约时间段时出错:', error);
+  }
+}
+
+document.getElementById("appointment-date").value = tomorrow // 设置 input 的值为当前日期
 let i = 0;
 let timeSlots = document.getElementById("time-slot");
 time_slots.forEach((slot) => {
@@ -71,7 +103,9 @@ time_slots.forEach((slot) => {
   option.type = "checkbox";
   option.value = slot;
   option.className = "time-slot-option";
-  option.id = "time-slot-" + i++;
+  option.id = "time-slot-" + slot; // 设置唯一的 ID
+  option.name = "time-slot"; // 设置 name 属性，便于表单提交时获取选中的时间段
+  option.checked = false; // 默认不选中
 
   // 添加选中事件监听器
   option.addEventListener('change', function(event) {
@@ -91,11 +125,6 @@ time_slots.forEach((slot) => {
     }
     
     console.log('当前选中的时间段:', selectedTimeSlots);
-    
-    // 你可以在这里添加其他逻辑，比如：
-    // - 更新UI显示
-    // - 发送请求到服务器
-    // - 验证选择是否合理等
   });
 
   const label = document.createElement("label");
@@ -107,12 +136,84 @@ time_slots.forEach((slot) => {
 
 });
 
+orderd_time(tomorrow); // 获取明天已预约的时间段
+
+// 发送预约数据到后端的函数
+async function submitAppointment() {
+  const selectedDate = document.getElementById("appointment-date").value;
+  
+  // 数据验证
+  if (!selectName) {
+    alert("请选择预约人姓名！");
+    return;
+  }
+  
+  if (!selectedDate) {
+    alert("请选择预约日期！");
+    return;
+  }
+  
+  if (selectedTimeSlots.length === 0) {
+    alert("请至少选择一个时间段！");
+    return;
+  }
+  
+  try {
+    // 一次性发送所有时间段
+    const appointmentData = {
+      system: 'a_device',  // 系统ID，根据需要修改
+      date: selectedDate,
+      slots: selectedTimeSlots,  // 发送所有选中的时间段
+      name: selectName
+    };
+    
+    console.log('发送的数据:', appointmentData);
+    
+    const response = await fetch('http://127.0.0.1:5000/api/info_save', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(appointmentData)
+    });
+    
+    console.log('响应状态:', response.status);
+    console.log('响应状态文本:', response.statusText);
+    
+    // 检查响应的Content-Type
+    const contentType = response.headers.get('content-type');
+    console.log('响应Content-Type:', contentType);
+    
+    if (!contentType || !contentType.includes('application/json')) {
+      // 如果不是JSON响应，获取文本内容进行调试
+      const text = await response.text();
+      console.error('收到非JSON响应:', text);
+      alert('服务器响应格式错误，请检查后端服务是否正常运行');
+      return;
+    }
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      console.log("预约已成功提交:", result);
+      location.reload();
+      
+    } else {
+      console.error("提交失败:", result);
+    }
+    
+  } catch (error) {
+    console.error("提交预约时出错:", error);
+  }
+}
+
 const submitButton = document.getElementById("submit-button");
 submitButton.addEventListener("click", () => {
   console.log("提交预约");
   console.log("选中的名字:", selectName);
   console.log("选中的日期:", document.getElementById("appointment-date").value);
   console.log("选中的时间段:", selectedTimeSlots);
+  submitAppointment();
 });
 
 

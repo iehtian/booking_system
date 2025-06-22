@@ -100,3 +100,10 @@ body {
   color: white;
   border: none;
 }
+
+.disabled-slot label {
+  color: #ca7c7c; /* 将文本颜色变灰 */
+  cursor: not-allowed; /* 鼠标悬停时显示禁止图标 */
+  pointer-events: none; /* 禁用所有鼠标事件，使其不可点击 */
+  background: #fee2e2;
+}
