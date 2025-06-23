@@ -1,4 +1,44 @@
 let selectName;
+
+function setCookie(name, value, days) {
+  // 初始化 expires 变量，用于存储 cookie 的过期时间
+  let expires = "";
+  // 如果传入了 days 参数（即 cookie 的有效天数）
+  if (days) {
+    // 创建一个新的 Date 对象
+    const date = new Date();
+    // 设置 cookie 的过期时间，通过当前时间加上指定天数的毫秒数
+    date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+    // 将过期时间转换为 UTC 格式的字符串
+    expires = "; expires=" + date.toUTCString();
+  }
+  // 设置 cookie，格式为 "key=value; expires=date; path=/"
+  // (value || "") 确保即使 value 为空，也会设置一个空字符串
+  // "path=/" 表示该 cookie 在整个网站下都可用
+  document.cookie = name + "=" + (value || "") + expires + "; path=/";
+}
+
+function getCookie(name) {
+  // 构造要查找的 cookie 名称字符串，例如 "selectedName="
+  const nameEQ = name + "=";
+  // 获取当前文档的所有 cookie，并用分号分割成数组
+  const ca = document.cookie.split(";");
+  // 遍历 cookie 数组
+  for (let i = 0; i < ca.length; i++) {
+    // 获取单个 cookie 字符串
+    let c = ca[i];
+    // 去除 cookie 字符串前面的空格
+    while (c.charAt(0) == " ") c = c.substring(1, c.length);
+    // 检查该 cookie 字符串是否以我们想查找的 nameEQ 开头
+    if (c.indexOf(nameEQ) == 0) {
+      // 如果是，则返回从 nameEQ 长度之后到字符串末尾的子字符串，即 cookie 的值
+      return c.substring(nameEQ.length, c.length);
+    }
+  }
+  // 如果遍历完所有 cookie 都没有找到，则返回 null
+  return null;
+}
+
 fetch("./data/names.json")
   .then((response) => response.json())
   .then((data) => {
@@ -10,8 +50,17 @@ fetch("./data/names.json")
       option.textContent = name;
       namesSelect.appendChild(option);
     });
+
+    const savedName = getCookie("selectedName");
+    if (savedName && data.names.includes(savedName)) {
+      namesSelect.value = savedName;
+      selectName = savedName;
+      console.log("从cookie中加载的姓名:", selectName);
+    }
+
     namesSelect.addEventListener("change", (event) => {
       selectName = event.target.value;
+      setCookie("selectedName", selectName, 365);
       console.log("选中的名字:", selectName);
     });
   })
