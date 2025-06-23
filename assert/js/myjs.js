@@ -323,6 +323,9 @@ document.querySelector('#morning').addEventListener('click', function(event){
   const morningButton = this;
   moring_clicked = !moring_clicked; // 切换状态
   morningButton.value = moring_clicked ? "► 00:00-08:00" : "▼ 00:00-08:00"; // 更新按钮文本
+  morningButton.style.backgroundColor = moring_clicked ? "#E0F2FE" : "#f1f5f9"; // 更新按钮背景色
+  morningButton.style.border = moring_clicked ? "1px solid #0991B2" : "1px solid#d6dee7"; // 更新按钮边框
+
   const morningSlots = time_slots.slice(0, 16);
   morningSlots.forEach((slot) => {
     const checkbox = document.getElementById(`time-slot-${slot}`);
@@ -338,7 +341,10 @@ document.querySelector('#night').addEventListener('click', function(event){
   //点击该按钮将自动隐藏/显示晚上
   const nightButton = this;
   night_clicked = !night_clicked // 切换状态
-  nightButton.value = night_clicked ? "► 16:00-24:00" : "▼ 16:00-24:00" // 更新按钮文本
+  nightButton.value = night_clicked ? "► 22:00-24:00" : "▼ 22:00-24:00" // 更新按钮文本
+  nightButton.style.backgroundColor = night_clicked ? "#E0F2FE" : "#f1f5f9"; // 更新按钮背景色
+  nightButton.style.border = night_clicked ? "1px solid #0991B2" : "1px solid#d6dee7"; // 更新按钮边框
+
   const morningSlots = time_slots.slice(-4);
   morningSlots.forEach((slot) => {
     const checkbox = document.getElementById(`time-slot-${slot}`)
