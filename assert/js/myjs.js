@@ -315,9 +315,14 @@ document.querySelector('#tomorrow').addEventListener('click', function(event){
   appointmentDate.dispatchEvent(new Event("change"));
 });
 
+let moring_clicked = false, night_clicked = false
+
 document.querySelector('#morning').addEventListener('click', function(event){
   event.preventDefault(); // 阻止默认链接行为
   //点击该按钮将自动隐藏/显示上午的时间段
+  const morningButton = this;
+  moring_clicked = !moring_clicked; // 切换状态
+  morningButton.value = moring_clicked ? "► 00:00-08:00" : "▼ 00:00-08:00"; // 更新按钮文本
   const morningSlots = time_slots.slice(0, 16);
   morningSlots.forEach((slot) => {
     const checkbox = document.getElementById(`time-slot-${slot}`);
@@ -331,9 +336,12 @@ document.querySelector('#morning').addEventListener('click', function(event){
 document.querySelector('#night').addEventListener('click', function(event){
   event.preventDefault(); // 阻止默认链接行为
   //点击该按钮将自动隐藏/显示晚上
-  const morningSlots = time_slots.slice(-4); //后四个
+  const nightButton = this;
+  night_clicked = !night_clicked // 切换状态
+  nightButton.value = night_clicked ? "► 16:00-24:00" : "▼ 16:00-24:00" // 更新按钮文本
+  const morningSlots = time_slots.slice(-4);
   morningSlots.forEach((slot) => {
-    const checkbox = document.getElementById(`time-slot-${slot}`);
+    const checkbox = document.getElementById(`time-slot-${slot}`)
     const checkboxParent = checkbox.parentElement;
     if (checkboxParent) {
       checkboxParent.style.display = checkboxParent.style.display === "none" ? "block" : "none"; // 切换上午时间段的显示状态
@@ -341,4 +349,5 @@ document.querySelector('#night').addEventListener('click', function(event){
   });
 });
 
-document.querySelector('#night').click();
+document.querySelector('#morning').click()
+document.querySelector('#night').click()
