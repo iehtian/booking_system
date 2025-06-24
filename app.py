@@ -1,52 +1,33 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file,session
 import json
+import hashlib
 import os
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
+CORS(app,supports_credentials=True, 
+     origins=["http://127.0.0.1:5501"])
+app.config.update(
+    SESSION_COOKIE_SAMESITE="None",  # 允许跨站点携带cookie
+    SESSION_COOKIE_SECURE=False      # 运行在HTTP环境，不用Secure
+)
+
+
+app.secret_key = 'your_secret_key'  # 用于会话加密
+app.permanent_session_lifetime = 24*60 * 60 *30*6  # 设置会话过期时间为6个月
 
 # 储存预约数据: { 'system_id': { '2025-06-01': { '09:00-09:30': '张三' } } }
 # 使用嵌套字典结构，第一层是系统ID，然后是日期，然后是时间段
 bookings = {
     'a_device': {},  # A仪器预约系统
 }
-
-def generate_time_slots():
-    """生成00:00到24:00的半小时时间段"""
-    slots = []
-    for hour in range(0, 24):
-        for minute in (0, 30):
-            # 格式化开始时间 (HH:MM)
-            start_time = f"{hour:02d}:{minute:02d}"
-            
-            # 计算结束时间
-            if minute == 30:
-                end_hour = hour + 1
-                end_minute = 0
-            else:
-                end_hour = hour
-                end_minute = 30
-            
-            # 处理24:00特殊情况
-            if end_hour == 24:
-                end_time = "24:00"
-            else:
-                end_time = f"{end_hour:02d}:{end_minute:02d}"
-            
-            slots.append({
-                "start": start_time,
-                "end": end_time,
-                "display": f"{start_time}-{end_time}"
-            })
-    return slots
-
-@app.route('/api/time_slots', methods=['GET'])
-def get_time_slots():
-    """返回时间段数据的API端点"""
-    return jsonify({
-        "time_slots": generate_time_slots()
-    })
+users_db = {
+    'admin': {
+        'password': hashlib.md5('123456'.encode()).hexdigest(),
+        'name': '管理员',
+        'user_id': 1
+    }
+}
 
 @app.route('/api/info_save', methods=['POST'])
 def save_info():
@@ -108,22 +89,7 @@ def save_info():
     except Exception as e:
         print(f"保存预约时出错: {e}")
         return jsonify({"error": "Internal server error"}), 500
-
-@app.route('/api/bookings', methods=['GET'])
-def get_bookings():
-    """获取所有预约信息"""
-    system_id = request.args.get('system', 'a_device')
-    date = request.args.get('date')
-    if system_id not in bookings:
-        return jsonify({"bookings": {}})
     
-    if date:
-        # 返回特定日期的预约
-        date_bookings = bookings[system_id].get(date, {})
-        return jsonify({"bookings": date_bookings})
-    else:
-        # 返回所有预约
-        return jsonify({"bookings": bookings[system_id]})
 @app.route('/api/orderd', methods=['GET'])
 def get_ordered_bookings():
     """获取预约信息并按时间段排序"""
@@ -145,6 +111,80 @@ def get_ordered_bookings():
         all_bookings = bookings[system_id]
         sorted_bookings = {date: dict(sorted(slots.items())) for date, slots in all_bookings.items()}
         return jsonify({"bookings": sorted_bookings})
+
+@app.route('/api/register', methods=['POST'])
+def get_register_info():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No registration data provided"}), 400
     
+    user_name = data.get('username', 'default_user')
+    password = data.get('password', 'default_password')
+    name = data.get('name', 'default_name')
+    print(f"获取注册信息: user_name={user_name}, password={password}, namespace={name}")
+    """获取注册信息"""
+    return jsonify({"message": "Please provide your registration details."})
+
+@app.route('/api/check-auth', methods=['GET'])
+def check_auth():
+    """检查登录状态"""
+    "打印当前session信息"
+    print(f"当前session信息: {session}")
+    if session.get('logged_in'):
+        return jsonify({
+            'logged_in': True,
+            'user': {
+                'username': session.get('username'),
+                'name': session.get('name'),
+                'user_id': session.get('user_id')
+            }
+        })
+    else:
+        return jsonify({'logged_in': False}), 401
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    
+    if not username or not password:
+        return jsonify({'success': False, 'message': '用户名和密码不能为空'}), 400
+    
+    # 验证用户
+    user = users_db.get(username)
+    if not user or user['password'] != hashlib.md5(password.encode()).hexdigest():
+        return jsonify({'success': False, 'message': '用户名或密码错误'}), 401
+    
+    # 设置 session
+    session.permanent = True  # 使 session 持久化
+    session['logged_in'] = True
+    session['user_id'] = user['user_id']
+    session['username'] = username
+    session['name'] = user['name']
+    
+    print(f"用户 {username} 登录成功，session ID: {session.get('_id', 'unknown')}")
+    
+    return jsonify({
+        'success': True,
+        'message': '登录成功',
+        'user': {
+            'username': username,
+            'name': user['name']
+        }
+    })
+
+@app.route('/api/logout', methods=['POST'])
+def logout():
+    username = session.get('username', 'unknown')
+    session.clear()  # 清除所有 session 数据
+    
+    print(f"用户 {username} 已登出")
+    
+    return jsonify({
+        'success': True,
+        'message': '已登出'
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
