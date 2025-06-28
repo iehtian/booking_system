@@ -44,10 +44,6 @@ body {
   color: #333;
 }
 
-.select_box {
-  width: 100%;
-}
-
 .time-slot-option {
   background: linear-gradient(to right, #dbeafe, #ede9fe);
   border: 0.0625rem solid #ccc;
@@ -132,15 +128,35 @@ label {
   display: none; /* 默认隐藏 */
 }
 
-/* 美化姓名选择框 */
-#names {
-  padding: 0.5rem 0.5rem;
-  border-radius: 0.5rem;
-  background: linear-gradient(135deg, #f0f8ff, #e0f2fe);
-  color: #374151;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  width: 30%;
+.show-name {
+  text-align: center;
+  font-size: 1.25rem;
+  background: linear-gradient(
+    45deg,
+    #ff6b6b,
+    #4ecdc4,
+    #45b7d1,
+    #96ceb4,
+    #feca57
+  );
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+  animation: gradientShift 3s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 /* 美化日期选择框 */

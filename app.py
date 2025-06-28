@@ -5,10 +5,10 @@ import os
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app,supports_credentials=True, 
-     origins=["http://127.0.0.1:5501"])
+CORS(app, supports_credentials=True, origins=["http://localhost:5501", "http://127.0.0.1:5501"])
+
+
 app.config.update(
-    SESSION_COOKIE_SAMESITE="None",  # 允许跨站点携带cookie
     SESSION_COOKIE_SECURE=False      # 运行在HTTP环境，不用Secure
 )
 
@@ -174,7 +174,7 @@ def login():
     session['username'] = username
     session['name'] = user['name']
     
-    print(f"用户 {username} 登录成功，session ID: {session.get('_id', 'unknown')}")
+    print(f"用户 {username} 登录成功，session contains: {', '.join(session.keys())}")
     
     return jsonify({
         'success': True,

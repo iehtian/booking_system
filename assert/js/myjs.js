@@ -1,57 +1,5 @@
 let selectName;
 
-function setCookie(name, value, days) {
-  let expires = "";
-  if (days) {
-    const date = new Date();
-    date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-    expires = "; expires=" + date.toUTCString();
-  }
-  document.cookie = name + "=" + (value || "") + expires + "; path=/";
-}
-
-function getCookie(name) {
-  const nameEQ = name + "=";
-  const ca = document.cookie.split(";");
-  for (let i = 0; i < ca.length; i++) {
-    let c = ca[i];
-    while (c.charAt(0) == " ") c = c.substring(1, c.length);
-    if (c.indexOf(nameEQ) == 0) {
-      return c.substring(nameEQ.length, c.length);
-    }
-  }
-  return null;
-}
-
-fetch("./data/names.json")
-  .then((response) => response.json())
-  .then((data) => {
-    console.log(data.names);
-    const namesSelect = document.getElementById("names");
-    data.names.forEach((name) => {
-      const option = document.createElement("option");
-      option.value = name;
-      option.textContent = name;
-      namesSelect.appendChild(option);
-    });
-
-    const savedName = getCookie("selectedName");
-    if (savedName && data.names.includes(savedName)) {
-      namesSelect.value = savedName;
-      selectName = savedName;
-      console.log("从cookie中加载的姓名:", selectName);
-    }
-
-    namesSelect.addEventListener("change", (event) => {
-      selectName = event.target.value;
-      setCookie("selectedName", selectName, 365);
-      console.log("选中的名字:", selectName);
-    });
-  })
-  .catch((error) => {
-    console.error("获取数据失败:", error);
-  });
-
 function generateTimeIntervalsSimple() {
   const intervals = [];
 
@@ -194,6 +142,7 @@ document
 
     // 获取新的日期的预约信息
     orderd_time(newDate);
+    // 现在的时间以后的时间段禁止预约，包括对日期的对比和日期修改后的变化
   });
 
 orderd_time(tomorrow); // 获取明天已预约的时间段
@@ -201,12 +150,6 @@ orderd_time(tomorrow); // 获取明天已预约的时间段
 // 发送预约数据到后端的函数
 async function submitAppointment() {
   const selectedDate = document.getElementById("appointment-date").value;
-
-  // 数据验证
-  if (!selectName) {
-    alert("请选择预约人姓名！");
-    return;
-  }
 
   if (!selectedDate) {
     alert("请选择预约日期！");
@@ -264,15 +207,6 @@ async function submitAppointment() {
     console.error("提交预约时出错:", error);
   }
 }
-
-const submitButton = document.getElementById("submit-button");
-submitButton.addEventListener("click", () => {
-  console.log("提交预约");
-  console.log("选中的名字:", selectName);
-  console.log("选中的日期:", document.getElementById("appointment-date").value);
-  console.log("选中的时间段:", selectedTimeSlots);
-  submitAppointment();
-});
 
 document.querySelector('#appointment-date').addEventListener('click', function(event){
   //回调函数，打开日期选择器
@@ -342,6 +276,13 @@ document.querySelector('#night').addEventListener('click', function(event){
 document.querySelector('#morning').click()
 document.querySelector('#night').click()
 
+document.querySelector('#login').addEventListener('click', function(event){
+    event.preventDefault(); // 阻止默认链接行为
+    const loginUrl = `pages/login.html`;
+    // 跳转到登录页面，新页面打开
+    window.open(loginUrl, '_blank');
+  });
+
 document.querySelector('#register').addEventListener('click', function(event){
     event.preventDefault(); // 阻止默认链接行为
     const registerUrl = `pages/register.html`;
@@ -352,10 +293,20 @@ document.querySelector('#register').addEventListener('click', function(event){
   
 // 使用示例：等待认证检查完成后再执行其他代码
 waitForAuthCheck().then((result) => {
-    console.log('认证检查完成:', result.logged_in);
+    console.log('认证检查完成:', result);
     if (result.logged_in) {
-      console.log(document.querySelector('#submit-button'));
-        document.querySelector('#submit-button').classList.remove('hidden'); // 显示提交按钮
+            const submitButton = document.querySelector('#submit-button');
+        submitButton.classList.remove('hidden'); // 显示提交按钮
+        selectName = result.user.name; // 获取用户姓名
+        submitButton.addEventListener("click", () => {
+          console.log("提交预约");
+          console.log("选中的名字:", selectName);
+          console.log("选中的日期:", document.getElementById("appointment-date").value);
+          console.log("选中的时间段:", selectedTimeSlots);
+          submitAppointment();
+});
+        document.querySelector('.show-name').textContent = `你好，${selectName}`; // 显示用户姓名
+        document.querySelector('.show-name').classList.remove('hidden'); // 显示用户姓名
     }
     else {
         console.log('用户未登录');
