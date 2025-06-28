@@ -21,24 +21,42 @@ function generateTimeIntervalsSimple() {
   return timeSlots;
 }
 const time_slots = generateTimeIntervalsSimple();
-console.log(generateTimeIntervalsSimple()); // 输出时间间隔数组
 
-// 格式化为 YYYY-MM-DD
-function formatDate(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-function get_tomorrow_date() {
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(now.getDate() + 1);
-  return formatDate(tomorrow); // 格式化日期
-}
-const tomorrow = get_tomorrow_date();
-console.log(tomorrow);
 const selectedTimeSlots = []; // 用于存储选中的时间段
+
+function getCurrentDateISO() {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getCurrentTimeSlotIndex() {
+  const now = new Date();
+  const hours = now.getHours();   // 0 ~ 23
+  const minutes = now.getMinutes(); // 0 ~ 59
+
+  const totalMinutes = hours * 60 + minutes;
+  const slotIndex = Math.floor(totalMinutes / 30); // 每30分钟为1个slot
+
+  return slotIndex; // 结果是 0 ~ 47
+}
+
+
+function disableSlot(slot, reasonText) {
+  const checkbox = document.getElementById(`time-slot-${slot}`);
+  if (checkbox) {
+    checkbox.disabled = true;
+    if (checkbox.parentElement) {
+      checkbox.parentElement.classList.add("disabled-slot");
+    }
+    const slotLabel = checkbox.nextElementSibling;
+    if (reasonText && slotLabel && !slotLabel.innerHTML.includes(reasonText)) {
+      slotLabel.innerHTML += `<br> ${reasonText}`;
+    }
+  }
+}
 
 async function orderd_time(date) {
   try {
@@ -53,27 +71,62 @@ async function orderd_time(date) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
+    const currentDate = getCurrentDateISO();
+    console.log("请求的日期:", date);
+    console.log("当前日期:", currentDate);
+
+    if (date < currentDate) {
+      // 日期已过
+      time_slots.forEach((slot) => disableSlot(slot));
+    } else if (date === currentDate) {
+      // 是今天，禁用当前时间段之前的
+      const currentSlotIndex = getCurrentTimeSlotIndex();
+      for (let i = 0; i < currentSlotIndex; i++) {
+        disableSlot(time_slots[i]);
+      }
+    }
+
     const data = await response.json();
     Object.entries(data.bookings).forEach(([key, value]) => {
-      console.log(`时间段: ${key}, 预约人: ${value}`);
-      const checkbox = document.getElementById(`time-slot-${key}`);
-      if (checkbox) {
-        if (checkbox.parentElement) {
-          checkbox.parentElement.classList.add("disabled-slot"); // 添加禁用样式
-        }
-        const slotLabel = checkbox.nextElementSibling;
-        if (slotLabel) {
-          slotLabel.innerHTML += `<br> 已被 ${value} 预约`; // 在标签后添加已预约信息
-        }
-      }
+      disableSlot(key, `已被 ${value} 预约`);
     });
   } catch (error) {
     console.error("获取已预约时间段时出错:", error);
   }
 }
 
+
+document
+  .getElementById("appointment-date")
+  .addEventListener("change", function (event) {
+    const newDate = event.target.value;
+
+    // 清除之前禁用的样式和提示
+    document.querySelectorAll(".time-slot-item").forEach((item) => {
+      item.classList.remove("disabled-slot");
+      const label = item.querySelector("label");
+      if (label) {
+        // 移除“已被 XXX 预约”的文本
+        const slotText = label.innerHTML.split("<br>")[0]; // 只保留时间段部分
+        label.innerHTML = slotText;
+      }
+    });
+
+    // 清空之前选中的时间段（如果你希望换日期时重置选择）
+    selectedTimeSlots.length = 0;
+    document.querySelectorAll(".time-slot-option").forEach((cb) => {
+      cb.checked = false;
+    });
+
+    // 获取新的日期的预约信息
+    orderd_time(newDate);
+    // 现在的时间以后的时间段禁止预约，包括对日期的对比和日期修改后的变化
+  });
+
 function addslot() {
-  document.getElementById("appointment-date").value = tomorrow; // 设置 input 的值为当前日期
+  console.log(getCurrentDateISO())
+  document.getElementById("appointment-date").value = getCurrentDateISO(); // 设置 input 的值为当前日期
+  document.getElementById("appointment-date").dispatchEvent(new Event("change"))
   let timeSlots = document.getElementById("time-slot");
   time_slots.forEach((slot) => {
     const div = document.createElement("div");
@@ -117,35 +170,6 @@ function addslot() {
 }
 
 addslot(); // 初始化时间段
-
-document
-  .getElementById("appointment-date")
-  .addEventListener("change", function (event) {
-    const newDate = event.target.value;
-
-    // 清除之前禁用的样式和提示
-    document.querySelectorAll(".time-slot-item").forEach((item) => {
-      item.classList.remove("disabled-slot");
-      const label = item.querySelector("label");
-      if (label) {
-        // 移除“已被 XXX 预约”的文本
-        const slotText = label.innerHTML.split("<br>")[0]; // 只保留时间段部分
-        label.innerHTML = slotText;
-      }
-    });
-
-    // 清空之前选中的时间段（如果你希望换日期时重置选择）
-    selectedTimeSlots.length = 0;
-    document.querySelectorAll(".time-slot-option").forEach((cb) => {
-      cb.checked = false;
-    });
-
-    // 获取新的日期的预约信息
-    orderd_time(newDate);
-    // 现在的时间以后的时间段禁止预约，包括对日期的对比和日期修改后的变化
-  });
-
-orderd_time(tomorrow); // 获取明天已预约的时间段
 
 // 发送预约数据到后端的函数
 async function submitAppointment() {
