@@ -126,25 +126,27 @@ async function getOrders() {
     }
 }
 
-// try {
-//     document.querySelector('#login').addEventListener('click', function(event) {
-//     event.preventDefault(); // 阻止默认行为
-//     const username = document.querySelector('#username').value;
-//     const password = document.querySelector('#password').value;
+try {
+    document.querySelector('#login').addEventListener('click', function(event) {
+    event.preventDefault(); // 阻止默认行为
+    const username = document.querySelector('#username').value;
+    const password = document.querySelector('#password').value;
 
-//     if (username === '' || password === '') {
-//         alert('Please fill in all fields.');
-//         return;
-//     }
+    if (username === '' || password === '') {
+        alert('Please fill in all fields.');
+        return;
+    }
 
-//     console.log('Logging in user:', username, password);
-//     // 调用登录函数
-//     login(username, password)
-// });
-// } catch (error) {
-//     console.error('没有登陆按钮:', error);
+    console.log('Logging in user:', username, password);
+    // 调用登录函数
+    login(username, password)
+    alert('Login successful!');
+    window.location.href = '../index.html';
+});
+} catch (error) {
+    console.error('没有登陆按钮:', error);
     
-// }
+}
 
 try {
     document.querySelector('#register').addEventListener('click', function(event) {
@@ -160,13 +162,12 @@ try {
 
     console.log('Registering user:', username, password, name);
     // 调用注册函数
-    // register(username,password,name)
-    login(username, password)
+    register(username,password,name)
 
     // Simulate a successful registration
     alert('Registration successful!');
     //返回上一页
-    // window.location.href = '../index.html';
+    window.location.href = '../index.html';
 });
 } catch (error) {
     console.error('没有注册按钮:', error);
