@@ -38,8 +38,12 @@ async function register(username, password, name) {
             credentials: 'include',
             body: JSON.stringify({ username, password, name })
         });
-        
+        // 处理返回值是409的情况
+        if (response.status === 409) {
+            return { success: false, message: '用户名已存在' };
+        }
         const data = await response.json();
+        console.log('注册响应:', data);
         return data;
         
     } catch (error) {
@@ -139,9 +143,19 @@ try {
 
     console.log('Logging in user:', username, password);
     // 调用登录函数
-    login(username, password)
-    alert('Login successful!');
-    window.location.href = '../index.html';
+    login(username, password).then(success => {
+        if (!success) {
+            alert('Login failed. Please check your username and password.');
+            return;
+        }
+        alert('Login successful!');
+        window.location.href = '../index.html';
+    }).catch(error => {
+        console.error('登录错误:', error);
+        alert('An error occurred during login. Please try again later.');
+    });
+    
+    
 });
 } catch (error) {
     console.error('没有登陆按钮:', error);
@@ -162,12 +176,20 @@ try {
 
     console.log('Registering user:', username, password, name);
     // 调用注册函数
-    register(username,password,name)
-
-    // Simulate a successful registration
-    alert('Registration successful!');
-    //返回上一页
-    window.location.href = '../index.html';
+    register(username,password,name).then(data => {
+        if (!data.success) {
+            alert(`Registration failed: ${data.message}`);
+            return;
+        }
+        console.log('注册成功:', data);
+        alert('Registration successful! You can now log in.');
+        window.location.href = '../index.html';
+        // 可以在这里处理注册成功后的逻辑，比如自动登录或跳转到登录页面
+    }).catch(error => {
+        console.error('注册错误:', error);
+        alert('An error occurred during registration. Please try again later.');
+    });
+    
 });
 } catch (error) {
     console.error('没有注册按钮:', error);
