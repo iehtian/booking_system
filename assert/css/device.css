@@ -72,20 +72,23 @@ body {
 }
 
 .time-slot-item {
-  width: 25%; /* 每行 4 个，响应式可改为 calc(100% / N) */
-  height: 3.75rem;
+  width: 25%;
+  height: 3.75rem; /* 保持一个明确的高度，这是关键 */
   box-sizing: border-box;
   border-right: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
+  background: rgb(240, 253, 244);
+  position: relative; /* 为 input 的绝对定位提供参照 */
 }
 
-.time-slot-item label {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  background: rgb(240, 253, 244);
+label {
+  display: flex; /* 确保 label 本身是一个 flex 容器，这样 flex 属性才能生效 */
+  flex-direction: column; /* 让 label 内部的文本（两行）垂直排列 */
+  justify-content: center; /* 垂直居中 label 内部的内容 */
+  align-items: center; /* 水平居中 label 内部的内容 */
+  text-align: center; /* 确保多行文本在各自的行内水平居中 */
+  width: 100%; /* 确保 label 占据其父容器 .time-slot-item 的全部宽度 */
+  height: 100%; /* 确保 label 占据其父容器 .time-slot-item 的全部高度 */
   cursor: pointer;
   user-select: none;
 }
