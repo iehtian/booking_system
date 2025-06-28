@@ -10,20 +10,18 @@
 </head>
 
 <body>
-    <h1>注册</h1>
-    <form action="#" method="post">
+    <h1>用户登录</h1>
+    <form id="login-form">
         <label for="username">用户名:</label>
         <input type="text" id="username" name="username" required>
-
+        <br>
         <label for="password">密码:</label>
         <input type="password" id="password" name="password" required>
-
-        <label for=“name">姓名:</label>
-        <input type="name" id="name" name="name" required>
-
-        <input type="submit" id="register" value="注册">
+        <br>
+        <button type="submit">登录</button>
     </form>
+    <div id="login-message"></div>
+    <script src="../assert/js/user_manager.js"></script>
 </body>
-<script src="../assert/js/user_manager.js"></script>
 
 </html>

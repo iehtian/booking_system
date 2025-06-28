@@ -122,7 +122,18 @@ def get_register_info():
     password = data.get('password', 'default_password')
     name = data.get('name', 'default_name')
     print(f"获取注册信息: user_name={user_name}, password={password}, namespace={name}")
-    """获取注册信息"""
+    if user_name and password and name:
+        # 检查用户名是否已存在
+        if user_name in users_db:
+            return jsonify({"error": "Username already exists"}), 409
+        
+        # 保存用户信息
+        user_id = len(users_db) + 1
+        users_db[user_name] = {
+            'password': hashlib.md5(password.encode()).hexdigest(),
+            'name': name,
+            'user_id': user_id
+        }
     return jsonify({"message": "Please provide your registration details."})
 
 @app.route('/api/check-auth', methods=['GET'])

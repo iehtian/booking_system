@@ -348,3 +348,17 @@ document.querySelector('#register').addEventListener('click', function(event){
     // 跳转到注册页面，新页面打开
     window.open(registerUrl, '_blank');
   });
+
+  
+// 使用示例：等待认证检查完成后再执行其他代码
+waitForAuthCheck().then((result) => {
+    console.log('认证检查完成:', result);
+    if (result.logged_in) {
+        console.log('用户已登录:', result.user);
+        usr_info = result.user;
+    }
+    else {
+        console.log('用户未登录');
+        document.querySelector('#submit-button').style.display = 'none'; // 如果未登录，隐藏提交按钮
+    }
+});

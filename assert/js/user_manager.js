@@ -70,26 +70,6 @@ async function logout() {
     }
 }
 
-// 检查登录状态
-async function checkAuthStatus() {
-    try {
-        const response = await fetch(`${host}/api/check-auth`, {
-            credentials: 'include'
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            return data;
-        } else {
-            return { logged_in: false };
-        }
-        
-    } catch (error) {
-        console.error('检查认证状态错误:', error);
-        return { logged_in: false };
-    }
-}
-
 // 发送需要认证的请求
 async function fetchWithAuth(url, options = {}) {
     const config = {
@@ -145,35 +125,6 @@ async function getOrders() {
         console.error('获取订单失败:', error);
     }
 }
-
-// 页面加载时检查登录状态
-window.addEventListener(`DOMContentLoaded`, async () => {
-    const authStatus = await checkAuthStatus();
-    
-    if (authStatus.logged_in) {
-        console.log('用户已登录:', authStatus.user);
-        // 显示已登录的界面
-        showLoggedInUI(authStatus.user);
-    } else {
-        console.log('用户未登录');
-        // 显示登录界面或重定向
-        showLoginUI();
-    }
-});
-
-function showLoggedInUI(user) {
-    // 更新界面显示用户信息
-    document.getElementById('username').textContent = user.username;
-    document.getElementById('welcome-message').textContent = `欢迎, ${user.name}!`;
-    document.getElementById('login-section').style.display = 'none';
-    document.getElementById('user-section').style.display = 'block';
-}
-
-function showLoginUI() {
-    document.getElementById('login-section').style.display = 'block';
-    document.getElementById('user-section').style.display = 'none';
-}
-
 
 document.querySelector('#register').addEventListener('click', function(event) {
     event.preventDefault(); // 阻止默认行为
