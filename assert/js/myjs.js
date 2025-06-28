@@ -142,15 +142,20 @@ document
     const newDate = event.target.value;
 
     // 清除之前禁用的样式和提示
-    document.querySelectorAll(".time-slot-item").forEach((item) => {
-      item.classList.remove("disabled-slot");
-      const label = item.querySelector("label");
-      if (label) {
-        // 移除“已被 XXX 预约”的文本
-        const slotText = label.innerHTML.split("<br>")[0]; // 只保留时间段部分
-        label.innerHTML = slotText;
+    // 遍历所有时间段项，移除禁用样式和提示文本
+    for (const slot of time_slots) {
+      const checkbox = document.getElementById(`time-slot-${slot}`);
+      if (checkbox) {
+        checkbox.disabled = false; // 启用复选框
+        checkbox.parentElement.classList.remove("disabled-slot"); // 移除禁用样式
+        const slotLabel = checkbox.nextElementSibling;
+        if (slotLabel) {
+          // 移除“已被 XXX 预约”的文本
+          const slotText = slotLabel.innerHTML.split("<br>")[0]; // 只保留时间段部分
+          slotLabel.innerHTML = slotText;
+        }
       }
-    });
+    }
 
     // 清空之前选中的时间段（如果你希望换日期时重置选择）
     selectedTimeSlots.length = 0;
