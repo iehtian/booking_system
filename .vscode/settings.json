@@ -1,3 +1,15 @@
 {
-    "liveServer.settings.port": 5501
+    "liveServer.settings.port": 5501,
+    "stylelint.configFile": "/home/ubuntu/order_myself/.stylelintrc.json",
+    // ✅ 启用 Stylelint 插件校验
+    "stylelint.validate": [
+        "css",
+        "scss",
+        "less"
+    ],
+    // ✅ 启用保存时自动执行 stylelint 修复
+    "editor.codeActionsOnSave": {
+        "source.fixAll.stylelint": "explicit"
+    },
+    "prettier.configPath": "/home/ubuntu/order_myself/.prettierrc",
 }
