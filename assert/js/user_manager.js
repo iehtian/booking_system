@@ -55,7 +55,7 @@ async function register(username, password, name) {
 // 登出功能
 async function logout() {
     try {
-        const response = await fetch('${host}/api/logout', {
+        const response = await fetch(`${host}/api/logout`, {
             method: 'POST',
             credentials: 'include'
         });
@@ -65,12 +65,13 @@ async function logout() {
         if (data.success) {
             localStorage.removeItem('userInfo');
             console.log('登出成功');
-            // 重定向到登录页面
-            window.location.href = '/login.html';
+            return true;
         }
+        return false;
         
     } catch (error) {
         console.error('登出错误:', error);
+        throw error;
     }
 }
 
@@ -194,3 +195,5 @@ try {
 } catch (error) {
     console.error('没有注册按钮:', error);
 }
+
+export { login, register, logout, fetchWithAuth, getUserProfile, getOrders };

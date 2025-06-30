@@ -27,14 +27,14 @@ const selectedTimeSlots = []; // 用于存储选中的时间段
 function getCurrentDateISO() {
   const date = new Date();
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
 function getCurrentTimeSlotIndex() {
   const now = new Date();
-  const hours = now.getHours();   // 0 ~ 23
+  const hours = now.getHours(); // 0 ~ 23
   const minutes = now.getMinutes(); // 0 ~ 59
 
   const totalMinutes = hours * 60 + minutes;
@@ -42,7 +42,6 @@ function getCurrentTimeSlotIndex() {
 
   return slotIndex; // 结果是 0 ~ 47
 }
-
 
 function disableSlot(slot, reasonText) {
   const checkbox = document.getElementById(`time-slot-${slot}`);
@@ -178,7 +177,7 @@ document
     // 现在的时间以后的时间段禁止预约，包括对日期的对比和日期修改后的变化
   });
 
-    document.getElementById("appointment-date").dispatchEvent(new Event("change")); // 触发日期变化事件
+document.getElementById("appointment-date").dispatchEvent(new Event("change")); // 触发日期变化事件
 // 发送预约数据到后端的函数
 async function submitAppointment() {
   const selectedDate = document.getElementById("appointment-date").value;
@@ -240,12 +239,14 @@ async function submitAppointment() {
   }
 }
 
-document.querySelector('#appointment-date').addEventListener('click', function(event){
-  //回调函数，打开日期选择器
-  event.target.showPicker(); // 显示日期选择器
-});
+document
+  .querySelector("#appointment-date")
+  .addEventListener("click", function (event) {
+    //回调函数，打开日期选择器
+    event.target.showPicker(); // 显示日期选择器
+  });
 
-document.querySelector('#yestoday').addEventListener('click', function(event){
+document.querySelector("#yestoday").addEventListener("click", function (event) {
   event.preventDefault(); // 阻止默认链接行为
   const appointmentDate = document.getElementById("appointment-date");
   const currentDate = new Date(appointmentDate.value);
@@ -255,7 +256,7 @@ document.querySelector('#yestoday').addEventListener('click', function(event){
   appointmentDate.dispatchEvent(new Event("change"));
 });
 
-document.querySelector('#tomorrow').addEventListener('click', function(event){
+document.querySelector("#tomorrow").addEventListener("click", function (event) {
   event.preventDefault(); // 阻止默认链接行为
   const appointmentDate = document.getElementById("appointment-date");
   const currentDate = new Date(appointmentDate.value);
@@ -265,84 +266,105 @@ document.querySelector('#tomorrow').addEventListener('click', function(event){
   appointmentDate.dispatchEvent(new Event("change"));
 });
 
-let moring_clicked = false, night_clicked = false
+let moring_clicked = false,
+  night_clicked = false;
 
-document.querySelector('#morning').addEventListener('click', function(event){
+document.querySelector("#morning").addEventListener("click", function (event) {
   event.preventDefault(); // 阻止默认链接行为
   //点击该按钮将自动隐藏/显示上午的时间段
   const morningButton = this;
   moring_clicked = !moring_clicked; // 切换状态
   morningButton.value = moring_clicked ? "► 00:00-08:00" : "▼ 00:00-08:00"; // 更新按钮文本
   morningButton.style.backgroundColor = moring_clicked ? "#E0F2FE" : "#f1f5f9"; // 更新按钮背景色
-  morningButton.style.border = moring_clicked ? "1px solid #0991B2" : "1px solid#d6dee7"; // 更新按钮边框
+  morningButton.style.border = moring_clicked
+    ? "1px solid #0991B2"
+    : "1px solid#d6dee7"; // 更新按钮边框
 
   const morningSlots = time_slots.slice(0, 16);
   morningSlots.forEach((slot) => {
     const checkbox = document.getElementById(`time-slot-${slot}`);
     const checkboxParent = checkbox.parentElement;
     if (checkboxParent) {
-      checkboxParent.style.display = checkboxParent.style.display === "none" ? "block" : "none"; // 切换上午时间段的显示状态
+      checkboxParent.style.display =
+        checkboxParent.style.display === "none" ? "block" : "none"; // 切换上午时间段的显示状态
     }
   });
 });
 
-document.querySelector('#night').addEventListener('click', function(event){
+document.querySelector("#night").addEventListener("click", function (event) {
   event.preventDefault(); // 阻止默认链接行为
   //点击该按钮将自动隐藏/显示晚上
   const nightButton = this;
-  night_clicked = !night_clicked // 切换状态
-  nightButton.value = night_clicked ? "► 22:00-24:00" : "▼ 22:00-24:00" // 更新按钮文本
+  night_clicked = !night_clicked; // 切换状态
+  nightButton.value = night_clicked ? "► 22:00-24:00" : "▼ 22:00-24:00"; // 更新按钮文本
   nightButton.style.backgroundColor = night_clicked ? "#E0F2FE" : "#f1f5f9"; // 更新按钮背景色
-  nightButton.style.border = night_clicked ? "1px solid #0991B2" : "1px solid#d6dee7"; // 更新按钮边框
+  nightButton.style.border = night_clicked
+    ? "1px solid #0991B2"
+    : "1px solid#d6dee7"; // 更新按钮边框
 
   const morningSlots = time_slots.slice(-4);
   morningSlots.forEach((slot) => {
-    const checkbox = document.getElementById(`time-slot-${slot}`)
+    const checkbox = document.getElementById(`time-slot-${slot}`);
     const checkboxParent = checkbox.parentElement;
     if (checkboxParent) {
-      checkboxParent.style.display = checkboxParent.style.display === "none" ? "block" : "none"; // 切换上午时间段的显示状态
+      checkboxParent.style.display =
+        checkboxParent.style.display === "none" ? "block" : "none"; // 切换上午时间段的显示状态
     }
   });
 });
 
-document.querySelector('#morning').click()
-document.querySelector('#night').click()
+document.querySelector("#morning").click();
+document.querySelector("#night").click();
 
-document.querySelector('#login').addEventListener('click', function(event){
-    event.preventDefault(); // 阻止默认链接行为
-    const loginUrl = `pages/login.html`;
-    // 跳转到登录页面，新页面打开
-    window.open(loginUrl, '_blank');
-  });
+document.querySelector("#login").addEventListener("click", function (event) {
+  event.preventDefault(); // 阻止默认链接行为
+  const loginUrl = `pages/login.html`;
+  // 跳转到登录页面，新页面打开
+  window.open(loginUrl, "_blank");
+});
 
-document.querySelector('#register').addEventListener('click', function(event){
-    event.preventDefault(); // 阻止默认链接行为
-    const registerUrl = `pages/register.html`;
-    // 跳转到注册页面，新页面打开
-    window.open(registerUrl, '_blank');
-  });
+document.querySelector("#register").addEventListener("click", function (event) {
+  event.preventDefault(); // 阻止默认链接行为
+  const registerUrl = `pages/register.html`;
+  // 跳转到注册页面，新页面打开
+  window.open(registerUrl, "_blank");
+});
 
-  
 // 使用示例：等待认证检查完成后再执行其他代码
 waitForAuthCheck().then((result) => {
-    console.log('认证检查完成:', result);
-    if (result.logged_in) {
-            const submitButton = document.querySelector('#submit-button');
-        submitButton.classList.remove('hidden'); // 显示提交按钮
-        selectName = result.user.name; // 获取用户姓名
-        submitButton.addEventListener("click", () => {
-          console.log("提交预约");
-          console.log("选中的名字:", selectName);
-          console.log("选中的日期:", document.getElementById("appointment-date").value);
-          console.log("选中的时间段:", selectedTimeSlots);
-          submitAppointment();
+  console.log("认证检查完成:", result);
+  if (result.logged_in) {
+    const submitButton = document.querySelector("#submit-button");
+    submitButton.classList.remove("hidden"); // 显示提交按钮
+    const logoutButton = document.querySelector("#logout");
+    logoutButton.classList.remove("hidden"); // 显示退出登录按钮
+    selectName = result.user.name; // 获取用户姓名
+    submitButton.addEventListener("click", () => {
+      console.log("提交预约");
+      console.log("选中的名字:", selectName);
+      console.log(
+        "选中的日期:",
+        document.getElementById("appointment-date").value
+      );
+      console.log("选中的时间段:", selectedTimeSlots);
+      submitAppointment();
+    });
+    document.querySelector(".show-name").textContent = `你好，${selectName}`; // 显示用户姓名
+    document.querySelector(".show-name").classList.remove("hidden"); // 显示用户姓名
+  } else {
+    console.log("用户未登录");
+    document.querySelector("#login").classList.remove("hidden"); // 显示登录按钮
+    document.querySelector("#register").classList.remove("hidden"); // 显示注册按钮
+  }
 });
-        document.querySelector('.show-name').textContent = `你好，${selectName}`; // 显示用户姓名
-        document.querySelector('.show-name').classList.remove('hidden'); // 显示用户姓名
-    }
-    else {
-        console.log('用户未登录');
-        document.querySelector('#login').classList.remove('hidden'); // 显示登录按钮
-        document.querySelector('#register').classList.remove('hidden'); // 显示注册按钮
-    }
+
+import{ logout } from "./user_manager.js";
+document.querySelector("#logout").addEventListener("click", function (event) {
+  event.preventDefault(); // 阻止默认链接行为
+  logout().then(() => {
+    console.log("用户已退出登录");
+    window.location.reload(); // 刷新页面
+  }).catch(error => {
+    console.error("退出登录失败:", error);
+  });
 });
