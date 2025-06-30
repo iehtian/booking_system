@@ -1,27 +1,26 @@
 <!DOCTYPE html>
 <html>
-<script src="../assert/js/config.js"></script>
-<script src="../assert/js/checkAuthStatus.js"></script>
+  <script src="../assert/js/config.js"></script>
+  <script src="../assert/js/checkAuthStatus.js"></script>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
-</head>
+  </head>
 
-<body>
+  <body>
     <h1>用户登录</h1>
     <form id="login-form">
-        <label for="username">用户名:</label>
-        <input type="text" id="username" name="username" required>
-        <br>
-        <label for="password">密码:</label>
-        <input type="password" id="password" name="password" required>
-        <br>
-        <button type="submit" id="login">登录</button>
+      <label for="username">用户名:</label>
+      <input type="text" id="username" name="username" required />
+      <br />
+      <label for="password">密码:</label>
+      <input type="password" id="password" name="password" required />
+      <br />
+      <button type="submit" id="login">登录</button>
     </form>
     <div id="login-message"></div>
     <script type="module" src="../assert/js/user_manager.js"></script>
-</body>
-
+  </body>
 </html>
