@@ -21,21 +21,21 @@ def create_index():
         'ON', 'JSON',
         'PREFIX', '1', 'user:',
         'SCHEMA',
-        '$.user_name', 'AS', 'user_name', 'TAG',
+        '$.ID', 'AS', 'ID', 'TAG',
         '$.real_name', 'AS', 'real_name', 'TAG'
     )
     print(f"Index '{index_name}' created.")
 
 # 插入或更新预订记录
-def upsert_user(user_id, user_name, password, real_name, color):
+def upsert_user(user_id, ID, password, real_name, color):
     key = f"user:{user_id}"
-    data = {"user_name": user_name, "password": password, "real_name": real_name, "color": color}
+    data = {"ID": ID, "password": password, "real_name": real_name, "color": color}
     r.execute_command('JSON.SET', key, '$', json.dumps(data))
     print(f"Upserted {key}: {data}")
 
 # 查询指定日期
-def search_by_user_name(user_name):
-    query = f"@user_name:{{{user_name}}}"
+def search_by_ID(ID):
+    query = f"@ID:{{{ID}}}"
     return search(query)
 
 # 查询指定姓名（支持中文）
@@ -66,13 +66,13 @@ if __name__ == '__main__':
 
     # 查询某天的预订
     print("\n📅 users on fea:")
-    for key, data in search_by_user_name("fea"):
+    for key, data in search_by_ID("fea"):
         print(f"{key}: {data}")
 
     # 查询 Alice
     print("\n🧑 users by Alice:")
-    for key, data in search_by_real_name("Alice"):
-        print(f"{key}: {data}")
+    data = search_by_real_name("Alice")[0]
+    print(f"{data}")
     
     # 查询所有用户
     print("\n🧑 All users:")

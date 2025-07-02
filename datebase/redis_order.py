@@ -28,21 +28,21 @@ def create_index():
     print(f"Index '{index_name}' created.")
 
 # 插入或更新预订记录
-def upsert_booking(booking_id, date, time, name):
+def upsert_booking(booking_id, system_id,date, time, name):
     key = f"booking:{booking_id}"
-    data = {"date": date, "time": time, "name": name}
+    data = {"date": date,"system_id": system_id, "time": time, "name": name}
     r.execute_command('JSON.SET', key, '$', json.dumps(data))
     print(f"Upserted {key}: {data}")
 
 # 查询指定日期
-def search_by_date(date):
+def search_by_date(system_id, date):
     date = date.replace('-', '\\-')  # 格式化日期为 YYYYMMDD
-    query = f"@date:{{{date}}}"
+    query = f"@date:{{{date}}} @system_id:{{{system_id}}}"
     return search(query)
 
 # 查询指定姓名（支持中文）
-def search_by_name(name):
-    query = f"@name:{{{name}}}"
+def search_by_name(system_id, name):
+    query = f"@name:{{{name}}} @system_id:{{{system_id}}}"
     return search(query)
 
 # 执行查询并解析结果
@@ -74,8 +74,8 @@ if __name__ == '__main__':
 
     # 查询某天的预订
     print("\n📅 Bookings on 2025-06-21:")
-    for key, data in search_by_date("2025-06-21"):
-        print(f"{key}: {data}")
+    for res in search_by_date("a","2025-06-21"):
+        print(f"{res[0]}: {res[1]}")
 
     # 查询 Alice
     print("\n🧑 Bookings by Alice:")
