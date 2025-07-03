@@ -1,5 +1,5 @@
 // 登录功能
-async function login(username, password) {
+async function login(ID, password) {
   try {
     const response = await fetch(`${host}/api/login`, {
       method: "POST",
@@ -7,7 +7,7 @@ async function login(username, password) {
         "Content-Type": "application/json",
       },
       credentials: "include", // 重要：包含 cookies
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ ID, password }),
     });
 
     const data = await response.json();
@@ -28,7 +28,7 @@ async function login(username, password) {
 }
 
 // 注册功能
-async function register(username, password, name) {
+async function register(ID, password, name) {
   try {
     const response = await fetch(`${host}/api/register`, {
       method: "POST",
@@ -36,7 +36,7 @@ async function register(username, password, name) {
         "Content-Type": "application/json",
       },
       credentials: "include",
-      body: JSON.stringify({ username, password, name }),
+      body: JSON.stringify({ ID, password, name }),
     });
     // 处理返回值是409的情况
     if (response.status === 409) {
@@ -131,20 +131,20 @@ async function getOrders() {
 try {
   document.querySelector("#login").addEventListener("click", function (event) {
     event.preventDefault(); // 阻止默认行为
-    const username = document.querySelector("#username").value;
+    const ID = document.querySelector("#ID").value;
     const password = document.querySelector("#password").value;
 
-    if (username === "" || password === "") {
+    if (ID === "" || password === "") {
       alert("Please fill in all fields.");
       return;
     }
 
-    console.log("Logging in user:", username, password);
+    console.log("Logging in user:", ID, password);
     // 调用登录函数
-    login(username, password)
+    login(ID, password)
       .then((success) => {
         if (!success) {
-          alert("Login failed. Please check your username and password.");
+          alert("Login failed. Please check your ID and password.");
           return;
         }
         alert("Login successful!");
@@ -164,19 +164,20 @@ try {
     .querySelector("#register")
     .addEventListener("click", function (event) {
       event.preventDefault(); // 阻止默认行为
-      const username = document.querySelector("#username").value;
+      const ID = document.querySelector("#ID").value;
       const password = document.querySelector("#password").value;
       const name = document.querySelector("#name").value;
 
-      if (username === "" || password === "" || name === "") {
+      if (ID === "" || password === "" || name === "") {
         alert("Please fill in all fields.");
         return;
       }
 
-      console.log("Registering user:", username, password, name);
+      console.log("Registering user:", ID, password, name);
       // 调用注册函数
-      register(username, password, name)
+      register(ID, password, name)
         .then((data) => {
+          console.log("注册响应:", data);
           if (!data.success) {
             alert(`Registration failed: ${data.message}`);
             return;

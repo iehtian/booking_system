@@ -71,6 +71,7 @@ async function orderd_time(date) {
     }
 
     const data = await response.json();
+    console.log("已预约时间段数据:", data);
     Object.entries(data.bookings).forEach(([key, value]) => {
       console.log(`时间段: ${key}, 预约人: ${value}`);
       const checkbox = document.getElementById(`time-slot-${key}`);
@@ -358,13 +359,15 @@ waitForAuthCheck().then((result) => {
   }
 });
 
-import{ logout } from "./user_manager.js";
+import { logout } from "./user_manager.js";
 document.querySelector("#logout").addEventListener("click", function (event) {
   event.preventDefault(); // 阻止默认链接行为
-  logout().then(() => {
-    console.log("用户已退出登录");
-    window.location.reload(); // 刷新页面
-  }).catch(error => {
-    console.error("退出登录失败:", error);
-  });
+  logout()
+    .then(() => {
+      console.log("用户已退出登录");
+      window.location.reload(); // 刷新页面
+    })
+    .catch((error) => {
+      console.error("退出登录失败:", error);
+    });
 });
