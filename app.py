@@ -28,7 +28,6 @@ app.config.update(
 app.secret_key = 'your_secret_key'  # 用于会话加密
 app.permanent_session_lifetime = 24*60 * 60 *30*6  # 设置会话过期时间为6个月
 
-# 方法3: HSL色彩空间生成（更好的色彩分布）
 def random_hsl_color():
     import colorsys
     import random
@@ -40,6 +39,11 @@ def random_hsl_color():
     rgb = colorsys.hls_to_rgb(hue, lightness, saturation)
     r, g, b = [int(x * 255) for x in rgb]
     return f"#{r:02x}{g:02x}{b:02x}"
+
+@app.route('/hello_world', methods=['GET'])
+def hello_world():
+    """用于验证服务是否正常运行"""
+    return jsonify({"message": "Hello, World!"})
 
 @app.route('/api/info_save', methods=['POST'])
 def save_info():
