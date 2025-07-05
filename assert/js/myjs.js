@@ -73,15 +73,18 @@ async function orderd_time(date) {
     const data = await response.json();
     console.log("已预约时间段数据:", data);
     Object.entries(data.bookings).forEach(([key, value]) => {
-      console.log(`时间段: ${key}, 预约人: ${value}`);
+      const name = value.name || "未知用户"; // 如果没有name字段，使用默认值
+      const color = value.color || "#ffffff"; // 如果没有color字段，使用默认值
+      console.log(`时间段: ${key}, 预约人: ${name}, 颜色: ${color}`);
       const checkbox = document.getElementById(`time-slot-${key}`);
       if (checkbox) {
         if (checkbox.parentElement) {
           checkbox.parentElement.classList.add("disabled-slot"); // 添加禁用样式
+          checkbox.parentElement.style.backgroundColor = color; // 设置背景色
         }
         const slotLabel = checkbox.nextElementSibling;
         if (slotLabel) {
-          slotLabel.innerHTML += `<br> 已被 ${value} 预约`; // 在标签后添加已预约信息
+          slotLabel.innerHTML += `<br> 已被 ${name} 预约`; // 在标签后添加已预约信息
         }
       }
     });
@@ -162,7 +165,7 @@ document
     document.querySelectorAll(".time-slot-option").forEach((cb) => {
       cb.checked = false;
     });
-
+    orderd_time(newDate);
     // 获取新的日期的预约信息
     if (newDate < getCurrentDateISO()) {
       // 日期已过
@@ -174,13 +177,13 @@ document
         disableSlot(time_slots[i]);
       }
     }
-    orderd_time(newDate);
+
     // 现在的时间以后的时间段禁止预约，包括对日期的对比和日期修改后的变化
   });
 
 document.getElementById("appointment-date").dispatchEvent(new Event("change")); // 触发日期变化事件
 // 发送预约数据到后端的函数
-async function submitAppointment() {
+async function submitAppointment(color) {
   const selectedDate = document.getElementById("appointment-date").value;
 
   if (!selectedDate) {
@@ -200,6 +203,7 @@ async function submitAppointment() {
       date: selectedDate,
       slots: selectedTimeSlots, // 发送所有选中的时间段
       name: selectName,
+      color: color, // 发送用户颜色
     };
 
     console.log("发送的数据:", appointmentData);
@@ -339,16 +343,11 @@ waitForAuthCheck().then((result) => {
     submitButton.classList.remove("hidden"); // 显示提交按钮
     const logoutButton = document.querySelector("#logout");
     logoutButton.classList.remove("hidden"); // 显示退出登录按钮
+    console.log(result.user);
     selectName = result.user.name; // 获取用户姓名
+    const color = result.user.color; // 获取用户颜色
     submitButton.addEventListener("click", () => {
-      console.log("提交预约");
-      console.log("选中的名字:", selectName);
-      console.log(
-        "选中的日期:",
-        document.getElementById("appointment-date").value
-      );
-      console.log("选中的时间段:", selectedTimeSlots);
-      submitAppointment();
+      submitAppointment(color);
     });
     document.querySelector(".show-name").textContent = `你好，${selectName}`; // 显示用户姓名
     document.querySelector(".show-name").classList.remove("hidden"); // 显示用户姓名

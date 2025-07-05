@@ -108,11 +108,17 @@ def get_ordered_bookings():
             return jsonify({"error": "No bookings found for the specified date"}), 404
         
         # 将结果转换为 {时间段: 预约人} 的字典格式
-        ordered_bookings_dict = {
-            slot[1]['time']: slot[1]['name'] 
-            for slot in search_by_date_result
-        }
-        
+        ordered_bookings_dict = {}
+        for slot in search_by_date_result:
+            time_slot = slot[1]['time']
+            name = slot[1]['name']
+            # 假设数据库中有 color 字段，如果没有则设置默认值
+            color = slot[1].get('color', '#ffffff')  # 默认黑色
+            
+            ordered_bookings_dict[time_slot] = {
+                "name": name,
+                "color": color
+            }
         # 打印转换后的字典，保持风格
         print(f"时间段和预约人 (字典格式): {ordered_bookings_dict}")
         

@@ -91,7 +91,7 @@ label {
   user-select: none;
 }
 
-.disabled-slot label {
+.disabled-slot {
   color: #ca7c7c; /* 将文本颜色变灰 */
   background: #fee2e2;
   cursor: not-allowed; /* 鼠标悬停时显示禁止图标 */

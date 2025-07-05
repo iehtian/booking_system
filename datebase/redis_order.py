@@ -28,9 +28,9 @@ def create_index():
     print(f"Index '{index_name}' created.")
 
 # 插入或更新预订记录
-def upsert_booking(booking_id, system_id,date, time, name):
+def upsert_booking(booking_id, system_id,date, time, name, color):
     key = f"booking:{booking_id}"
-    data = {"date": date,"system_id": system_id, "time": time, "name": name}
+    data = {"date": date,"system_id": system_id, "time": time, "name": name, "color": color}
     r.execute_command('JSON.SET', key, '$', json.dumps(data))
     print(f"Upserted {key}: {data}")
 
