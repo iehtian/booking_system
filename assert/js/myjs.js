@@ -355,6 +355,14 @@ waitForAuthCheck().then((result) => {
     console.log("用户未登录");
     document.querySelector("#login").classList.remove("hidden"); // 显示登录按钮
     document.querySelector("#register").classList.remove("hidden"); // 显示注册按钮
+    // 禁用所有时间段的复选框
+    time_slots.forEach((slot) => {
+      const checkbox = document.getElementById(`time-slot-${slot}`);
+      if (checkbox) {
+        checkbox.disabled = true; // 禁用复选框
+        checkbox.parentElement.classList.add("no-login-slot"); // 添加禁用样式
+      }
+    });
   }
 });
 
