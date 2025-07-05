@@ -150,7 +150,10 @@ def check_auth():
     "打印当前session信息"
     print(f"当前session信息: {session}")
     if session.get('logged_in'):
-        return jsonify({
+        ID = session.get('ID', 'unknown')
+        if search_by_ID(ID):
+            print(f"用户 {ID} 已登录")
+            return jsonify({
             'logged_in': True,
             'user': {
                 'ID': session.get('ID'),
@@ -159,6 +162,10 @@ def check_auth():
                 'color': session.get('color')  # 添加用户颜色
             }
         })
+        else:
+            print(f"用户 {ID} 不存在，清除session")
+            session.clear()
+            return jsonify({'logged_in': False}), 401
     else:
         return jsonify({'logged_in': False}), 401
 
