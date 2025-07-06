@@ -1,10 +1,8 @@
-from flask import Flask, request, jsonify, send_file
-import json
-import hashlib
-import os
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 from datetime import timedelta
+import bcrypt
 
 from datebase import (
     upsert_user, 
@@ -37,6 +35,21 @@ def check_if_token_revoked(jwt_header, jwt_payload):
     """检查token是否已被撤销"""
     jti = jwt_payload['jti']
     return jti in revoked_tokens
+
+def hash_password(password):
+    """使用bcrypt加密密码"""
+    # 生成salt并加密密码
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')  # 返回字符串形式
+
+def verify_password(password, hashed_password):
+    """验证密码"""
+    try:
+        return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
+    except Exception as e:
+        print(f"密码验证出错: {e}")
+        return False
 
 def random_hsl_color():
     import colorsys
@@ -155,16 +168,20 @@ def get_register_info():
     ID = data.get('ID', 'default_user')
     password = data.get('password', 'default_password')
     name = data.get('name', 'default_name')
-    print(f"获取注册信息: ID={ID}, password={password}, namespace={name}")
+    print(f"获取注册信息: ID={ID}, password=[已隐藏], namespace={name}")
 
     if ID and password and name:
         if(search_by_ID(ID)):
             return jsonify({"error": "User already exists"}), 400
         
         user_color = random_hsl_color()  # 生成随机颜色
+        
+        # 使用bcrypt加密密码
+        hashed_password = hash_password(password)
+        
         # 保存用户信息
         user_order = len(search_all_users()) + 1
-        upsert_user(user_order, ID, hashlib.md5(password.encode()).hexdigest(), name, user_color)
+        upsert_user(user_order, ID, hashed_password, name, user_color)
         
         # 注册成功后自动生成JWT token
         access_token = create_access_token(
@@ -226,10 +243,14 @@ def login():
     
     # 验证用户
     user = search_by_ID(ID)
-    if not user or user[0][1]['password'] != hashlib.md5(password.encode()).hexdigest():
+    if not user:
         return jsonify({'success': False, 'message': '用户名或密码错误'}), 401
     
     user_data = user[0][1]
+    
+    # 使用bcrypt验证密码
+    if not verify_password(password, user_data['password']):
+        return jsonify({'success': False, 'message': '用户名或密码错误'}), 401
     
     # 创建JWT token
     access_token = create_access_token(
