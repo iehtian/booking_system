@@ -21,7 +21,6 @@ async function checkAuthStatus() {
       },
     });
     const data = await res.json();
-    console.log("认证状态检查结果:", data);
     return data;
   } catch (error) {
     console.error("检查认证状态错误:", error);
@@ -52,6 +51,7 @@ window.addEventListener(`DOMContentLoaded`, async () => {
     usr_info = authStatus.user;
   } else {
     console.log("用户未登录");
+    localStorage.removeItem("access_token");
   }
 
   // 通知认证检查已完成

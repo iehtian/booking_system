@@ -362,7 +362,6 @@ waitForAuthCheck().then((result) => {
     document.querySelector(".show-name").textContent = `你好，${selectName}`; // 显示用户姓名
     document.querySelector(".show-name").classList.remove("hidden"); // 显示用户姓名
   } else {
-    console.log("用户未登录");
     document.querySelector("#login").classList.remove("hidden"); // 显示登录按钮
     document.querySelector("#register").classList.remove("hidden"); // 显示注册按钮
     // 禁用所有时间段的复选框
