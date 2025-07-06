@@ -198,6 +198,16 @@ async function submitAppointment(color) {
 
   try {
     // 一次性发送所有时间段
+    console.log(
+      "日期",
+      selectedDate,
+      "选中的时间段",
+      selectedTimeSlots,
+      "用户姓名",
+      selectName,
+      "用户颜色",
+      color
+    );
     const appointmentData = {
       system: "a_device", // 系统ID，根据需要修改
       date: selectedDate,

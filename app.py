@@ -56,22 +56,19 @@ def hello_world():
     return jsonify({"message": "Hello, World!"})
 
 @app.route('/api/info_save', methods=['POST'])
-@jwt_required()
 def save_info():
     """将预约信息保存"""
     try:
-        # 获取当前用户ID
-        current_user_id = get_jwt_identity()
         
         data = request.get_json()
+        print(f"接收到的预约数据: {data}")
         system_id = data.get('system', 'a_device')  # 默认为A仪器系统
         date = data.get('date')
         slots = data.get('slots')  # 现在接收时间段数组
         name = data.get('name')
         color = data.get('color')  # 如果没有提供颜色，则生成随机颜色
 
-        print(f"接收到的预约数据: {data}")
-        print(f"当前用户: {current_user_id}")
+        
         
         if not date or not slots or not name:
             return jsonify({"error": "Missing required fields: date, slots, name"}), 400
@@ -94,7 +91,8 @@ def save_info():
                 system_id=system_id, 
                 date=date, 
                 time=slot, 
-                name=name
+                name=name,
+                color= color
             )
             successful_slots.append(slot)
         
