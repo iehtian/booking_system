@@ -27,15 +27,6 @@ app.config.from_object(Config)  # 加载配置类
 # 初始化JWT管理器
 jwt = JWTManager(app)
 
-# 用于存储已撤销的token（简单实现，生产环境建议使用Redis）
-revoked_tokens = set()
-
-@jwt.token_in_blocklist_loader
-def check_if_token_revoked(jwt_header, jwt_payload):
-    """检查token是否已被撤销"""
-    jti = jwt_payload['jti']
-    return jti in revoked_tokens
-
 def hash_password(password):
     """使用bcrypt加密密码"""
     # 生成salt并加密密码
@@ -279,12 +270,6 @@ def login():
 def logout():
     try:
         current_user_id = get_jwt_identity()
-        jti = get_jwt()['jti']  # JWT ID
-        
-        # 将token添加到撤销列表
-        revoked_tokens.add(jti)
-        
-        print(f"用户 {current_user_id} 已登出，token已撤销")
         
         return jsonify({
             'success': True,
