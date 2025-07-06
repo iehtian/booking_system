@@ -4,3 +4,5 @@ venv/
 assert/js/config.js
 datebase/__pycache__
 *.bak
+config.py
+__pycache__

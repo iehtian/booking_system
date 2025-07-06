@@ -3,7 +3,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 from datetime import timedelta
 import bcrypt
-
+from config import Config
 from datebase import (
     upsert_user, 
     search_by_ID, 
@@ -16,13 +16,13 @@ from datebase import (
     search_all_bookings
 )
 
+
+
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=["http://localhost:5501", "http://127.0.0.1:5501","http://127.0.0.1:5502", "http://localhost:5502"])
 
 # JWT配置
-app.config['JWT_SECRET_KEY'] = 'your-secret-key-change-this-in-production'  # 在生产环境中更改此密钥
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)  # 30天过期
-app.config['JWT_ALGORITHM'] = 'HS256'
+app.config.from_object(Config)  # 加载配置类
 
 # 初始化JWT管理器
 jwt = JWTManager(app)
