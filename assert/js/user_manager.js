@@ -1,26 +1,18 @@
+const API_BASE = "http://127.0.0.1:5000";
 // 登录功能
 async function login(ID, password) {
   try {
-    const response = await fetch(`${host}/api/login`, {
+    const res = await fetch(`${API_BASE}/api/login`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include", // 重要：包含 cookies
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ID, password }),
     });
-
-    const data = await response.json();
-
-    if (data.success) {
-      console.log("登录成功:", data.user);
-      // 可以保存用户信息到内存或 localStorage（非敏感信息）
-      localStorage.setItem("userInfo", JSON.stringify(data.user));
-      return true;
-    } else {
-      console.log("登录失败:", data.message);
-      return false;
+    const data = await res.json();
+    console.log("登录响应:", data);
+    if (data.access_token) {
+      localStorage.setItem("access_token", data.access_token);
     }
+    return data;
   } catch (error) {
     console.error("登录错误:", error);
     return false;
@@ -30,21 +22,16 @@ async function login(ID, password) {
 // 注册功能
 async function register(ID, password, name) {
   try {
-    const response = await fetch(`${host}/api/register`, {
+    const res = await fetch(`${API_BASE}/api/register`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify({ ID, password, name }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ID, name, password }),
     });
-    // 处理返回值是409的情况
-    if (response.status === 409) {
-      return { success: false, message: "用户名已存在" };
+    const data = await res.json();
+    if (data.access_token) {
+      localStorage.setItem("access_token", data.access_token);
     }
-    const data = await response.json();
-    console.log("注册响应:", data);
-    return data;
+    return data; // 返回注册结果
   } catch (error) {
     console.error("注册错误:", error);
     return { success: false, message: "注册失败" };
@@ -73,60 +60,33 @@ async function logout() {
   }
 }
 
-// 发送需要认证的请求
-async function fetchWithAuth(url, options = {}) {
-  const config = {
-    ...options,
-    credentials: "include", // 重要：自动包含 session cookie
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  };
+// // 发送需要认证的请求
+// async function fetchWithAuth(url, options = {}) {
+//   const config = {
+//     ...options,
+//     credentials: "include", // 重要：自动包含 session cookie
+//     headers: {
+//       "Content-Type": "application/json",
+//       ...options.headers,
+//     },
+//   };
 
-  try {
-    const response = await fetch(url, config);
+//   try {
+//     const response = await fetch(url, config);
 
-    if (response.status === 401) {
-      console.log("登录已过期，请重新登录");
-      localStorage.removeItem("userInfo");
-      window.location.href = "/login.html";
-      return null;
-    }
+//     if (response.status === 401) {
+//       console.log("登录已过期，请重新登录");
+//       localStorage.removeItem("userInfo");
+//       window.location.href = "/login.html";
+//       return null;
+//     }
 
-    return response;
-  } catch (error) {
-    console.error("请求错误:", error);
-    throw error;
-  }
-}
-
-// 使用示例
-async function getUserProfile() {
-  try {
-    const response = await fetchWithAuth(`${host}/api/user/profile`);
-    if (response) {
-      const data = await response.json();
-      console.log("用户资料:", data);
-      return data;
-    }
-  } catch (error) {
-    console.error("获取用户资料失败:", error);
-  }
-}
-
-async function getOrders() {
-  try {
-    const response = await fetchWithAuth(`${host}/api/orders`);
-    if (response) {
-      const data = await response.json();
-      console.log("订单列表:", data);
-      return data;
-    }
-  } catch (error) {
-    console.error("获取订单失败:", error);
-  }
-}
+//     return response;
+//   } catch (error) {
+//     console.error("请求错误:", error);
+//     throw error;
+//   }
+// }
 
 try {
   document.querySelector("#login").addEventListener("click", function (event) {
@@ -198,4 +158,95 @@ try {
   console.error("没有注册按钮:", error);
 }
 
-export { login, register, logout, fetchWithAuth, getUserProfile, getOrders };
+export { login, register, logout };
+
+// const API_BASE = "http://127.0.0.1:5000";
+
+// function showMessage(msg) {
+//   document.getElementById("output").textContent = JSON.stringify(msg, null, 2);
+// }
+
+// function getToken() {
+//   return localStorage.getItem("access_token");
+// }
+
+// async function register() {
+//   const ID = document.getElementById("regID").value;
+//   const name = document.getElementById("regName").value;
+//   const password = document.getElementById("regPwd").value;
+
+//   const res = await fetch(`${API_BASE}/api/register`, {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify({ ID, name, password }),
+//   });
+//   const data = await res.json();
+//   if (data.access_token) {
+//     localStorage.setItem("access_token", data.access_token);
+//   }
+//   showMessage(data);
+// }
+
+// async function login() {
+//   const ID = document.getElementById("loginID").value;
+//   const password = document.getElementById("loginPwd").value;
+
+//   const res = await fetch(`${API_BASE}/api/login`, {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify({ ID, password }),
+//   });
+//   const data = await res.json();
+//   if (data.access_token) {
+//     localStorage.setItem("access_token", data.access_token);
+//   }
+//   showMessage(data);
+// }
+
+// async function checkAuth() {
+//   const token = getToken();
+//   const res = await fetch(`${API_BASE}/api/check-auth`, {
+//     headers: {
+//       Authorization: `Bearer ${token}`,
+//     },
+//   });
+//   const data = await res.json();
+//   showMessage(data);
+// }
+
+// async function saveBooking() {
+//   const token = getToken();
+//   const name = document.getElementById("bookingName").value;
+//   const date = document.getElementById("bookingDate").value;
+//   const time = document.getElementById("bookingTime").value;
+
+//   const res = await fetch(`${API_BASE}/api/info_save`, {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//       Authorization: `Bearer ${token}`,
+//     },
+//     body: JSON.stringify({
+//       system: "a_device",
+//       name,
+//       date,
+//       slots: [time],
+//     }),
+//   });
+
+//   const data = await res.json();
+//   showMessage(data);
+// }
+
+// async function logout() {
+//   const token = getToken();
+//   const res = await fetch(`${API_BASE}/api/logout`, {
+//     method: "POST",
+//     headers: {
+//       Authorization: `Bearer ${token}`,
+//     },
+//   });
+//   localStorage.removeItem("access_token");
+//   const data = await res.json();
+//   showMessage(data);
+// }

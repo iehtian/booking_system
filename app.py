@@ -1,8 +1,10 @@
-from flask import Flask, request, jsonify, send_file,session
+from flask import Flask, request, jsonify, send_file
 import json
 import hashlib
 import os
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
+from datetime import timedelta
 
 from datebase import (
     upsert_user, 
@@ -19,14 +21,22 @@ from datebase import (
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=["http://localhost:5501", "http://127.0.0.1:5501","http://127.0.0.1:5502", "http://localhost:5502"])
 
+# JWT配置
+app.config['JWT_SECRET_KEY'] = 'your-secret-key-change-this-in-production'  # 在生产环境中更改此密钥
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)  # 30天过期
+app.config['JWT_ALGORITHM'] = 'HS256'
 
-app.config.update(
-    SESSION_COOKIE_SECURE=False      # 运行在HTTP环境，不用Secure
-)
+# 初始化JWT管理器
+jwt = JWTManager(app)
 
+# 用于存储已撤销的token（简单实现，生产环境建议使用Redis）
+revoked_tokens = set()
 
-app.secret_key = 'your_secret_key'  # 用于会话加密
-app.permanent_session_lifetime = 24*60 * 60 *30*6  # 设置会话过期时间为6个月
+@jwt.token_in_blocklist_loader
+def check_if_token_revoked(jwt_header, jwt_payload):
+    """检查token是否已被撤销"""
+    jti = jwt_payload['jti']
+    return jti in revoked_tokens
 
 def random_hsl_color():
     import colorsys
@@ -46,9 +56,13 @@ def hello_world():
     return jsonify({"message": "Hello, World!"})
 
 @app.route('/api/info_save', methods=['POST'])
+@jwt_required()
 def save_info():
     """将预约信息保存"""
     try:
+        # 获取当前用户ID
+        current_user_id = get_jwt_identity()
+        
         data = request.get_json()
         system_id = data.get('system', 'a_device')  # 默认为A仪器系统
         date = data.get('date')
@@ -57,6 +71,7 @@ def save_info():
         color = data.get('color')  # 如果没有提供颜色，则生成随机颜色
 
         print(f"接收到的预约数据: {data}")
+        print(f"当前用户: {current_user_id}")
         
         if not date or not slots or not name:
             return jsonify({"error": "Missing required fields: date, slots, name"}), 400
@@ -152,32 +167,55 @@ def get_register_info():
         # 保存用户信息
         user_order = len(search_all_users()) + 1
         upsert_user(user_order, ID, hashlib.md5(password.encode()).hexdigest(), name, user_color)
-    return jsonify({"success": "注册成功", "user": {"ID": ID, "name": name, "color": user_color}})
+        
+        # 注册成功后自动生成JWT token
+        access_token = create_access_token(
+            identity=ID,
+            additional_claims={
+                'name': name,
+                'color': user_color
+            }
+        )
+        print(f"用户 {ID} 注册成功，生成JWT token")
+        return jsonify({
+            "success": True, 
+            "user": {"ID": ID, "name": name, "color": user_color},
+            "access_token": access_token
+        })
+    
+    return jsonify({"error": "Missing required fields"}), 400
 
 @app.route('/api/check-auth', methods=['GET'])
+@jwt_required()
 def check_auth():
     """检查登录状态"""
-    "打印当前session信息"
-    print(f"当前session信息: {session}")
-    if session.get('logged_in'):
-        ID = session.get('ID', 'unknown')
-        if search_by_ID(ID):
-            print(f"用户 {ID} 已登录")
-            return jsonify({
+    try:
+        current_user_id = get_jwt_identity()
+        claims = get_jwt()
+        
+        print(f"当前用户: {current_user_id}")
+        
+        # 验证用户是否仍然存在
+        user = search_by_ID(current_user_id)
+        if not user:
+            print(f"用户 {current_user_id} 不存在")
+            return jsonify({'logged_in': False, 'message': 'User not found'}), 401
+        
+        user_data = user[0][1]
+        print(f"用户 {current_user_id} 已登录")
+        
+        return jsonify({
             'logged_in': True,
             'user': {
-                'ID': session.get('ID'),
-                'name': session.get('name'),
-                'user_id': session.get('user_id'),
-                'color': session.get('color')  # 添加用户颜色
+                'ID': current_user_id,
+                'name': user_data['real_name'],
+                'color': user_data.get('color', '#FEE2E2')
             }
         })
-        else:
-            print(f"用户 {ID} 不存在，清除session")
-            session.clear()
-            return jsonify({'logged_in': False}), 401
-    else:
-        return jsonify({'logged_in': False}), 401
+        
+    except Exception as e:
+        print(f"检查认证时出错: {e}")
+        return jsonify({'logged_in': False, 'message': 'Invalid token'}), 401
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -189,40 +227,85 @@ def login():
         return jsonify({'success': False, 'message': '用户名和密码不能为空'}), 400
     
     # 验证用户
-    user =search_by_ID(ID)
+    user = search_by_ID(ID)
     if not user or user[0][1]['password'] != hashlib.md5(password.encode()).hexdigest():
         return jsonify({'success': False, 'message': '用户名或密码错误'}), 401
     
     user_data = user[0][1]
-    # 设置 session
-    session.permanent = True  # 使 session 持久化
-    session['logged_in'] = True
-    session['ID'] = ID
-    session['name'] = user_data['real_name']
-    session['color'] = user_data.get('color', '#FEE2E2')
+    
+    # 创建JWT token
+    access_token = create_access_token(
+        identity=ID,
+        additional_claims={
+            'name': user_data['real_name'],
+            'color': user_data.get('color', '#FEE2E2')
+        }
+    )
 
-    print(f"用户 {ID} 登录成功，session contains: {', '.join(session.keys())}")
+    print(f"用户 {ID} 登录成功，生成JWT token")
     
     return jsonify({
         'success': True,
         'message': '登录成功',
+        'access_token': access_token,
         'user': {
             'ID': ID,
-            'name': user[0][1]['real_name'],
+            'name': user_data['real_name'],
+            'color': user_data.get('color', '#FEE2E2')
         }
     })
 
 @app.route('/api/logout', methods=['POST'])
+@jwt_required()
 def logout():
-    ID = session.get('ID', 'unknown')
-    session.clear()  # 清除所有 session 数据
-    
-    print(f"用户 {ID} 已登出")
-    
-    return jsonify({
-        'success': True,
-        'message': '已登出'
-    })
+    try:
+        current_user_id = get_jwt_identity()
+        jti = get_jwt()['jti']  # JWT ID
+        
+        # 将token添加到撤销列表
+        revoked_tokens.add(jti)
+        
+        print(f"用户 {current_user_id} 已登出，token已撤销")
+        
+        return jsonify({
+            'success': True,
+            'message': '已登出'
+        })
+        
+    except Exception as e:
+        print(f"登出时出错: {e}")
+        return jsonify({'success': False, 'message': 'Logout failed'}), 500
+
+@app.route('/api/refresh', methods=['POST'])
+@jwt_required()
+def refresh():
+    """刷新JWT token"""
+    try:
+        current_user_id = get_jwt_identity()
+        user = search_by_ID(current_user_id)
+        
+        if not user:
+            return jsonify({'success': False, 'message': 'User not found'}), 401
+        
+        user_data = user[0][1]
+        
+        # 创建新的token
+        new_token = create_access_token(
+            identity=current_user_id,
+            additional_claims={
+                'name': user_data['real_name'],
+                'color': user_data.get('color', '#FEE2E2')
+            }
+        )
+        
+        return jsonify({
+            'success': True,
+            'access_token': new_token
+        })
+        
+    except Exception as e:
+        print(f"刷新token时出错: {e}")
+        return jsonify({'success': False, 'message': 'Token refresh failed'}), 500
 
 if __name__ == '__main__':
     if initialize_database():
