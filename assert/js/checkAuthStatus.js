@@ -15,7 +15,7 @@ createAuthCheckPromise();
 async function checkAuthStatus() {
   try {
     const token = localStorage.getItem("access_token");
-    const res = await fetch(`http://127.0.0.1:5000/api/check-auth`, {
+    const res = await fetch(`${host}/api/check-auth`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

@@ -1,5 +1,3 @@
-let selectName;
-
 function generateTimeIntervalsSimple() {
   const intervals = [];
 
@@ -183,7 +181,7 @@ document
 
 document.getElementById("appointment-date").dispatchEvent(new Event("change")); // 触发日期变化事件
 // 发送预约数据到后端的函数
-async function submitAppointment(color) {
+async function submitAppointment(realName, color) {
   const selectedDate = document.getElementById("appointment-date").value;
 
   if (!selectedDate) {
@@ -198,21 +196,11 @@ async function submitAppointment(color) {
 
   try {
     // 一次性发送所有时间段
-    console.log(
-      "日期",
-      selectedDate,
-      "选中的时间段",
-      selectedTimeSlots,
-      "用户姓名",
-      selectName,
-      "用户颜色",
-      color
-    );
     const appointmentData = {
       system: "a_device", // 系统ID，根据需要修改
       date: selectedDate,
       slots: selectedTimeSlots, // 发送所有选中的时间段
-      name: selectName,
+      name: realName,
       color: color, // 发送用户颜色
     };
 
@@ -226,12 +214,7 @@ async function submitAppointment(color) {
       body: JSON.stringify(appointmentData),
     });
 
-    console.log("响应状态:", response.status);
-    console.log("响应状态文本:", response.statusText);
-
-    // 检查响应的Content-Type
     const contentType = response.headers.get("content-type");
-    console.log("响应Content-Type:", contentType);
 
     if (!contentType || !contentType.includes("application/json")) {
       // 如果不是JSON响应，获取文本内容进行调试
@@ -354,12 +337,12 @@ waitForAuthCheck().then((result) => {
     const logoutButton = document.querySelector("#logout");
     logoutButton.classList.remove("hidden"); // 显示退出登录按钮
     console.log(result.user);
-    selectName = result.user.name; // 获取用户姓名
+    const realName = result.user.name; // 获取用户姓名
     const color = result.user.color; // 获取用户颜色
     submitButton.addEventListener("click", () => {
-      submitAppointment(color);
+      submitAppointment(realName, color);
     });
-    document.querySelector(".show-name").textContent = `你好，${selectName}`; // 显示用户姓名
+    document.querySelector(".show-name").textContent = `你好，${realName}`; // 显示用户姓名
     document.querySelector(".show-name").classList.remove("hidden"); // 显示用户姓名
   } else {
     document.querySelector("#login").classList.remove("hidden"); // 显示登录按钮

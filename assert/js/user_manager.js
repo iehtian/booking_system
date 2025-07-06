@@ -1,8 +1,7 @@
-const API_BASE = "http://127.0.0.1:5000";
 // 登录功能
 async function login(ID, password) {
   try {
-    const res = await fetch(`${API_BASE}/api/login`, {
+    const res = await fetch(`${host}/api/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ID, password }),
@@ -22,7 +21,7 @@ async function login(ID, password) {
 // 注册功能
 async function register(ID, password, name) {
   try {
-    const res = await fetch(`${API_BASE}/api/register`, {
+    const res = await fetch(`${host}/api/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ID, name, password }),
@@ -59,34 +58,6 @@ async function logout() {
     throw error;
   }
 }
-
-// // 发送需要认证的请求
-// async function fetchWithAuth(url, options = {}) {
-//   const config = {
-//     ...options,
-//     credentials: "include", // 重要：自动包含 session cookie
-//     headers: {
-//       "Content-Type": "application/json",
-//       ...options.headers,
-//     },
-//   };
-
-//   try {
-//     const response = await fetch(url, config);
-
-//     if (response.status === 401) {
-//       console.log("登录已过期，请重新登录");
-//       localStorage.removeItem("userInfo");
-//       window.location.href = "/login.html";
-//       return null;
-//     }
-
-//     return response;
-//   } catch (error) {
-//     console.error("请求错误:", error);
-//     throw error;
-//   }
-// }
 
 try {
   document.querySelector("#login").addEventListener("click", function (event) {
@@ -159,94 +130,3 @@ try {
 }
 
 export { login, register, logout };
-
-// const API_BASE = "http://127.0.0.1:5000";
-
-// function showMessage(msg) {
-//   document.getElementById("output").textContent = JSON.stringify(msg, null, 2);
-// }
-
-// function getToken() {
-//   return localStorage.getItem("access_token");
-// }
-
-// async function register() {
-//   const ID = document.getElementById("regID").value;
-//   const name = document.getElementById("regName").value;
-//   const password = document.getElementById("regPwd").value;
-
-//   const res = await fetch(`${API_BASE}/api/register`, {
-//     method: "POST",
-//     headers: { "Content-Type": "application/json" },
-//     body: JSON.stringify({ ID, name, password }),
-//   });
-//   const data = await res.json();
-//   if (data.access_token) {
-//     localStorage.setItem("access_token", data.access_token);
-//   }
-//   showMessage(data);
-// }
-
-// async function login() {
-//   const ID = document.getElementById("loginID").value;
-//   const password = document.getElementById("loginPwd").value;
-
-//   const res = await fetch(`${API_BASE}/api/login`, {
-//     method: "POST",
-//     headers: { "Content-Type": "application/json" },
-//     body: JSON.stringify({ ID, password }),
-//   });
-//   const data = await res.json();
-//   if (data.access_token) {
-//     localStorage.setItem("access_token", data.access_token);
-//   }
-//   showMessage(data);
-// }
-
-// async function checkAuth() {
-//   const token = getToken();
-//   const res = await fetch(`${API_BASE}/api/check-auth`, {
-//     headers: {
-//       Authorization: `Bearer ${token}`,
-//     },
-//   });
-//   const data = await res.json();
-//   showMessage(data);
-// }
-
-// async function saveBooking() {
-//   const token = getToken();
-//   const name = document.getElementById("bookingName").value;
-//   const date = document.getElementById("bookingDate").value;
-//   const time = document.getElementById("bookingTime").value;
-
-//   const res = await fetch(`${API_BASE}/api/info_save`, {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//       Authorization: `Bearer ${token}`,
-//     },
-//     body: JSON.stringify({
-//       system: "a_device",
-//       name,
-//       date,
-//       slots: [time],
-//     }),
-//   });
-
-//   const data = await res.json();
-//   showMessage(data);
-// }
-
-// async function logout() {
-//   const token = getToken();
-//   const res = await fetch(`${API_BASE}/api/logout`, {
-//     method: "POST",
-//     headers: {
-//       Authorization: `Bearer ${token}`,
-//     },
-//   });
-//   localStorage.removeItem("access_token");
-//   const data = await res.json();
-//   showMessage(data);
-// }
