@@ -55,9 +55,9 @@ function disableSlot(slot, reasonText) {
   }
 }
 
-async function orderd_time(date) {
+async function getBookings(date) {
   try {
-    const response = await fetch(`${host}/api/orderd?date=${date}`, {
+    const response = await fetch(`${host}/api/bookings?date=${date}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -163,7 +163,7 @@ document
     document.querySelectorAll(".time-slot-option").forEach((cb) => {
       cb.checked = false;
     });
-    orderd_time(newDate);
+    getBookings(newDate);
     // 获取新的日期的预约信息
     if (newDate < getCurrentDateISO()) {
       // 日期已过
