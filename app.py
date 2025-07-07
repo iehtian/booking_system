@@ -126,7 +126,7 @@ def get_bookings():
         print(f"原始数据库查询结果: {search_by_date_result}") # 保持原始结果的打印
         
         if not search_by_date_result:
-            return jsonify({"error": "No bookings found for the specified date"}), 404
+            return jsonify({"booking": ""}), 200
         
         # 将结果转换为 {时间段: 预约人} 的字典格式
         bookings_dict = {}

@@ -64,12 +64,11 @@ async function getBookings(date) {
       },
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
     const data = await response.json();
     console.log("已预约时间段数据:", data);
+    if (!data.bookings) {
+      return;
+    }
     Object.entries(data.bookings).forEach(([key, value]) => {
       const name = value.name || "未知用户"; // 如果没有name字段，使用默认值
       const color = value.color || "#ffffff"; // 如果没有color字段，使用默认值

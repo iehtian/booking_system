@@ -12,7 +12,7 @@ from .redis_user import (
     search_all as search_all_users
 )
 
-from .redis_order import (
+from .redis_booking import (
     upsert_booking, 
     search_by_date, 
     search_by_name, 
