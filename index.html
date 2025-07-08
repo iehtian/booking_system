@@ -1,39 +1,55 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<script src="./assert/js/config.js"></script>
-<script src="./assert/js/checkAuthStatus.js"></script>
-
-<head>
+  <head>
     <meta charset="utf-8" />
     <title>A仪器</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="./assert/css/device.css" />
-</head>
+  </head>
 
-<body>
+  <body>
     <div class="container">
-        <h1>A仪器预约系统</h1>
-        <div class="show-name hidden">
-        </div>
-        <div class="date-controls">
-            <a href="#" id='yestoday'>前一天</a>
-            <input type="date" name="appointment-date" id="appointment-date" />
-            <a href="#" id='tomorrow'>后一天</a>
-        </div>
-        <div class="date-display-box">
-            <input type="button" value="" class="date-display" id="morning">
-            <input type="button" value="22:00-24:00" class="date-display" id="night">
-        </div>
-        <div class="time-slot" id="time-slot">
-        </div>
-        <div class="button-box"><input type="button" class="button hidden" id="submit-button" value="提交预约"></div>
-        <div class="button-box"><input type="button" class="button hidden" id="logout" value="退出登录"></div>
-        <div class="button-box"><input type="button" class="button hidden" id="login" value="登录"></div>
-        <div class="button-box"><input type="button" class="button hidden" id="register" value="注册"></div>
+      <h1>A仪器预约系统</h1>
+      <div class="show-name hidden"></div>
+      <div class="date-controls">
+        <a href="#" id="yestoday">前一天</a>
+        <input type="date" name="appointment-date" id="appointment-date" />
+        <a href="#" id="tomorrow">后一天</a>
+      </div>
+      <div class="date-display-box">
+        <input type="button" value="" class="date-display" id="morning" />
+        <input
+          type="button"
+          value="22:00-24:00"
+          class="date-display"
+          id="night"
+        />
+      </div>
+      <div class="time-slot" id="time-slot"></div>
+      <div class="button-box">
+        <input
+          type="button"
+          class="button hidden"
+          id="submit-button"
+          value="提交预约"
+        />
+      </div>
+      <div class="button-box">
+        <input
+          type="button"
+          class="button hidden"
+          id="logout"
+          value="退出登录"
+        />
+      </div>
+      <div class="button-box">
+        <input type="button" class="button hidden" id="login" value="登录" />
+      </div>
+      <div class="button-box">
+        <input type="button" class="button hidden" id="register" value="注册" />
+      </div>
 
-        <script type="module" src="./assert/js/myjs.js"></script>
+      <script type="module" src="./assert/js/myjs.js"></script>
     </div>
-
-</body>
-
+  </body>
 </html>

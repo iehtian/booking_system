@@ -1,3 +1,4 @@
+import { host } from "./config.js";
 // 登录功能
 async function login(ID, password) {
   try {
@@ -129,4 +130,31 @@ try {
   console.error("没有注册按钮:", error);
 }
 
-export { login, register, logout };
+// 检查登录状态
+async function checkAuthStatus() {
+  try {
+    const token = localStorage.getItem("access_token");
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort(); // 超时后中止请求
+    }, 1000); // 设置超时时间为1秒
+    const res = await fetch(`${host}/api/check-auth`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      signal: controller.signal,
+    });
+    const data = await res.json();
+    clearTimeout(timeoutId); // 清除超时定时器
+    return data;
+  } catch (error) {
+    if (error.name === "AbortError") {
+      console.error("检查认证状态请求超时，检查后端链接");
+      return { logged_in: false };
+    }
+    console.error("检查认证状态错误:", error);
+    return { logged_in: false };
+  }
+}
+
+export { logout, checkAuthStatus };

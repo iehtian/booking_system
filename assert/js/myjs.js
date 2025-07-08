@@ -1,3 +1,6 @@
+import { logout, checkAuthStatus } from "./user_manager.js";
+import { host } from "./config.js";
+
 function generateTimeIntervalsSimple() {
   const intervals = [];
 
@@ -327,10 +330,9 @@ document.querySelector("#register").addEventListener("click", function (event) {
   window.open(registerUrl, "_blank");
 });
 
-// 使用示例：等待认证检查完成后再执行其他代码
-waitForAuthCheck().then((result) => {
-  console.log("认证检查完成:", result);
+function afterAuthCheck(result) {
   if (result.logged_in) {
+    console.log("用户已登录:", result.user);
     const submitButton = document.querySelector("#submit-button");
     submitButton.classList.remove("hidden"); // 显示提交按钮
     const logoutButton = document.querySelector("#logout");
@@ -344,6 +346,7 @@ waitForAuthCheck().then((result) => {
     document.querySelector(".show-name").textContent = `你好，${realName}`; // 显示用户姓名
     document.querySelector(".show-name").classList.remove("hidden"); // 显示用户姓名
   } else {
+    console.log("用户未登录");
     document.querySelector("#login").classList.remove("hidden"); // 显示登录按钮
     document.querySelector("#register").classList.remove("hidden"); // 显示注册按钮
     // 禁用所有时间段的复选框
@@ -355,9 +358,8 @@ waitForAuthCheck().then((result) => {
       }
     });
   }
-});
+}
 
-import { logout } from "./user_manager.js";
 document.querySelector("#logout").addEventListener("click", function (event) {
   event.preventDefault(); // 阻止默认链接行为
   logout()
@@ -368,4 +370,10 @@ document.querySelector("#logout").addEventListener("click", function (event) {
     .catch((error) => {
       console.error("退出登录失败:", error);
     });
+});
+
+// 页面加载时检查登录状态
+window.addEventListener(`DOMContentLoaded`, async () => {
+  const authStatus = await checkAuthStatus();
+  afterAuthCheck(authStatus); // 调用函数处理认证检查结果
 });
