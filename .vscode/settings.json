@@ -1,6 +1,5 @@
 {
     "liveServer.settings.port": 5501,
-    "stylelint.configFile": "./.stylelintrc.json",
     // ✅ 启用 Stylelint 插件校验
     "stylelint.validate": [
         "css",
@@ -11,5 +10,10 @@
     "editor.codeActionsOnSave": {
         "source.fixAll.stylelint": "explicit"
     },
+    "files.exclude": {
+        "__pycache__": true,
+        "LICENSE": true,
+    },
+    "stylelint.configFile": "./.stylelintrc.json",
     "prettier.configPath": "./.prettierrc",
 }
