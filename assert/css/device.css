@@ -202,3 +202,34 @@ label {
   border-radius: 0.2rem;
   cursor: pointer;
 }
+
+.week-time-slot-option {
+  width: 100%;
+  height: 2.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 1rem;
+  color: #333;
+  background: linear-gradient(to right, #dbeafe, #ede9fe);
+  border: 0.0625rem solid #ccc;
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+
+.week-range {
+  flex: 1 1 0; /* 简写形式：flex-grow flex-shrink flex-basis */
+  border-right: 1px solid #000; /* 只添加右边线 */
+}
+
+.week-range:first-child {
+  border-left: 1px solid #000; /* 第一个元素添加左边线 */
+}
+
+.week-date {
+  flex: 1; /* 允许元素增长以填充可用空间 */
+  padding: 0.5rem;
+  font-weight: bold;
+  text-align: center;
+  color: #4a5568;
+  background-color: #edf2f7;
+  border-bottom: 1px solid #cbd5e0; /* 添加底部边框 */
+}
