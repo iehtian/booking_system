@@ -395,55 +395,19 @@ if (width < 768) {
         option.name = "time-slot" // 设置 name 属性，便于表单提交时获取选中的时间段
         option.checked = false // 默认不选中
 
-        // const label = document.createElement("label")
-        // label.htmlFor = option.id
-        // label.textContent = slot
-        // label.className = "week-time-slot-label" // 添加样式类名
-        div.appendChild(option)
-        // div.appendChild(label)
+        const label = document.createElement("label")
+        label.htmlFor = option.id
+        label.textContent = slot
+        label.className = "time-slot-label" // 添加样式类名
+        const divtime = document.createElement("div")
+        divtime.className = "week-time-slot-item"
+        divtime.appendChild(option)
+        divtime.appendChild(label)
+        div.appendChild(divtime)
       })
 
       timeSlots.appendChild(div)
     })
-    // time_slots.forEach((slot) => {
-    //   const div = document.createElement("div")
-    //   div.className = "time-slot-item"
-
-    //   const option = document.createElement("input")
-    //   option.type = "checkbox"
-    //   option.value = slot
-    //   option.className = "time-slot-option"
-    //   option.id = "time-slot-" + slot // 设置唯一的 ID
-    //   option.name = "time-slot" // 设置 name 属性，便于表单提交时获取选中的时间段
-    //   option.checked = false // 默认不选中
-
-    //   // 添加选中事件监听器
-    //   option.addEventListener("change", function (event) {
-    //     const timeSlot = event.target.value
-
-    //     if (event.target.checked) {
-    //       // 复选框被选中
-    //       selectedTimeSlots.push(timeSlot)
-    //       console.log(`选中时间段: ${timeSlot}`)
-    //     } else {
-    //       // 复选框被取消选中
-    //       const index = selectedTimeSlots.indexOf(timeSlot)
-    //       if (index > -1) {
-    //         selectedTimeSlots.splice(index, 1)
-    //       }
-    //       console.log(`取消选中时间段: ${timeSlot}`)
-    //     }
-
-    //     console.log("当前选中的时间段:", selectedTimeSlots)
-    //   })
-
-    //   const label = document.createElement("label")
-    //   label.htmlFor = option.id
-    //   label.textContent = slot
-    //   div.appendChild(option)
-    //   div.appendChild(label)
-    //   timeSlots.appendChild(div)
-    // })
   }
   addslot() // 初始化时间段
 }
