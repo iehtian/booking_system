@@ -59,6 +59,16 @@ function disableSlot(slot, reasonText) {
   }
 }
 
+function disableAllSlots() {
+  time_slots.forEach((slot) => {
+    const checkbox = document.getElementById(`time-slot-${slot}`)
+    if (checkbox) {
+      checkbox.disabled = true // 禁用复选框
+      checkbox.parentElement.classList.add("no-login-slot") // 添加禁用样式
+    }
+  })
+}
+
 async function getBookings(date) {
   try {
     const response = await fetch(`${host}/api/bookings?date=${date}`, {
@@ -179,6 +189,17 @@ if (width < 768) {
           disableSlot(time_slots[i])
         }
       }
+      //找出所有的no-login-slot类的元素,禁止点击
+      const noLoginSlots = document.querySelectorAll(".no-login-slot")
+      noLoginSlots.forEach((slot) => {
+        //找到类中的input元素
+        const input = slot.querySelector("input[type='checkbox']")
+        if (input) {
+          input.disabled = true // 禁用复选框
+        }
+      })
+
+      // 现在的时间以后的时间段禁止预约，包括对日期的对比和日期修改后的变化
     })
 
   document.getElementById("appointment-date").dispatchEvent(new Event("change")) // 触发日期变化事件
@@ -425,6 +446,30 @@ document.querySelector("#register").addEventListener("click", function (event) {
   // 跳转到注册页面，新页面打开
   window.open(registerUrl, "_blank")
 })
+
+function afterAuthCheck(result) {
+  if (result.logged_in) {
+    console.log("用户已登录:", result.user)
+    const submitButton = document.querySelector("#submit-button")
+    submitButton.classList.remove("hidden") // 显示提交按钮
+    const logoutButton = document.querySelector("#logout")
+    logoutButton.classList.remove("hidden") // 显示退出登录按钮
+    console.log(result.user)
+    const realName = result.user.name // 获取用户姓名
+    const color = result.user.color // 获取用户颜色
+    submitButton.addEventListener("click", () => {
+      submitAppointment(realName, color)
+    })
+    document.querySelector(".show-name").textContent = `你好，${realName}` // 显示用户姓名
+    document.querySelector(".show-name").classList.remove("hidden") // 显示用户姓名
+  } else {
+    console.log("用户未登录")
+    document.querySelector("#login").classList.remove("hidden") // 显示登录按钮
+    document.querySelector("#register").classList.remove("hidden") // 显示注册按钮
+    // 禁用所有时间段的复选框
+    disableAllSlots() // 禁用所有时间段
+  }
+}
 
 document.querySelector("#logout").addEventListener("click", function (event) {
   event.preventDefault() // 阻止默认链接行为
