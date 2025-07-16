@@ -47,7 +47,7 @@ function getCurrentTimeSlotIndex() {
 function disableSlot(slot, reasonText) {
   const checkbox = document.getElementById(`time-slot-${slot}`);
   if (checkbox) {
-    checkbox.disabled = true;
+    // checkbox.disabled = true;
     if (checkbox.parentElement) {
       checkbox.parentElement.classList.add("disabled-slot");
     }
@@ -56,6 +56,16 @@ function disableSlot(slot, reasonText) {
       slotLabel.innerHTML += `<br> ${reasonText}`;
     }
   }
+}
+
+function disableAllSlots() {
+  time_slots.forEach((slot) => {
+    const checkbox = document.getElementById(`time-slot-${slot}`);
+    if (checkbox) {
+      checkbox.disabled = true; // 禁用复选框
+      checkbox.parentElement.classList.add("no-login-slot"); // 添加禁用样式
+    }
+  });
 }
 
 async function getBookings(date) {
@@ -96,6 +106,7 @@ async function getBookings(date) {
 function addslot() {
   document.getElementById("appointment-date").value = getCurrentDateISO(); // 设置 input 的值为当前日期
   let timeSlots = document.getElementById("time-slot");
+  console.log("当前时间段:", time_slots);
   time_slots.forEach((slot) => {
     const div = document.createElement("div");
     div.className = "time-slot-item";
@@ -106,7 +117,7 @@ function addslot() {
     option.className = "time-slot-option";
     option.id = "time-slot-" + slot; // 设置唯一的 ID
     option.name = "time-slot"; // 设置 name 属性，便于表单提交时获取选中的时间段
-    option.checked = false; // 默认不选中
+    option.checked = true; // 默认不选中
 
     // 添加选中事件监听器
     option.addEventListener("change", function (event) {
@@ -177,7 +188,15 @@ document
         disableSlot(time_slots[i]);
       }
     }
-
+    //找出所有的no-login-slot类的元素,禁止点击
+    const noLoginSlots = document.querySelectorAll(".no-login-slot");
+    noLoginSlots.forEach((slot) => {
+      //找到类中的input元素
+      const input = slot.querySelector("input[type='checkbox']");
+      if (input) {
+        input.disabled = true; // 禁用复选框
+      }
+    });
     // 现在的时间以后的时间段禁止预约，包括对日期的对比和日期修改后的变化
   });
 
@@ -350,13 +369,7 @@ function afterAuthCheck(result) {
     document.querySelector("#login").classList.remove("hidden"); // 显示登录按钮
     document.querySelector("#register").classList.remove("hidden"); // 显示注册按钮
     // 禁用所有时间段的复选框
-    time_slots.forEach((slot) => {
-      const checkbox = document.getElementById(`time-slot-${slot}`);
-      if (checkbox) {
-        checkbox.disabled = true; // 禁用复选框
-        checkbox.parentElement.classList.add("no-login-slot"); // 添加禁用样式
-      }
-    });
+    disableAllSlots(); // 禁用所有时间段
   }
 }
 
