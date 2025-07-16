@@ -49,6 +49,8 @@ input[type="checkbox"] {
 .time-slot {
   display: flex;
   width: 100%;
+  height: 45rem; /* 确保容器有足够的高度 */
+  overflow-y: auto;
   border: 1px solid #ccc;
   flex-wrap: wrap;
   border-right: none;
@@ -208,6 +210,9 @@ label {
 }
 
 .week-date {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   flex: 1; /* 允许元素增长以填充可用空间 */
   padding: 0.5rem;
   font-weight: bold;
