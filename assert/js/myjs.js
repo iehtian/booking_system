@@ -407,21 +407,9 @@ if (width < 768) {
     datediv.className = "week-date" // 添加样式类名
     div.appendChild(datediv)
     time_slots.forEach((slot) => {
-      const option = document.createElement("input")
-      option.type = "checkbox"
-      option.value = slot
-      option.className = "week-time-slot-option"
-      option.name = "time-slot" // 设置 name 属性，便于表单提交时获取选中的时间段
-      option.checked = false // 默认不选中
-
-      const label = document.createElement("label")
-      label.htmlFor = option.id
-      label.textContent = slot
-      label.className = "time-slot-label" // 添加样式类名
       const divtime = document.createElement("div")
       divtime.className = "week-time-slot-item"
-      divtime.appendChild(option)
-      divtime.appendChild(label)
+      divtime.textContent = slot // 显示时间段
       div.appendChild(divtime)
     })
     timeSlots.appendChild(div)
@@ -463,6 +451,14 @@ if (width < 768) {
     dateElements.forEach((el) => {
       if (el.textContent.trim() === today) {
         el.classList.add("highlight")
+        const parent = el.parentElement
+        const weekTimeSlotItems = parent.querySelectorAll(
+          ".week-time-slot-item"
+        )
+        // 给每个子元素添加背景色
+        weekTimeSlotItems.forEach((item) => {
+          item.style.backgroundColor = "#E0F2FE" // 设置背景色
+        })
       }
     })
   })
