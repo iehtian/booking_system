@@ -24,7 +24,7 @@ function generateTimeIntervalsSimple() {
   return timeSlots
 }
 const time_slots = generateTimeIntervalsSimple()
-const selectedTimeSlots = [] // 用于存储选中的时间段
+const selectedTimeSlots = []
 
 function getCurrentDateISO() {
   const date = new Date()
@@ -105,6 +105,7 @@ async function getBookings(date) {
 }
 
 if (width < 768) {
+  const selected = []
   function addslot() {
     document.getElementById("appointment-date").value = getCurrentDateISO() // 设置 input 的值为当前日期
     let timeSlots = document.getElementById("time-slot")
@@ -126,18 +127,18 @@ if (width < 768) {
 
         if (event.target.checked) {
           // 复选框被选中
-          selectedTimeSlots.push(timeSlot)
+          selected.push(timeSlot)
           console.log(`选中时间段: ${timeSlot}`)
         } else {
           // 复选框被取消选中
-          const index = selectedTimeSlots.indexOf(timeSlot)
+          const index = selected.indexOf(timeSlot)
           if (index > -1) {
-            selectedTimeSlots.splice(index, 1)
+            selected.splice(index, 1)
           }
           console.log(`取消选中时间段: ${timeSlot}`)
         }
 
-        console.log("当前选中的时间段:", selectedTimeSlots)
+        console.log("当前选中的时间段:", selected)
       })
 
       const label = document.createElement("label")
@@ -173,7 +174,7 @@ if (width < 768) {
       }
 
       // 清空之前选中的时间段（如果你希望换日期时重置选择）
-      selectedTimeSlots.length = 0
+      selected.length = 0
       document.querySelectorAll(".time-slot-option").forEach((cb) => {
         cb.checked = false
       })
@@ -205,58 +206,49 @@ if (width < 768) {
   document.getElementById("appointment-date").dispatchEvent(new Event("change")) // 触发日期变化事件
   // 发送预约数据到后端的函数
   async function submitAppointment(realName, color) {
-    const selectedDate = document.getElementById("appointment-date").value
-
-    if (!selectedDate) {
-      alert("请选择预约日期！")
-      return
-    }
-
-    if (selectedTimeSlots.length === 0) {
-      alert("请至少选择一个时间段！")
-      return
-    }
-
-    try {
-      // 一次性发送所有时间段
-      const appointmentData = {
-        system: "a_device", // 系统ID，根据需要修改
-        date: selectedDate,
-        slots: selectedTimeSlots, // 发送所有选中的时间段
-        name: realName,
-        color: color, // 发送用户颜色
-      }
-
-      console.log("发送的数据:", appointmentData)
-
-      const response = await fetch(`${host}/api/info_save`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(appointmentData),
-      })
-
-      const contentType = response.headers.get("content-type")
-
-      if (!contentType || !contentType.includes("application/json")) {
-        // 如果不是JSON响应，获取文本内容进行调试
-        const text = await response.text()
-        console.error("收到非JSON响应:", text)
-        alert("服务器响应格式错误，请检查后端服务是否正常运行")
+    // 遍历selectedTimeSlots，每个元素是date:[time_slot1, time_slot2, ...]格式
+    for (const item of selectedTimeSlots) {
+      const selectedDate = item.date
+      const slots = item.slots
+      if (!selectedDate || slots.length === 0) {
+        alert("请先选择日期和时间段")
         return
       }
 
-      const result = await response.json()
+      try {
+        // 一次性发送所有时间段
+        const appointmentData = {
+          system: "a_device", // 系统ID，根据需要修改
+          date: selectedDate,
+          slots: slots, // 发送所有选中的时间段
+          name: realName,
+          color: color, // 发送用户颜色
+        }
 
-      if (response.ok) {
-        console.log("预约已成功提交:", result)
-        location.reload()
-      } else {
-        console.error("提交失败:", result)
+        console.log("发送的数据:", appointmentData)
+
+        const response = await fetch(`${host}/api/info_save`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(appointmentData),
+        })
+
+        const result = await response.json()
+
+        if (response.ok) {
+          console.log("预约已成功提交:", result)
+          location.reload()
+        } else {
+          // 处理错误情况
+          alert("提交预约失败，请重试")
+          console.error("提交失败:", result)
+          location.reload()
+        }
+      } catch (error) {
+        console.error("提交预约时出错:", error)
       }
-    } catch (error) {
-      console.error("提交预约时出错:", error)
     }
   }
 
@@ -355,6 +347,8 @@ if (width < 768) {
       console.log(result.user)
       const realName = result.user.name // 获取用户姓名
       const color = result.user.color // 获取用户颜色
+      const selectedDate = document.getElementById("appointment-date").value // 获取选中的日期
+      selectedTimeSlots.push({ date: selectedDate, slots: selected }) // 将选中的时间段添加到数组中
       submitButton.addEventListener("click", () => {
         submitAppointment(realName, color)
       })
@@ -462,6 +456,8 @@ if (width < 768) {
       }
     })
   })
+
+  //增加点击事件
 }
 
 document.querySelector("#login").addEventListener("click", function (event) {
@@ -477,30 +473,6 @@ document.querySelector("#register").addEventListener("click", function (event) {
   // 跳转到注册页面，新页面打开
   window.open(registerUrl, "_blank")
 })
-
-function afterAuthCheck(result) {
-  if (result.logged_in) {
-    console.log("用户已登录:", result.user)
-    const submitButton = document.querySelector("#submit-button")
-    submitButton.classList.remove("hidden") // 显示提交按钮
-    const logoutButton = document.querySelector("#logout")
-    logoutButton.classList.remove("hidden") // 显示退出登录按钮
-    console.log(result.user)
-    const realName = result.user.name // 获取用户姓名
-    const color = result.user.color // 获取用户颜色
-    submitButton.addEventListener("click", () => {
-      submitAppointment(realName, color)
-    })
-    document.querySelector(".show-name").textContent = `你好，${realName}` // 显示用户姓名
-    document.querySelector(".show-name").classList.remove("hidden") // 显示用户姓名
-  } else {
-    console.log("用户未登录")
-    document.querySelector("#login").classList.remove("hidden") // 显示登录按钮
-    document.querySelector("#register").classList.remove("hidden") // 显示注册按钮
-    // 禁用所有时间段的复选框
-    disableAllSlots() // 禁用所有时间段
-  }
-}
 
 document.querySelector("#logout").addEventListener("click", function (event) {
   event.preventDefault() // 阻止默认链接行为
