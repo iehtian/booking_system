@@ -104,8 +104,57 @@ async function getBookings(date) {
   }
 }
 
+let datas = {}
+function getWeekRangeMonday(date = new Date()) {
+  const current = new Date(date)
+  const day = current.getDay()
+  const diff = current.getDate() - day + (day === 0 ? -6 : 1) // 周一为开始
+
+  const this_week = []
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(current.setDate(diff + i))
+    this_week.push(day.toISOString().split("T")[0]) // 将每一天的日期添加到 this_week 数组
+  }
+  return this_week
+}
+
+function add_new_date(data) {
+  datas[data] = []
+}
+function clear_dates() {
+  datas = {}
+}
+function get_dates(data) {
+  if (datas[data]) {
+    return datas[data]
+  } else {
+    console.error("日期不存在:", data)
+  }
+  return []
+}
+
 if (width < 768) {
-  const selected = []
+  clear_dates()
+  add_new_date(getCurrentDateISO())
+  function checked_option(event, data, timeSlot) {
+    const selected = get_dates(data)
+    console.log("当前选中的时间段:", selected)
+    if (event.target.checked) {
+      // 复选框被选中
+      selected.push(timeSlot)
+      console.log(`选中时间段: ${timeSlot}`)
+    } else {
+      // 复选框被取消选中
+      const index = selected.indexOf(timeSlot)
+      if (index > -1) {
+        selected.splice(index, 1)
+      }
+      console.log(`取消选中时间段: ${timeSlot}`)
+    }
+
+    console.log("当前选中的时间段:", selected)
+  }
+
   function addslot() {
     document.getElementById("appointment-date").value = getCurrentDateISO() // 设置 input 的值为当前日期
     let timeSlots = document.getElementById("time-slot")
@@ -122,23 +171,12 @@ if (width < 768) {
       option.checked = false // 默认不选中
 
       // 添加选中事件监听器
-      option.addEventListener("change", function (event) {
-        const timeSlot = event.target.value
-
-        if (event.target.checked) {
-          // 复选框被选中
-          selected.push(timeSlot)
-          console.log(`选中时间段: ${timeSlot}`)
-        } else {
-          // 复选框被取消选中
-          const index = selected.indexOf(timeSlot)
-          if (index > -1) {
-            selected.splice(index, 1)
-          }
-          console.log(`取消选中时间段: ${timeSlot}`)
-        }
-
-        console.log("当前选中的时间段:", selected)
+      option.addEventListener("change", (event) => {
+        checked_option(
+          event,
+          document.getElementById("appointment-date").value,
+          event.target.value
+        )
       })
 
       const label = document.createElement("label")
@@ -172,8 +210,9 @@ if (width < 768) {
           }
         }
       }
-
+      add_new_date(newDate) // 添加新的日期到数据中
       // 清空之前选中的时间段（如果你希望换日期时重置选择）
+      const selected = get_dates(newDate)
       selected.length = 0
       document.querySelectorAll(".time-slot-option").forEach((cb) => {
         cb.checked = false
@@ -348,6 +387,7 @@ if (width < 768) {
       const realName = result.user.name // 获取用户姓名
       const color = result.user.color // 获取用户颜色
       const selectedDate = document.getElementById("appointment-date").value // 获取选中的日期
+      const selected = get_dates(selectedDate) // 获取选中的时间段
       selectedTimeSlots.push({ date: selectedDate, slots: selected }) // 将选中的时间段添加到数组中
       submitButton.addEventListener("click", () => {
         submitAppointment(realName, color)
@@ -375,19 +415,6 @@ if (width < 768) {
     afterAuthCheck(authStatus) // 调用函数处理认证检查结果
   })
 } else {
-  function getWeekRangeMonday(date = new Date()) {
-    const current = new Date(date)
-    const day = current.getDay()
-    const diff = current.getDate() - day + (day === 0 ? -6 : 1) // 周一为开始
-
-    const this_week = []
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(current.setDate(diff + i))
-      this_week.push(day.toISOString().split("T")[0]) // 将每一天的日期添加到 this_week 数组
-    }
-    return this_week
-  }
-
   // 使用示例
   const weekRange = getWeekRangeMonday()
   console.log("本周日期范围:", weekRange)
