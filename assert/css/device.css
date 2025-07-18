@@ -235,6 +235,12 @@ label {
   border-bottom: 1px solid #ccc;
 }
 
+.week-time-slot-option:checked + label {
+  color: white;
+  background: rgb(59 130 246);
+  border: none;
+}
+
 .highlight {
   font-weight: bold;
   color: red;
