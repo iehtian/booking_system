@@ -3,6 +3,94 @@ import { host } from "./config.js"
 const width = document.documentElement.clientWidth || document.body.clientWidth
 console.log("当前屏幕宽度:", width)
 
+const deviceConfig = {
+  mobile: {
+    setupSlots: () => {
+      clear_dates()
+      add_new_date(getCurrentDateISO())
+      addslot()
+      // 移动端特有的初始化逻辑
+    },
+    setupSubmitHandler: (realName, color) => {
+      const submitButton = document.querySelector("#submit-button")
+      submitButton.addEventListener("click", () => {
+        submitAppointment(realName, color)
+      })
+    },
+  },
+  desktop: {
+    setupSlots: () => {
+      clear_dates()
+      const weekRange = getWeekRangeMonday()
+      weekRange.forEach((date) => add_new_date(date))
+
+      console.log("本周日期范围:", weekRange)
+      function addslot() {
+        document.getElementById("appointment-date").value = getCurrentDateISO() // 设置 input 的值为当前日期
+        let timeSlots = document.getElementById("time-slot")
+        const div = document.createElement("div")
+        div.className = "week-range"
+        const datediv = document.createElement("div")
+        datediv.textContent = "时间" // 显示日期标题
+        datediv.className = "week-date" // 添加样式类名
+        div.appendChild(datediv)
+        time_slots.forEach((slot) => {
+          const divtime = document.createElement("div")
+          divtime.className = "week-time-slot-item"
+          divtime.textContent = slot // 显示时间段
+          div.appendChild(divtime)
+        })
+        timeSlots.appendChild(div)
+
+        weekRange.forEach((date) => {
+          const div = document.createElement("div")
+          div.className = "week-range"
+          const datediv = document.createElement("div")
+          datediv.textContent = date // 显示日期
+          datediv.className = "week-date" // 添加样式类名
+          div.appendChild(datediv)
+          time_slots.forEach((slot) => {
+            const option = document.createElement("input")
+            option.type = "checkbox"
+            option.value = slot
+            option.className = "week-time-slot-option"
+            option.id = "time-slot-" + date + "-" + slot // 设置唯一的 ID
+            option.name = "time-slot" // 设置 name 属性，便于表单提交时获取选中的时间段
+            option.checked = false // 默认不选中
+            // 添加选中事件监听器
+            option.addEventListener("change", (event) => {
+              checked_option(event, date, event.target.value)
+            })
+
+            const label = document.createElement("label")
+            label.htmlFor = option.id
+            // label.textContent = slot
+            label.className = "time-slot-label" // 添加样式类名
+            const divtime = document.createElement("div")
+            divtime.className = "week-time-slot-item"
+            divtime.appendChild(option)
+            divtime.appendChild(label)
+            div.appendChild(divtime)
+          })
+          timeSlots.appendChild(div)
+        })
+      }
+      addslot() // 初始化时间段
+      // 桌面端特有的初始化逻辑
+    },
+    setupSubmitHandler: (realName, color) => {
+      const submitButton = document.querySelector("#submit-button")
+      submitButton.addEventListener("click", () => {
+        for (const [date, slots] of Object.entries(datas)) {
+          if (slots.length === 0) continue
+          let submit = { date: date, slots: slots }
+          submitAppointment_week(realName, color, submit)
+        }
+      })
+    },
+  },
+}
+
 function generateTimeIntervalsSimple() {
   const intervals = []
 
@@ -57,16 +145,6 @@ function disableSlot(slot, reasonText) {
       slotLabel.innerHTML += `<br> ${reasonText}`
     }
   }
-}
-
-function disableAllSlots() {
-  time_slots.forEach((slot) => {
-    const checkbox = document.getElementById(`time-slot-${slot}`)
-    if (checkbox) {
-      checkbox.disabled = true // 禁用复选框
-      checkbox.parentElement.classList.add("no-login-slot") // 添加禁用样式
-    }
-  })
 }
 
 async function getBookings(date) {
@@ -423,104 +501,65 @@ if (width < 768) {
 
   document.querySelector("#morning").click()
   document.querySelector("#night").click()
-
-  function afterAuthCheck(result) {
-    if (result.logged_in) {
-      console.log("用户已登录:", result.user)
-      const submitButton = document.querySelector("#submit-button")
-      submitButton.classList.remove("hidden") // 显示提交按钮
-      const logoutButton = document.querySelector("#logout")
-      logoutButton.classList.remove("hidden") // 显示退出登录按钮
-      console.log(result.user)
-      const realName = result.user.name // 获取用户姓名
-      const color = result.user.color // 获取用户颜色
-      const selectedDate = document.getElementById("appointment-date").value // 获取选中的日期
-      const selected = get_dates(selectedDate) // 获取选中的时间段
-      selectedTimeSlots.push({ date: selectedDate, slots: selected }) // 将选中的时间段添加到数组中
-      submitButton.addEventListener("click", () => {
-        submitAppointment(realName, color)
-      })
-      document.querySelector(".show-name").textContent = `你好，${realName}` // 显示用户姓名
-      document.querySelector(".show-name").classList.remove("hidden") // 显示用户姓名
-    } else {
-      console.log("用户未登录")
-      document.querySelector("#login").classList.remove("hidden") // 显示登录按钮
-      document.querySelector("#register").classList.remove("hidden") // 显示注册按钮
-      // 禁用所有时间段的复选框
-      time_slots.forEach((slot) => {
-        const checkbox = document.getElementById(`time-slot-${slot}`)
-        if (checkbox) {
-          checkbox.disabled = true // 禁用复选框
-          checkbox.parentElement.classList.add("no-login-slot") // 添加禁用样式
-        }
-      })
-    }
-  }
-
-  // 页面加载时检查登录状态
-  window.addEventListener(`DOMContentLoaded`, async () => {
-    const authStatus = await checkAuthStatus()
-    afterAuthCheck(authStatus) // 调用函数处理认证检查结果
-  })
 } else {
   // 使用示例
-  clear_dates()
-  const weekRange = getWeekRangeMonday()
-  console.log("本周日期范围:", weekRange)
-  weekRange.forEach((date) => {
-    add_new_date(date) // 添加每个日期到数据中
-  })
-  function addslot() {
-    document.getElementById("appointment-date").value = getCurrentDateISO() // 设置 input 的值为当前日期
-    let timeSlots = document.getElementById("time-slot")
-    const div = document.createElement("div")
-    div.className = "week-range"
-    const datediv = document.createElement("div")
-    datediv.textContent = "时间" // 显示日期标题
-    datediv.className = "week-date" // 添加样式类名
-    div.appendChild(datediv)
-    time_slots.forEach((slot) => {
-      const divtime = document.createElement("div")
-      divtime.className = "week-time-slot-item"
-      divtime.textContent = slot // 显示时间段
-      div.appendChild(divtime)
-    })
-    timeSlots.appendChild(div)
+  // clear_dates()
+  // const weekRange = getWeekRangeMonday()
+  // console.log("本周日期范围:", weekRange)
+  // weekRange.forEach((date) => {
+  //   add_new_date(date) // 添加每个日期到数据中
+  // })
+  // function addslot() {
+  //   document.getElementById("appointment-date").value = getCurrentDateISO() // 设置 input 的值为当前日期
+  //   let timeSlots = document.getElementById("time-slot")
+  //   const div = document.createElement("div")
+  //   div.className = "week-range"
+  //   const datediv = document.createElement("div")
+  //   datediv.textContent = "时间" // 显示日期标题
+  //   datediv.className = "week-date" // 添加样式类名
+  //   div.appendChild(datediv)
+  //   time_slots.forEach((slot) => {
+  //     const divtime = document.createElement("div")
+  //     divtime.className = "week-time-slot-item"
+  //     divtime.textContent = slot // 显示时间段
+  //     div.appendChild(divtime)
+  //   })
+  //   timeSlots.appendChild(div)
 
-    weekRange.forEach((date) => {
-      const div = document.createElement("div")
-      div.className = "week-range"
-      const datediv = document.createElement("div")
-      datediv.textContent = date // 显示日期
-      datediv.className = "week-date" // 添加样式类名
-      div.appendChild(datediv)
-      time_slots.forEach((slot) => {
-        const option = document.createElement("input")
-        option.type = "checkbox"
-        option.value = slot
-        option.className = "week-time-slot-option"
-        option.id = "time-slot-" + date + "-" + slot // 设置唯一的 ID
-        option.name = "time-slot" // 设置 name 属性，便于表单提交时获取选中的时间段
-        option.checked = false // 默认不选中
-        // 添加选中事件监听器
-        option.addEventListener("change", (event) => {
-          checked_option(event, date, event.target.value)
-        })
+  //   weekRange.forEach((date) => {
+  //     const div = document.createElement("div")
+  //     div.className = "week-range"
+  //     const datediv = document.createElement("div")
+  //     datediv.textContent = date // 显示日期
+  //     datediv.className = "week-date" // 添加样式类名
+  //     div.appendChild(datediv)
+  //     time_slots.forEach((slot) => {
+  //       const option = document.createElement("input")
+  //       option.type = "checkbox"
+  //       option.value = slot
+  //       option.className = "week-time-slot-option"
+  //       option.id = "time-slot-" + date + "-" + slot // 设置唯一的 ID
+  //       option.name = "time-slot" // 设置 name 属性，便于表单提交时获取选中的时间段
+  //       option.checked = false // 默认不选中
+  //       // 添加选中事件监听器
+  //       option.addEventListener("change", (event) => {
+  //         checked_option(event, date, event.target.value)
+  //       })
 
-        const label = document.createElement("label")
-        label.htmlFor = option.id
-        // label.textContent = slot
-        label.className = "time-slot-label" // 添加样式类名
-        const divtime = document.createElement("div")
-        divtime.className = "week-time-slot-item"
-        divtime.appendChild(option)
-        divtime.appendChild(label)
-        div.appendChild(divtime)
-      })
-      timeSlots.appendChild(div)
-    })
-  }
-  addslot() // 初始化时间段
+  //       const label = document.createElement("label")
+  //       label.htmlFor = option.id
+  //       // label.textContent = slot
+  //       label.className = "time-slot-label" // 添加样式类名
+  //       const divtime = document.createElement("div")
+  //       divtime.className = "week-time-slot-item"
+  //       divtime.appendChild(option)
+  //       divtime.appendChild(label)
+  //       div.appendChild(divtime)
+  //     })
+  //     timeSlots.appendChild(div)
+  //   })
+  // }
+  // addslot() // 初始化时间段
   window.addEventListener("DOMContentLoaded", () => {
     const today = new Date().toISOString().split("T")[0] // 获取今天的日期，格式为 YYYY-MM-DD
     const dateElements = document.querySelectorAll(".week-date") // 获取所有日期元素
@@ -539,49 +578,50 @@ if (width < 768) {
       }
     })
   })
+}
 
-  function afterAuthCheck(result) {
-    if (result.logged_in) {
-      console.log("用户已登录:", result.user)
-      const submitButton = document.querySelector("#submit-button")
-      submitButton.classList.remove("hidden") // 显示提交按钮
-      const logoutButton = document.querySelector("#logout")
-      logoutButton.classList.remove("hidden") // 显示退出登录按钮
-      console.log(result.user)
-      const realName = result.user.name // 获取用户姓名
-      const color = result.user.color // 获取用户颜色
+function afterAuthCheck(result, config) {
+  if (result.logged_in) {
+    console.log("用户已登录:", result.user)
+    const submitButton = document.querySelector("#submit-button")
+    submitButton.classList.remove("hidden")
+    const logoutButton = document.querySelector("#logout")
+    logoutButton.classList.remove("hidden")
 
-      submitButton.addEventListener("click", () => {
-        for (const [date, slots] of Object.entries(datas)) {
-          if (slots.length === 0) {
-            continue
-          }
-          let submit = { date: date, slots: slots } // 将选中的时间段添加到数组中
-          submitAppointment_week(realName, color, submit) // 提交预约
-        }
-      })
-      document.querySelector(".show-name").textContent = `你好，${realName}` // 显示用户姓名
-      document.querySelector(".show-name").classList.remove("hidden") // 显示用户姓名
-    } else {
-      console.log("用户未登录")
-      document.querySelector("#login").classList.remove("hidden") // 显示登录按钮
-      document.querySelector("#register").classList.remove("hidden") // 显示注册按钮
-      // 禁用所有时间段的复选框
-      time_slots.forEach((slot) => {
-        const checkbox = document.getElementById(`time-slot-${slot}`)
-        if (checkbox) {
-          checkbox.disabled = true // 禁用复选框
-          checkbox.parentElement.classList.add("no-login-slot") // 添加禁用样式
-        }
-      })
-    }
+    const realName = result.user.name
+    const color = result.user.color
+
+    // 设置特定设备的提交处理器
+    config.setupSubmitHandler(realName, color)
+
+    document.querySelector(".show-name").textContent = `你好，${realName}`
+    document.querySelector(".show-name").classList.remove("hidden")
+  } else {
+    console.log("用户未登录")
+    document.querySelector("#login").classList.remove("hidden")
+    document.querySelector("#register").classList.remove("hidden")
+
+    time_slots.forEach((slot) => {
+      const checkbox = document.getElementById(`time-slot-${slot}`)
+      if (checkbox) {
+        checkbox.disabled = true
+        checkbox.parentElement.classList.add("no-login-slot")
+      }
+    })
   }
+}
 
-  // 页面加载时检查登录状态
-  window.addEventListener(`DOMContentLoaded`, async () => {
-    const authStatus = await checkAuthStatus()
-    afterAuthCheck(authStatus) // 调用函数处理认证检查结果
-  })
+// 统一的初始化函数
+async function initializeApp() {
+  const isMobile = width < 768
+  const config = isMobile ? deviceConfig.mobile : deviceConfig.desktop
+
+  // 设置时间段
+  config.setupSlots()
+
+  // 检查认证状态
+  const authStatus = await checkAuthStatus()
+  afterAuthCheck(authStatus, config)
 }
 
 document.querySelector("#login").addEventListener("click", function (event) {
@@ -590,6 +630,8 @@ document.querySelector("#login").addEventListener("click", function (event) {
   // 跳转到登录页面，新页面打开
   window.open(loginUrl, "_blank")
 })
+
+window.addEventListener("DOMContentLoaded", initializeApp)
 
 document.querySelector("#register").addEventListener("click", function (event) {
   event.preventDefault() // 阻止默认链接行为
