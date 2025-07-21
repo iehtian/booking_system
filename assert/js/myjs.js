@@ -152,6 +152,99 @@ function checked_option(event, data, timeSlot) {
   console.log("当前选中的时间段:", selected)
 }
 
+async function submitAppointment(realName, color) {
+  // 遍历selectedTimeSlots，每个元素是date:[time_slot1, time_slot2, ...]格式
+  for (const item of selectedTimeSlots) {
+    const selectedDate = item.date
+    const slots = item.slots
+    if (!selectedDate || slots.length === 0) {
+      alert("请先选择日期和时间段")
+      return
+    }
+
+    try {
+      // 一次性发送所有时间段
+      const appointmentData = {
+        system: "a_device", // 系统ID，根据需要修改
+        date: selectedDate,
+        slots: slots, // 发送所有选中的时间段
+        name: realName,
+        color: color, // 发送用户颜色
+      }
+
+      console.log("发送的数据:", appointmentData)
+
+      const response = await fetch(`${host}/api/info_save`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(appointmentData),
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        console.log("预约已成功提交:", result)
+        location.reload()
+      } else {
+        // 处理错误情况
+        alert("提交预约失败，请重试")
+        console.error("提交失败:", result)
+        location.reload()
+      }
+    } catch (error) {
+      console.error("提交预约时出错:", error)
+    }
+  }
+}
+
+async function submitAppointment_week(realName, color, submitData) {
+  // 遍历selectedTimeSlots，每个元素是date:[time_slot1, time_slot2, ...]格式
+
+  const selectedDate = submitData.date
+  const slots = submitData.slots
+  if (!selectedDate || slots.length === 0) {
+    alert("请先选择日期和时间段")
+    return
+  }
+
+  try {
+    // 一次性发送所有时间段
+    const appointmentData = {
+      system: "a_device", // 系统ID，根据需要修改
+      date: selectedDate,
+      slots: slots, // 发送所有选中的时间段
+      name: realName,
+      color: color, // 发送用户颜色
+    }
+
+    console.log("发送的数据:", appointmentData)
+
+    const response = await fetch(`${host}/api/info_save`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(appointmentData),
+    })
+
+    const result = await response.json()
+
+    if (response.ok) {
+      console.log("预约已成功提交:", result)
+      location.reload()
+    } else {
+      // 处理错误情况
+      alert("提交预约失败，请重试")
+      console.error("提交失败:", result)
+      location.reload()
+    }
+  } catch (error) {
+    console.error("提交预约时出错:", error)
+  }
+}
+
 if (width < 768) {
   clear_dates()
   add_new_date(getCurrentDateISO())
@@ -245,52 +338,6 @@ if (width < 768) {
 
   document.getElementById("appointment-date").dispatchEvent(new Event("change")) // 触发日期变化事件
   // 发送预约数据到后端的函数
-  async function submitAppointment(realName, color) {
-    // 遍历selectedTimeSlots，每个元素是date:[time_slot1, time_slot2, ...]格式
-    for (const item of selectedTimeSlots) {
-      const selectedDate = item.date
-      const slots = item.slots
-      if (!selectedDate || slots.length === 0) {
-        alert("请先选择日期和时间段")
-        return
-      }
-
-      try {
-        // 一次性发送所有时间段
-        const appointmentData = {
-          system: "a_device", // 系统ID，根据需要修改
-          date: selectedDate,
-          slots: slots, // 发送所有选中的时间段
-          name: realName,
-          color: color, // 发送用户颜色
-        }
-
-        console.log("发送的数据:", appointmentData)
-
-        const response = await fetch(`${host}/api/info_save`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(appointmentData),
-        })
-
-        const result = await response.json()
-
-        if (response.ok) {
-          console.log("预约已成功提交:", result)
-          location.reload()
-        } else {
-          // 处理错误情况
-          alert("提交预约失败，请重试")
-          console.error("提交失败:", result)
-          location.reload()
-        }
-      } catch (error) {
-        console.error("提交预约时出错:", error)
-      }
-    }
-  }
 
   document
     .querySelector("#appointment-date")
@@ -417,8 +464,12 @@ if (width < 768) {
   })
 } else {
   // 使用示例
+  clear_dates()
   const weekRange = getWeekRangeMonday()
   console.log("本周日期范围:", weekRange)
+  weekRange.forEach((date) => {
+    add_new_date(date) // 添加每个日期到数据中
+  })
   function addslot() {
     document.getElementById("appointment-date").value = getCurrentDateISO() // 设置 input 的值为当前日期
     let timeSlots = document.getElementById("time-slot")
@@ -489,7 +540,48 @@ if (width < 768) {
     })
   })
 
-  //增加点击事件
+  function afterAuthCheck(result) {
+    if (result.logged_in) {
+      console.log("用户已登录:", result.user)
+      const submitButton = document.querySelector("#submit-button")
+      submitButton.classList.remove("hidden") // 显示提交按钮
+      const logoutButton = document.querySelector("#logout")
+      logoutButton.classList.remove("hidden") // 显示退出登录按钮
+      console.log(result.user)
+      const realName = result.user.name // 获取用户姓名
+      const color = result.user.color // 获取用户颜色
+
+      submitButton.addEventListener("click", () => {
+        for (const [date, slots] of Object.entries(datas)) {
+          if (slots.length === 0) {
+            continue
+          }
+          let submit = { date: date, slots: slots } // 将选中的时间段添加到数组中
+          submitAppointment_week(realName, color, submit) // 提交预约
+        }
+      })
+      document.querySelector(".show-name").textContent = `你好，${realName}` // 显示用户姓名
+      document.querySelector(".show-name").classList.remove("hidden") // 显示用户姓名
+    } else {
+      console.log("用户未登录")
+      document.querySelector("#login").classList.remove("hidden") // 显示登录按钮
+      document.querySelector("#register").classList.remove("hidden") // 显示注册按钮
+      // 禁用所有时间段的复选框
+      time_slots.forEach((slot) => {
+        const checkbox = document.getElementById(`time-slot-${slot}`)
+        if (checkbox) {
+          checkbox.disabled = true // 禁用复选框
+          checkbox.parentElement.classList.add("no-login-slot") // 添加禁用样式
+        }
+      })
+    }
+  }
+
+  // 页面加载时检查登录状态
+  window.addEventListener(`DOMContentLoaded`, async () => {
+    const authStatus = await checkAuthStatus()
+    afterAuthCheck(authStatus) // 调用函数处理认证检查结果
+  })
 }
 
 document.querySelector("#login").addEventListener("click", function (event) {
