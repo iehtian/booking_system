@@ -237,6 +237,7 @@ async function submitAppointment_week(realName, color, submitData) {
 
 const deviceConfig = {
   mobile: {
+    init_slots: () => {},
     setupSlots: () => {
       clear_dates()
       add_new_date(getCurrentDateISO())
@@ -344,7 +345,55 @@ const deviceConfig = {
 const isMobile = width < 768 // 判断是否为移动端
 const config = isMobile ? deviceConfig.mobile : deviceConfig.desktop
 config.init_slots() // 初始化时间段
+let night_clicked = false
+function hidden_block(event, date, text, hidden_slots) {
+  event.preventDefault() // 阻止默认链接行为
+  //点击该按钮将自动隐藏/显示晚上
+  const nightButton = event.target
+  night_clicked = !night_clicked // 切换状态
+  nightButton.value = night_clicked ? `► ${text}` : `▼ ${text}` // 更新按钮文本
+  nightButton.style.backgroundColor = night_clicked ? "#E0F2FE" : "#f1f5f9" // 更新按钮背景色
+  nightButton.style.border = night_clicked
+    ? "1px solid #0991B2"
+    : "1px solid#d6dee7" // 更新按钮边框
 
+  if (width < 768) {
+    hidden_slots.forEach((slot) => {
+      const checkbox = document.getElementById(`time-slot-${slot}`)
+      const checkboxParent = checkbox.parentElement
+      if (checkboxParent) {
+        checkboxParent.style.display =
+          checkboxParent.style.display === "none" ? "block" : "none" // 切换上午时间段的显示状态
+      }
+    })
+  } else {
+    date.forEach((thisdate) => {
+      const week_time_slots = document.querySelectorAll(`.week-time-slot-item`)
+      const week_time_map = new Map()
+      week_time_slots.forEach((item) => {
+        const timeText = item.textContent.trim()
+        week_time_map.set(timeText, item)
+      })
+      hidden_slots.forEach((slot) => {
+        const this_slot = week_time_map.get(`${slot}`)
+        if (this_slot) {
+          this_slot.style.display =
+            this_slot.style.display === "none" ? "block" : "none" // 切换上午时间段的显示状态
+        }
+      })
+      hidden_slots.forEach((slot) => {
+        const checkbox = document.getElementById(
+          `time-slot-${thisdate}-${slot}`
+        )
+        const checkboxParent = checkbox.parentElement
+        if (checkboxParent) {
+          checkboxParent.style.display =
+            checkboxParent.style.display === "none" ? "block" : "none" // 切换上午时间段的显示状态
+        }
+      })
+    })
+  }
+}
 if (width < 768) {
   clear_dates()
   add_new_date(getCurrentDateISO())
@@ -596,6 +645,17 @@ if (width < 768) {
   //     }
   //   })
   // })
+  document.querySelector("#morning").addEventListener("click", (event) => {
+    const weekRange = getWeekRangeMonday() // 获取日期数组
+    const morningSlots = time_slots.slice(0, 16) // 00:00-08:00
+    hidden_block(event, weekRange, "00:00-08:00", morningSlots)
+  })
+
+  document.querySelector("#night").addEventListener("click", (event) => {
+    const weekRange = getWeekRangeMonday() // 获取日期数组
+    const nightSlots = time_slots.slice(-4) // 22:00-24:00
+    hidden_block(event, weekRange, "22:00-24:00", nightSlots)
+  })
 }
 
 function afterAuthCheck(result, config) {
