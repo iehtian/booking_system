@@ -303,13 +303,15 @@ let night_clicked = false
 function hidden_block(event, date, text, hidden_slots) {
   event.preventDefault() // 阻止默认链接行为
   //点击该按钮将自动隐藏/显示晚上
-  const nightButton = event.target
-  night_clicked = !night_clicked // 切换状态
-  nightButton.value = night_clicked ? `► ${text}` : `▼ ${text}` // 更新按钮文本
-  nightButton.style.backgroundColor = night_clicked ? "#E0F2FE" : "#f1f5f9" // 更新按钮背景色
-  nightButton.style.border = night_clicked
-    ? "1px solid #0991B2"
-    : "1px solid#d6dee7" // 更新按钮边框
+  const Button = event.target
+  const currentState = Button.dataset.clicked === "true"
+  const newState = !currentState
+
+  // 将状态保存到DOM元素
+  Button.dataset.clicked = newState.toString()
+  Button.value = newState ? `► ${text}` : `▼ ${text}` // 更新按钮文本
+  Button.style.backgroundColor = newState ? "#E0F2FE" : "#f1f5f9" // 更新按钮背景色
+  Button.style.border = newState ? "1px solid #0991B2" : "1px solid#d6dee7" // 更新按钮边框
 
   if (width < 768) {
     hidden_slots.forEach((slot) => {
@@ -610,6 +612,8 @@ if (width < 768) {
     const nightSlots = time_slots.slice(-4) // 22:00-24:00
     hidden_block(event, weekRange, "22:00-24:00", nightSlots)
   })
+  document.querySelector("#night").click()
+  document.querySelector("#morning").click()
 }
 
 function afterAuthCheck(result, config) {
