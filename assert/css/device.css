@@ -82,6 +82,12 @@ label {
   background: #f3f4f6; /* 浅灰色背景 */
 }
 
+.week-time-slot-option:checked + label {
+  color: white;
+  background: rgb(59 130 246);
+  border: none;
+}
+
 .disabled-slot input[type="checkbox"]:hover + label,
 .no-login-slot input[type="checkbox"]:hover + label {
   cursor: not-allowed; /* 鼠标悬停时显示禁止图标 */
@@ -236,12 +242,6 @@ label {
   background: rgb(240 253 244);
   border-right: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
-}
-
-.week-time-slot-option:checked + label {
-  color: white;
-  background: rgb(59 130 246);
-  border: none;
 }
 
 .highlight {
