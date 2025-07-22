@@ -24,7 +24,6 @@ function generateTimeIntervalsSimple() {
   return timeSlots
 }
 const time_slots = generateTimeIntervalsSimple()
-const selectedTimeSlots = []
 
 function getCurrentDateISO() {
   const date = new Date()
@@ -142,56 +141,7 @@ function checked_option(event, data, timeSlot) {
   console.log("当前选中的时间段:", selected)
 }
 
-async function submitAppointment(realName, color) {
-  // 遍历selectedTimeSlots，每个元素是date:[time_slot1, time_slot2, ...]格式
-  for (const item of selectedTimeSlots) {
-    const selectedDate = item.date
-    const slots = item.slots
-    if (!selectedDate || slots.length === 0) {
-      alert("请先选择日期和时间段")
-      return
-    }
-
-    try {
-      // 一次性发送所有时间段
-      const appointmentData = {
-        system: "a_device", // 系统ID，根据需要修改
-        date: selectedDate,
-        slots: slots, // 发送所有选中的时间段
-        name: realName,
-        color: color, // 发送用户颜色
-      }
-
-      console.log("发送的数据:", appointmentData)
-
-      const response = await fetch(`${host}/api/info_save`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(appointmentData),
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        console.log("预约已成功提交:", result)
-        location.reload()
-      } else {
-        // 处理错误情况
-        alert("提交预约失败，请重试")
-        console.error("提交失败:", result)
-        location.reload()
-      }
-    } catch (error) {
-      console.error("提交预约时出错:", error)
-    }
-  }
-}
-
-async function submitAppointment_week(realName, color, submitData) {
-  // 遍历selectedTimeSlots，每个元素是date:[time_slot1, time_slot2, ...]格式
-
+async function submitAppointment(realName, color, submitData) {
   const selectedDate = submitData.date
   const slots = submitData.slots
   if (!selectedDate || slots.length === 0) {
@@ -247,7 +197,11 @@ const deviceConfig = {
     setupSubmitHandler: (realName, color) => {
       const submitButton = document.querySelector("#submit-button")
       submitButton.addEventListener("click", () => {
-        submitAppointment(realName, color)
+        for (const [date, slots] of Object.entries(datas)) {
+          if (slots.length === 0) continue
+          let submit = { date: date, slots: slots }
+          submitAppointment(realName, color, submit)
+        }
       })
     },
   },
@@ -336,7 +290,7 @@ const deviceConfig = {
         for (const [date, slots] of Object.entries(datas)) {
           if (slots.length === 0) continue
           let submit = { date: date, slots: slots }
-          submitAppointment_week(realName, color, submit)
+          submitAppointment(realName, color, submit)
         }
       })
     },
