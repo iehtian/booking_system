@@ -247,9 +247,19 @@ function createTimeHeaderRow() {
   return div
 }
 
+function date_change(event, changer) {
+  event.preventDefault() // 阻止默认链接行为
+  const appointmentDate = document.getElementById("appointment-date")
+  const currentDate = new Date(appointmentDate.value)
+  currentDate.setDate(currentDate.getDate() + changer)
+  appointmentDate.value = currentDate.toISOString().split("T")[0]
+  // 触发日期变化事件
+  appointmentDate.dispatchEvent(new Event("change"))
+}
+
 const deviceConfig = {
   mobile: {
-    addslot: () => {
+    addslot() {
       document.getElementById("appointment-date").value = getCurrentDateISO()
       let timeSlots = document.getElementById("time-slot")
 
@@ -258,11 +268,11 @@ const deviceConfig = {
         timeSlots.appendChild(timeSlotElement)
       })
     },
-    init_slots: () => {
+    init_slots() {
       clear_dates()
       add_new_date(getCurrentDateISO())
 
-      addslot() // 初始化时间段
+      this.addslot() // 初始化时间段
 
       document
         .getElementById("appointment-date")
@@ -328,29 +338,13 @@ const deviceConfig = {
           event.target.showPicker() // 显示日期选择器
         })
 
-      document
-        .querySelector("#yestoday")
-        .addEventListener("click", function (event) {
-          event.preventDefault() // 阻止默认链接行为
-          const appointmentDate = document.getElementById("appointment-date")
-          const currentDate = new Date(appointmentDate.value)
-          currentDate.setDate(currentDate.getDate() - 1)
-          appointmentDate.value = currentDate.toISOString().split("T")[0]
-          // 触发日期变化事件
-          appointmentDate.dispatchEvent(new Event("change"))
-        })
+      document.querySelector("#yestoday").addEventListener("click", (event) => {
+        date_change(event, -1) // 点击昨天按钮，日期减1
+      })
 
-      document
-        .querySelector("#tomorrow")
-        .addEventListener("click", function (event) {
-          event.preventDefault() // 阻止默认链接行为
-          const appointmentDate = document.getElementById("appointment-date")
-          const currentDate = new Date(appointmentDate.value)
-          currentDate.setDate(currentDate.getDate() + 1)
-          appointmentDate.value = currentDate.toISOString().split("T")[0]
-          // 触发日期变化事件
-          appointmentDate.dispatchEvent(new Event("change"))
-        })
+      document.querySelector("#tomorrow").addEventListener("click", (event) => {
+        date_change(event, 1) // 点击明天按钮，日期加1
+      })
     },
     setupSubmitHandler: (realName, color) => {
       const submitButton = document.querySelector("#submit-button")
@@ -364,7 +358,7 @@ const deviceConfig = {
     },
   },
   desktop: {
-    addslot: () => {
+    addslot() {
       document.getElementById("appointment-date").value = getCurrentDateISO()
       let timeSlots = document.getElementById("time-slot")
 
@@ -388,14 +382,14 @@ const deviceConfig = {
         timeSlots.appendChild(div)
       })
     },
-    init_slots: () => {
+    init_slots() {
       clear_dates()
       const weekRange = getWeekRangeMonday()
       console.log("本周日期范围:", weekRange)
       weekRange.forEach((date) => {
         add_new_date(date) // 添加每个日期到数据中
       })
-      addslot() // 初始化时间段
+      this.addslot() // 初始化时间段
       window.addEventListener("DOMContentLoaded", () => {
         const today = new Date().toISOString().split("T")[0] // 获取今天的日期，格式为 YYYY-MM-DD
         const dateElements = document.querySelectorAll(".week-date") // 获取所有日期元素
