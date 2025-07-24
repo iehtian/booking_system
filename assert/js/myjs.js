@@ -185,14 +185,147 @@ async function submitAppointment(realName, color, submitData) {
   }
 }
 
+const buttonConfigs = {
+  morning: {
+    selector: "#morning",
+    timeRange: "00:00-08:00",
+    getSlots: () => time_slots.slice(0, 16),
+  },
+  night: {
+    selector: "#night",
+    timeRange: "22:00-24:00",
+    getSlots: () => time_slots.slice(-4),
+  },
+}
+
 const deviceConfig = {
   mobile: {
-    init_slots: () => {},
-    setupSlots: () => {
+    init_slots: () => {
       clear_dates()
       add_new_date(getCurrentDateISO())
-      addslot()
-      // 移动端特有的初始化逻辑
+
+      function addslot() {
+        document.getElementById("appointment-date").value = getCurrentDateISO() // 设置 input 的值为当前日期
+        let timeSlots = document.getElementById("time-slot")
+        time_slots.forEach((slot) => {
+          const div = document.createElement("div")
+          div.className = "time-slot-item"
+
+          const option = document.createElement("input")
+          option.type = "checkbox"
+          option.value = slot
+          option.className = "time-slot-option"
+          option.id = "time-slot-" + slot // 设置唯一的 ID
+          option.name = "time-slot" // 设置 name 属性，便于表单提交时获取选中的时间段
+          option.checked = false // 默认不选中
+
+          // 添加选中事件监听器
+          option.addEventListener("change", (event) => {
+            checked_option(
+              event,
+              document.getElementById("appointment-date").value,
+              event.target.value
+            )
+          })
+
+          const label = document.createElement("label")
+          label.htmlFor = option.id
+          label.textContent = slot
+          div.appendChild(option)
+          div.appendChild(label)
+          timeSlots.appendChild(div)
+        })
+      }
+
+      addslot() // 初始化时间段
+
+      document
+        .getElementById("appointment-date")
+        .addEventListener("change", function (event) {
+          const newDate = event.target.value
+
+          // 清除之前禁用的样式和提示
+          // 遍历所有时间段项，移除禁用样式和提示文本
+          for (const slot of time_slots) {
+            const checkbox = document.getElementById(`time-slot-${slot}`)
+            if (checkbox) {
+              checkbox.disabled = false // 启用复选框
+              checkbox.parentElement.classList.remove("disabled-slot") // 移除禁用样式
+              const slotLabel = checkbox.nextElementSibling
+              if (slotLabel) {
+                // 移除“已被 XXX 预约”的文本
+                const slotText = slotLabel.innerHTML.split("<br>")[0] // 只保留时间段部分
+                slotLabel.innerHTML = slotText
+              }
+            }
+          }
+          add_new_date(newDate) // 添加新的日期到数据中
+          // 清空之前选中的时间段（如果你希望换日期时重置选择）
+          const selected = get_dates(newDate)
+          selected.length = 0
+          document.querySelectorAll(".time-slot-option").forEach((cb) => {
+            cb.checked = false
+          })
+          getBookings(newDate)
+          // 获取新的日期的预约信息
+          if (newDate < getCurrentDateISO()) {
+            // 日期已过
+            time_slots.forEach((slot) => disableSlot(slot))
+          } else if (newDate === getCurrentDateISO()) {
+            // 是今天，禁用当前时间段之前的
+            const currentSlotIndex = getCurrentTimeSlotIndex()
+            for (let i = 0; i < currentSlotIndex; i++) {
+              disableSlot(time_slots[i])
+            }
+          }
+          //找出所有的no-login-slot类的元素,禁止点击
+          const noLoginSlots = document.querySelectorAll(".no-login-slot")
+          noLoginSlots.forEach((slot) => {
+            //找到类中的input元素
+            const input = slot.querySelector("input[type='checkbox']")
+            if (input) {
+              input.disabled = true // 禁用复选框
+            }
+          })
+
+          // 现在的时间以后的时间段禁止预约，包括对日期的对比和日期修改后的变化
+        })
+
+      document
+        .getElementById("appointment-date")
+        .dispatchEvent(new Event("change")) // 触发日期变化事件
+      // 发送预约数据到后端的函数
+
+      document
+        .querySelector("#appointment-date")
+        .addEventListener("click", function (event) {
+          //回调函数，打开日期选择器
+          event.target.showPicker() // 显示日期选择器
+        })
+
+      document
+        .querySelector("#yestoday")
+        .addEventListener("click", function (event) {
+          event.preventDefault() // 阻止默认链接行为
+          const appointmentDate = document.getElementById("appointment-date")
+          const currentDate = new Date(appointmentDate.value)
+          currentDate.setDate(currentDate.getDate() - 1)
+          appointmentDate.value = currentDate.toISOString().split("T")[0]
+          // 触发日期变化事件
+          appointmentDate.dispatchEvent(new Event("change"))
+        })
+
+      document
+        .querySelector("#tomorrow")
+        .addEventListener("click", function (event) {
+          event.preventDefault() // 阻止默认链接行为
+          const appointmentDate = document.getElementById("appointment-date")
+          const currentDate = new Date(appointmentDate.value)
+          currentDate.setDate(currentDate.getDate() + 1)
+          appointmentDate.value = currentDate.toISOString().split("T")[0]
+          // 触发日期变化事件
+          appointmentDate.dispatchEvent(new Event("change"))
+        })
     },
     setupSubmitHandler: (realName, color) => {
       const submitButton = document.querySelector("#submit-button")
@@ -296,10 +429,10 @@ const deviceConfig = {
     },
   },
 }
+
 const isMobile = width < 768 // 判断是否为移动端
 const config = isMobile ? deviceConfig.mobile : deviceConfig.desktop
-config.init_slots() // 初始化时间段
-let night_clicked = false
+config.init_slots() // 初始化
 function hidden_block(event, date, text, hidden_slots) {
   event.preventDefault() // 阻止默认链接行为
   //点击该按钮将自动隐藏/显示晚上
@@ -350,257 +483,33 @@ function hidden_block(event, date, text, hidden_slots) {
     })
   }
 }
+
+function setupTimeSlotButton(config, isMobile) {
+  document.querySelector(config.selector).addEventListener("click", (event) => {
+    const slots = config.getSlots()
+
+    if (isMobile) {
+      // 移动端逻辑：传入当前日期
+      hidden_block(event, getCurrentDateISO(), config.timeRange, slots)
+    } else {
+      // 桌面端逻辑：传入周日期数组
+      const weekRange = getWeekRangeMonday()
+      hidden_block(event, weekRange, config.timeRange, slots)
+    }
+  })
+}
+
 if (width < 768) {
-  clear_dates()
-  add_new_date(getCurrentDateISO())
-
-  function addslot() {
-    document.getElementById("appointment-date").value = getCurrentDateISO() // 设置 input 的值为当前日期
-    let timeSlots = document.getElementById("time-slot")
-    time_slots.forEach((slot) => {
-      const div = document.createElement("div")
-      div.className = "time-slot-item"
-
-      const option = document.createElement("input")
-      option.type = "checkbox"
-      option.value = slot
-      option.className = "time-slot-option"
-      option.id = "time-slot-" + slot // 设置唯一的 ID
-      option.name = "time-slot" // 设置 name 属性，便于表单提交时获取选中的时间段
-      option.checked = false // 默认不选中
-
-      // 添加选中事件监听器
-      option.addEventListener("change", (event) => {
-        checked_option(
-          event,
-          document.getElementById("appointment-date").value,
-          event.target.value
-        )
-      })
-
-      const label = document.createElement("label")
-      label.htmlFor = option.id
-      label.textContent = slot
-      div.appendChild(option)
-      div.appendChild(label)
-      timeSlots.appendChild(div)
-    })
-  }
-
-  addslot() // 初始化时间段
-
-  document
-    .getElementById("appointment-date")
-    .addEventListener("change", function (event) {
-      const newDate = event.target.value
-
-      // 清除之前禁用的样式和提示
-      // 遍历所有时间段项，移除禁用样式和提示文本
-      for (const slot of time_slots) {
-        const checkbox = document.getElementById(`time-slot-${slot}`)
-        if (checkbox) {
-          checkbox.disabled = false // 启用复选框
-          checkbox.parentElement.classList.remove("disabled-slot") // 移除禁用样式
-          const slotLabel = checkbox.nextElementSibling
-          if (slotLabel) {
-            // 移除“已被 XXX 预约”的文本
-            const slotText = slotLabel.innerHTML.split("<br>")[0] // 只保留时间段部分
-            slotLabel.innerHTML = slotText
-          }
-        }
-      }
-      add_new_date(newDate) // 添加新的日期到数据中
-      // 清空之前选中的时间段（如果你希望换日期时重置选择）
-      const selected = get_dates(newDate)
-      selected.length = 0
-      document.querySelectorAll(".time-slot-option").forEach((cb) => {
-        cb.checked = false
-      })
-      getBookings(newDate)
-      // 获取新的日期的预约信息
-      if (newDate < getCurrentDateISO()) {
-        // 日期已过
-        time_slots.forEach((slot) => disableSlot(slot))
-      } else if (newDate === getCurrentDateISO()) {
-        // 是今天，禁用当前时间段之前的
-        const currentSlotIndex = getCurrentTimeSlotIndex()
-        for (let i = 0; i < currentSlotIndex; i++) {
-          disableSlot(time_slots[i])
-        }
-      }
-      //找出所有的no-login-slot类的元素,禁止点击
-      const noLoginSlots = document.querySelectorAll(".no-login-slot")
-      noLoginSlots.forEach((slot) => {
-        //找到类中的input元素
-        const input = slot.querySelector("input[type='checkbox']")
-        if (input) {
-          input.disabled = true // 禁用复选框
-        }
-      })
-
-      // 现在的时间以后的时间段禁止预约，包括对日期的对比和日期修改后的变化
-    })
-
-  document.getElementById("appointment-date").dispatchEvent(new Event("change")) // 触发日期变化事件
-  // 发送预约数据到后端的函数
-
-  document
-    .querySelector("#appointment-date")
-    .addEventListener("click", function (event) {
-      //回调函数，打开日期选择器
-      event.target.showPicker() // 显示日期选择器
-    })
-
-  document
-    .querySelector("#yestoday")
-    .addEventListener("click", function (event) {
-      event.preventDefault() // 阻止默认链接行为
-      const appointmentDate = document.getElementById("appointment-date")
-      const currentDate = new Date(appointmentDate.value)
-      currentDate.setDate(currentDate.getDate() - 1)
-      appointmentDate.value = currentDate.toISOString().split("T")[0]
-      // 触发日期变化事件
-      appointmentDate.dispatchEvent(new Event("change"))
-    })
-
-  document
-    .querySelector("#tomorrow")
-    .addEventListener("click", function (event) {
-      event.preventDefault() // 阻止默认链接行为
-      const appointmentDate = document.getElementById("appointment-date")
-      const currentDate = new Date(appointmentDate.value)
-      currentDate.setDate(currentDate.getDate() + 1)
-      appointmentDate.value = currentDate.toISOString().split("T")[0]
-      // 触发日期变化事件
-      appointmentDate.dispatchEvent(new Event("change"))
-    })
-
-  let moring_clicked = false,
-    night_clicked = false
-
-  document
-    .querySelector("#morning")
-    .addEventListener("click", function (event) {
-      event.preventDefault() // 阻止默认链接行为
-      //点击该按钮将自动隐藏/显示上午的时间段
-      const morningButton = this
-      moring_clicked = !moring_clicked // 切换状态
-      morningButton.value = moring_clicked ? "► 00:00-08:00" : "▼ 00:00-08:00" // 更新按钮文本
-      morningButton.style.backgroundColor = moring_clicked
-        ? "#E0F2FE"
-        : "#f1f5f9" // 更新按钮背景色
-      morningButton.style.border = moring_clicked
-        ? "1px solid #0991B2"
-        : "1px solid#d6dee7" // 更新按钮边框
-
-      const morningSlots = time_slots.slice(0, 16)
-      morningSlots.forEach((slot) => {
-        const checkbox = document.getElementById(`time-slot-${slot}`)
-        const checkboxParent = checkbox.parentElement
-        if (checkboxParent) {
-          checkboxParent.style.display =
-            checkboxParent.style.display === "none" ? "block" : "none" // 切换上午时间段的显示状态
-        }
-      })
-    })
-
-  document.querySelector("#night").addEventListener("click", function (event) {
-    event.preventDefault() // 阻止默认链接行为
-    //点击该按钮将自动隐藏/显示晚上
-    const nightButton = this
-    night_clicked = !night_clicked // 切换状态
-    nightButton.value = night_clicked ? "► 22:00-24:00" : "▼ 22:00-24:00" // 更新按钮文本
-    nightButton.style.backgroundColor = night_clicked ? "#E0F2FE" : "#f1f5f9" // 更新按钮背景色
-    nightButton.style.border = night_clicked
-      ? "1px solid #0991B2"
-      : "1px solid#d6dee7" // 更新按钮边框
-
-    const morningSlots = time_slots.slice(-4)
-    morningSlots.forEach((slot) => {
-      const checkbox = document.getElementById(`time-slot-${slot}`)
-      const checkboxParent = checkbox.parentElement
-      if (checkboxParent) {
-        checkboxParent.style.display =
-          checkboxParent.style.display === "none" ? "block" : "none" // 切换上午时间段的显示状态
-      }
-    })
+  document.querySelector("#morning").addEventListener("click", (event) => {
+    const morningSlots = time_slots.slice(0, 16) // 00:00-08:00
+    hidden_block(event, getCurrentDateISO(), "00:00-08:00", morningSlots)
   })
 
-  document.querySelector("#morning").click()
-  document.querySelector("#night").click()
+  document.querySelector("#night").addEventListener("click", (event) => {
+    const nightSlots = time_slots.slice(-4) // 22:00-24:00
+    hidden_block(event, nightSlots, "22:00-24:00", nightSlots)
+  })
 } else {
-  // clear_dates()
-  // const weekRange = getWeekRangeMonday()
-  // console.log("本周日期范围:", weekRange)
-  // weekRange.forEach((date) => {
-  //   add_new_date(date) // 添加每个日期到数据中
-  // })
-  // function addslot() {
-  //   document.getElementById("appointment-date").value = getCurrentDateISO() // 设置 input 的值为当前日期
-  //   let timeSlots = document.getElementById("time-slot")
-  //   const div = document.createElement("div")
-  //   div.className = "week-range"
-  //   const datediv = document.createElement("div")
-  //   datediv.textContent = "时间" // 显示日期标题
-  //   datediv.className = "week-date" // 添加样式类名
-  //   div.appendChild(datediv)
-  //   time_slots.forEach((slot) => {
-  //     const divtime = document.createElement("div")
-  //     divtime.className = "week-time-slot-item"
-  //     divtime.textContent = slot // 显示时间段
-  //     div.appendChild(divtime)
-  //   })
-  //   timeSlots.appendChild(div)
-  //   weekRange.forEach((date) => {
-  //     const div = document.createElement("div")
-  //     div.className = "week-range"
-  //     const datediv = document.createElement("div")
-  //     datediv.textContent = date // 显示日期
-  //     datediv.className = "week-date" // 添加样式类名
-  //     div.appendChild(datediv)
-  //     time_slots.forEach((slot) => {
-  //       const option = document.createElement("input")
-  //       option.type = "checkbox"
-  //       option.value = slot
-  //       option.className = "week-time-slot-option"
-  //       option.id = "time-slot-" + date + "-" + slot // 设置唯一的 ID
-  //       option.name = "time-slot" // 设置 name 属性，便于表单提交时获取选中的时间段
-  //       option.checked = false // 默认不选中
-  //       // 添加选中事件监听器
-  //       option.addEventListener("change", (event) => {
-  //         checked_option(event, date, event.target.value)
-  //       })
-  //       const label = document.createElement("label")
-  //       label.htmlFor = option.id
-  //       // label.textContent = slot
-  //       label.className = "time-slot-label" // 添加样式类名
-  //       const divtime = document.createElement("div")
-  //       divtime.className = "week-time-slot-item"
-  //       divtime.appendChild(option)
-  //       divtime.appendChild(label)
-  //       div.appendChild(divtime)
-  //     })
-  //     timeSlots.appendChild(div)
-  //   })
-  // }
-  // addslot() // 初始化时间段
-  // window.addEventListener("DOMContentLoaded", () => {
-  //   const today = new Date().toISOString().split("T")[0] // 获取今天的日期，格式为 YYYY-MM-DD
-  //   const dateElements = document.querySelectorAll(".week-date") // 获取所有日期元素
-  //   dateElements.forEach((el) => {
-  //     if (el.textContent.trim() === today) {
-  //       el.classList.add("highlight")
-  //       const parent = el.parentElement
-  //       const weekTimeSlotItems = parent.querySelectorAll(
-  //         ".week-time-slot-item"
-  //       )
-  //       // 给每个子元素添加背景色
-  //       weekTimeSlotItems.forEach((item) => {
-  //         item.style.backgroundColor = "#E0F2FE" // 设置背景色
-  //       })
-  //     }
-  //   })
-  // })
   document.querySelector("#morning").addEventListener("click", (event) => {
     const weekRange = getWeekRangeMonday() // 获取日期数组
     const morningSlots = time_slots.slice(0, 16) // 00:00-08:00
@@ -612,9 +521,10 @@ if (width < 768) {
     const nightSlots = time_slots.slice(-4) // 22:00-24:00
     hidden_block(event, weekRange, "22:00-24:00", nightSlots)
   })
-  document.querySelector("#night").click()
-  document.querySelector("#morning").click()
 }
+
+document.querySelector("#morning").click()
+document.querySelector("#night").click()
 
 function afterAuthCheck(result, config) {
   if (result.logged_in) {
