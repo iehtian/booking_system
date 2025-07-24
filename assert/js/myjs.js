@@ -358,7 +358,7 @@ const deviceConfig = {
     },
   },
   desktop: {
-    addslot() {
+    addslot(weekRange) {
       document.getElementById("appointment-date").value = getCurrentDateISO()
       let timeSlots = document.getElementById("time-slot")
 
@@ -389,7 +389,7 @@ const deviceConfig = {
       weekRange.forEach((date) => {
         add_new_date(date) // 添加每个日期到数据中
       })
-      this.addslot() // 初始化时间段
+      this.addslot(weekRange) // 初始化时间段
       window.addEventListener("DOMContentLoaded", () => {
         const today = new Date().toISOString().split("T")[0] // 获取今天的日期，格式为 YYYY-MM-DD
         const dateElements = document.querySelectorAll(".week-date") // 获取所有日期元素
