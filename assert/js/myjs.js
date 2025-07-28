@@ -539,12 +539,15 @@ function setupTimeSlotButton(config) {
   console.log("按钮配置:", buttons)
 
   const button_morning = document.querySelector(buttons.morning.selector)
+
   if (button_morning) {
+    button_morning
     button_morning.addEventListener("click", (event) => {
       auto_hidden(event, buttons.morning.timeRange)
       console.log("上午", buttons.morning.getSlots)
       config.hidden(buttons.morning.getSlots, buttons.weekdates)
     })
+    button_morning.click()
   }
   const button_night = document.querySelector(buttons.night.selector)
   if (button_night) {
@@ -553,36 +556,10 @@ function setupTimeSlotButton(config) {
       console.log("晚上", buttons.night.getSlots)
       config.hidden(buttons.night.getSlots, buttons.weekdates)
     })
+    button_night.click()
   }
 }
 setupTimeSlotButton(config)
-
-// if (width < 768) {
-//   document.querySelector("#morning").addEventListener("click", (event) => {
-//     const morningSlots = time_slots.slice(0, 16) // 00:00-08:00
-//     hidden_block(event, getCurrentDateISO(), "00:00-08:00", morningSlots)
-//   })
-
-//   document.querySelector("#night").addEventListener("click", (event) => {
-//     const nightSlots = time_slots.slice(-4) // 22:00-24:00
-//     hidden_block(event, nightSlots, "22:00-24:00", nightSlots)
-//   })
-// } else {
-//   document.querySelector("#morning").addEventListener("click", (event) => {
-//     const weekRange = getWeekRangeMonday() // 获取日期数组
-//     const morningSlots = time_slots.slice(0, 16) // 00:00-08:00
-//     hidden_block(event, weekRange, "00:00-08:00", morningSlots)
-//   })
-
-//   document.querySelector("#night").addEventListener("click", (event) => {
-//     const weekRange = getWeekRangeMonday() // 获取日期数组
-//     const nightSlots = time_slots.slice(-4) // 22:00-24:00
-//     hidden_block(event, weekRange, "22:00-24:00", nightSlots)
-//   })
-// }
-
-document.querySelector("#morning").click()
-document.querySelector("#night").click()
 
 function afterAuthCheck(result, config) {
   if (result.logged_in) {
