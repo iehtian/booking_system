@@ -185,7 +185,7 @@ async function submitAppointment(realName, color, submitData) {
   }
 }
 
-const buttonConfigs = {
+const buttonhideConfigs = {
   morning: {
     selector: "#morning",
     timeRange: "00:00-08:00",
@@ -257,8 +257,32 @@ function date_change(event, changer) {
   appointmentDate.dispatchEvent(new Event("change"))
 }
 
+function auto_hidden(event, text) {
+  const Button = event.target
+  const currentState = Button.dataset.clicked === "true"
+  const newState = !currentState
+
+  // 将状态保存到DOM元素
+  Button.dataset.clicked = newState.toString()
+  Button.value = newState ? `► ${text}` : `▼ ${text}` // 更新按钮文本
+  Button.style.backgroundColor = newState ? "#E0F2FE" : "#f1f5f9" // 更新按钮背景色
+  Button.style.border = newState ? "1px solid #0991B2" : "1px solid#d6dee7" // 更新按钮边框
+}
+
 const deviceConfig = {
   mobile: {
+    buttonhide: buttonhideConfigs,
+    hidden(hidden_slots) {
+      const hidden_slots_arr = hidden_slots()
+      hidden_slots_arr.forEach((slot) => {
+        const checkbox = document.getElementById(`time-slot-${slot}`)
+        const checkboxParent = checkbox.parentElement
+        if (checkboxParent) {
+          checkboxParent.style.display =
+            checkboxParent.style.display === "none" ? "block" : "none" // 切换上午时间段的显示状态
+        }
+      })
+    },
     addslot() {
       document.getElementById("appointment-date").value = getCurrentDateISO()
       let timeSlots = document.getElementById("time-slot")
@@ -273,7 +297,7 @@ const deviceConfig = {
       add_new_date(getCurrentDateISO())
 
       this.addslot() // 初始化时间段
-
+      this.buttonhide.weekdates = [getCurrentDateISO()] // 设置当前日期为本周日期
       document
         .getElementById("appointment-date")
         .addEventListener("change", function (event) {
@@ -358,6 +382,37 @@ const deviceConfig = {
     },
   },
   desktop: {
+    buttonhide: buttonhideConfigs,
+    hidden(hidden_slots, date) {
+      console.log("hidden_slots:", hidden_slots)
+      const hidden_slots_arr = hidden_slots()
+      date.forEach((thisdate) => {
+        const week_time_slots =
+          document.querySelectorAll(`.week-time-slot-item`)
+        const week_time_map = new Map()
+        week_time_slots.forEach((item) => {
+          const timeText = item.textContent.trim()
+          week_time_map.set(timeText, item)
+        })
+        hidden_slots_arr.forEach((slot) => {
+          const this_slot = week_time_map.get(`${slot}`)
+          if (this_slot) {
+            this_slot.style.display =
+              this_slot.style.display === "none" ? "block" : "none" // 切换上午时间段的显示状态
+          }
+        })
+        hidden_slots_arr.forEach((slot) => {
+          const checkbox = document.getElementById(
+            `time-slot-${thisdate}-${slot}`
+          )
+          const checkboxParent = checkbox.parentElement
+          if (checkboxParent) {
+            checkboxParent.style.display =
+              checkboxParent.style.display === "none" ? "block" : "none" // 切换上午时间段的显示状态
+          }
+        })
+      })
+    },
     addslot(weekRange) {
       document.getElementById("appointment-date").value = getCurrentDateISO()
       let timeSlots = document.getElementById("time-slot")
@@ -385,6 +440,7 @@ const deviceConfig = {
     init_slots() {
       clear_dates()
       const weekRange = getWeekRangeMonday()
+      this.buttonhide.weekdates = weekRange
       console.log("本周日期范围:", weekRange)
       weekRange.forEach((date) => {
         add_new_date(date) // 添加每个日期到数据中
@@ -426,6 +482,7 @@ const deviceConfig = {
 const isMobile = width < 768 // 判断是否为移动端
 const config = isMobile ? deviceConfig.mobile : deviceConfig.desktop
 config.init_slots() // 初始化
+
 function hidden_block(event, date, text, hidden_slots) {
   event.preventDefault() // 阻止默认链接行为
   //点击该按钮将自动隐藏/显示晚上
@@ -477,44 +534,52 @@ function hidden_block(event, date, text, hidden_slots) {
   }
 }
 
-function setupTimeSlotButton(config, isMobile) {
-  document.querySelector(config.selector).addEventListener("click", (event) => {
-    const slots = config.getSlots()
+function setupTimeSlotButton(config) {
+  let buttons = config.buttonhide
+  console.log("按钮配置:", buttons)
 
-    if (isMobile) {
-      // 移动端逻辑：传入当前日期
-      hidden_block(event, getCurrentDateISO(), config.timeRange, slots)
-    } else {
-      // 桌面端逻辑：传入周日期数组
-      const weekRange = getWeekRangeMonday()
-      hidden_block(event, weekRange, config.timeRange, slots)
-    }
-  })
+  const button_morning = document.querySelector(buttons.morning.selector)
+  if (button_morning) {
+    button_morning.addEventListener("click", (event) => {
+      auto_hidden(event, buttons.morning.timeRange)
+      console.log("上午", buttons.morning.getSlots)
+      config.hidden(buttons.morning.getSlots, buttons.weekdates)
+    })
+  }
+  const button_night = document.querySelector(buttons.night.selector)
+  if (button_night) {
+    button_night.addEventListener("click", (event) => {
+      auto_hidden(event, buttons.night.timeRange)
+      console.log("晚上", buttons.night.getSlots)
+      config.hidden(buttons.night.getSlots, buttons.weekdates)
+    })
+  }
 }
+setupTimeSlotButton(config)
 
-if (width < 768) {
-  document.querySelector("#morning").addEventListener("click", (event) => {
-    const morningSlots = time_slots.slice(0, 16) // 00:00-08:00
-    hidden_block(event, getCurrentDateISO(), "00:00-08:00", morningSlots)
-  })
+// if (width < 768) {
+//   document.querySelector("#morning").addEventListener("click", (event) => {
+//     const morningSlots = time_slots.slice(0, 16) // 00:00-08:00
+//     hidden_block(event, getCurrentDateISO(), "00:00-08:00", morningSlots)
+//   })
 
-  document.querySelector("#night").addEventListener("click", (event) => {
-    const nightSlots = time_slots.slice(-4) // 22:00-24:00
-    hidden_block(event, nightSlots, "22:00-24:00", nightSlots)
-  })
-} else {
-  document.querySelector("#morning").addEventListener("click", (event) => {
-    const weekRange = getWeekRangeMonday() // 获取日期数组
-    const morningSlots = time_slots.slice(0, 16) // 00:00-08:00
-    hidden_block(event, weekRange, "00:00-08:00", morningSlots)
-  })
+//   document.querySelector("#night").addEventListener("click", (event) => {
+//     const nightSlots = time_slots.slice(-4) // 22:00-24:00
+//     hidden_block(event, nightSlots, "22:00-24:00", nightSlots)
+//   })
+// } else {
+//   document.querySelector("#morning").addEventListener("click", (event) => {
+//     const weekRange = getWeekRangeMonday() // 获取日期数组
+//     const morningSlots = time_slots.slice(0, 16) // 00:00-08:00
+//     hidden_block(event, weekRange, "00:00-08:00", morningSlots)
+//   })
 
-  document.querySelector("#night").addEventListener("click", (event) => {
-    const weekRange = getWeekRangeMonday() // 获取日期数组
-    const nightSlots = time_slots.slice(-4) // 22:00-24:00
-    hidden_block(event, weekRange, "22:00-24:00", nightSlots)
-  })
-}
+//   document.querySelector("#night").addEventListener("click", (event) => {
+//     const weekRange = getWeekRangeMonday() // 获取日期数组
+//     const nightSlots = time_slots.slice(-4) // 22:00-24:00
+//     hidden_block(event, weekRange, "22:00-24:00", nightSlots)
+//   })
+// }
 
 document.querySelector("#morning").click()
 document.querySelector("#night").click()
