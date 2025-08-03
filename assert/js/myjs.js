@@ -96,14 +96,20 @@ async function getBookings(date) {
 let datas = {}
 function getWeekRangeMonday(date = new Date()) {
   const current = new Date(date)
-  const day = current.getDay()
-  const diff = current.getDate() - day + (day === 0 ? -6 : 1) // 周一为开始
+  const dayOfWeek = current.getDay()
+  const diff = current.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1) // 周一为开始
+
+  // 计算周一的日期
+  const monday = new Date(current)
+  monday.setDate(diff)
 
   const this_week = []
   for (let i = 0; i < 7; i++) {
-    const day = new Date(current.setDate(diff + i))
-    this_week.push(day.toISOString().split("T")[0]) // 将每一天的日期添加到 this_week 数组
+    const dayDate = new Date(monday)
+    dayDate.setDate(monday.getDate() + i)
+    this_week.push(dayDate.toISOString().split("T")[0])
   }
+  console.log("本周日期范围:", this_week)
   return this_week
 }
 
@@ -441,7 +447,6 @@ const deviceConfig = {
       clear_dates()
       const weekRange = getWeekRangeMonday()
       this.buttonhide.weekdates = weekRange
-      console.log("本周日期范围:", weekRange)
       weekRange.forEach((date) => {
         add_new_date(date) // 添加每个日期到数据中
       })
