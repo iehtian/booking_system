@@ -1,0 +1,82 @@
+import { host } from "./config.js"
+
+async function getBookings(date) {
+  try {
+    const response = await fetch(`${host}/api/bookings?date=${date}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+
+    const data = await response.json()
+    console.log("已预约时间段数据:", data)
+    if (!data.bookings) {
+      return
+    }
+    Object.entries(data.bookings).forEach(([key, value]) => {
+      const name = value.name || "未知用户" // 如果没有name字段，使用默认值
+      const color = value.color || "#ffffff" // 如果没有color字段，使用默认值
+      console.log(`时间段: ${key}, 预约人: ${name}, 颜色: ${color}`)
+      const checkbox = document.getElementById(`time-slot-${key}`)
+      if (checkbox) {
+        if (checkbox.parentElement) {
+          checkbox.parentElement.classList.add("disabled-slot") // 添加禁用样式
+          checkbox.parentElement.style.backgroundColor = color // 设置背景色
+        }
+        const slotLabel = checkbox.nextElementSibling
+        if (slotLabel) {
+          slotLabel.innerHTML += `<br> 已被 ${name} 预约` // 在标签后添加已预约信息
+        }
+      }
+    })
+  } catch (error) {
+    console.error("获取已预约时间段时出错:", error)
+  }
+}
+
+async function submitBookings(realName, color, submitData) {
+  const selectedDate = submitData.date
+  const slots = submitData.slots
+  if (!selectedDate || slots.length === 0) {
+    alert("请先选择日期和时间段")
+    return
+  }
+
+  try {
+    // 一次性发送所有时间段
+    const appointmentData = {
+      system: "a_device", // 系统ID，根据需要修改
+      date: selectedDate,
+      slots: slots, // 发送所有选中的时间段
+      name: realName,
+      color: color, // 发送用户颜色
+    }
+
+    console.log("发送的数据:", appointmentData)
+
+    const response = await fetch(`${host}/api/info_save`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(appointmentData),
+    })
+
+    const result = await response.json()
+
+    if (response.ok) {
+      console.log("预约已成功提交:", result)
+      location.reload()
+    } else {
+      // 处理错误情况
+      alert("提交预约失败，请重试")
+      console.error("提交失败:", result)
+      location.reload()
+    }
+  } catch (error) {
+    console.error("提交预约时出错:", error)
+  }
+}
+
+export { getBookings, submitBookings }
