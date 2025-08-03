@@ -479,61 +479,6 @@ const deviceConfig = {
   },
 }
 
-const isMobile = width < 768 // 判断是否为移动端
-const config = isMobile ? deviceConfig.mobile : deviceConfig.desktop
-config.init_slots() // 初始化
-
-function hidden_block(event, date, text, hidden_slots) {
-  event.preventDefault() // 阻止默认链接行为
-  //点击该按钮将自动隐藏/显示晚上
-  const Button = event.target
-  const currentState = Button.dataset.clicked === "true"
-  const newState = !currentState
-
-  // 将状态保存到DOM元素
-  Button.dataset.clicked = newState.toString()
-  Button.value = newState ? `► ${text}` : `▼ ${text}` // 更新按钮文本
-  Button.style.backgroundColor = newState ? "#E0F2FE" : "#f1f5f9" // 更新按钮背景色
-  Button.style.border = newState ? "1px solid #0991B2" : "1px solid#d6dee7" // 更新按钮边框
-
-  if (width < 768) {
-    hidden_slots.forEach((slot) => {
-      const checkbox = document.getElementById(`time-slot-${slot}`)
-      const checkboxParent = checkbox.parentElement
-      if (checkboxParent) {
-        checkboxParent.style.display =
-          checkboxParent.style.display === "none" ? "block" : "none" // 切换上午时间段的显示状态
-      }
-    })
-  } else {
-    date.forEach((thisdate) => {
-      const week_time_slots = document.querySelectorAll(`.week-time-slot-item`)
-      const week_time_map = new Map()
-      week_time_slots.forEach((item) => {
-        const timeText = item.textContent.trim()
-        week_time_map.set(timeText, item)
-      })
-      hidden_slots.forEach((slot) => {
-        const this_slot = week_time_map.get(`${slot}`)
-        if (this_slot) {
-          this_slot.style.display =
-            this_slot.style.display === "none" ? "block" : "none" // 切换上午时间段的显示状态
-        }
-      })
-      hidden_slots.forEach((slot) => {
-        const checkbox = document.getElementById(
-          `time-slot-${thisdate}-${slot}`
-        )
-        const checkboxParent = checkbox.parentElement
-        if (checkboxParent) {
-          checkboxParent.style.display =
-            checkboxParent.style.display === "none" ? "block" : "none" // 切换上午时间段的显示状态
-        }
-      })
-    })
-  }
-}
-
 function setupTimeSlotButton(config) {
   let buttons = config.buttonhide
   console.log("按钮配置:", buttons)
@@ -559,7 +504,6 @@ function setupTimeSlotButton(config) {
     button_night.click()
   }
 }
-setupTimeSlotButton(config)
 
 function afterAuthCheck(result, config) {
   if (result.logged_in) {
@@ -594,8 +538,10 @@ function afterAuthCheck(result, config) {
 
 // 统一的初始化函数
 async function initializeApp() {
-  const isMobile = width < 768
+  const isMobile = width < 768 // 判断是否为移动端
   const config = isMobile ? deviceConfig.mobile : deviceConfig.desktop
+  config.init_slots() // 初始化
+  setupTimeSlotButton(config)
 
   // 检查认证状态
   const authStatus = await checkAuthStatus()
