@@ -26,11 +26,7 @@ function generateTimeIntervalsSimple() {
 const time_slots = generateTimeIntervalsSimple()
 
 function getCurrentDateISO() {
-  const date = new Date()
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-  return `${year}-${month}-${day}`
+  return new Date().toISOString().split("T")[0]
 }
 
 function getCurrentTimeSlotIndex() {
@@ -419,13 +415,30 @@ const deviceConfig = {
         })
       })
     },
+    HighlightCheckedSlots() {
+      // 高亮今天的时间段对应的复选框
+      const today = getCurrentDateISO() // 获取今天的日期
+      const dateElements = document.querySelectorAll(".week-date") // 获取所有日期元素
+      console.log("今天的日期:", today)
+      dateElements.forEach((el) => {
+        if (el.textContent.trim() === today) {
+          el.classList.add("highlight")
+          const parent = el.parentElement
+          const weekTimeSlotItems = parent.querySelectorAll(
+            ".week-time-slot-item"
+          )
+          // 给每个子元素添加背景色
+          weekTimeSlotItems.forEach((item) => {
+            item.style.backgroundColor = "#E0F2FE" // 设置背景色
+          })
+        }
+      })
+    },
     addslot(weekRange) {
       document.getElementById("appointment-date").value = getCurrentDateISO()
       let timeSlots = document.getElementById("time-slot")
-
       // 添加时间标题行
       timeSlots.appendChild(createTimeHeaderRow())
-
       // 为每个日期创建时间段
       weekRange.forEach((date) => {
         const div = document.createElement("div")
@@ -451,24 +464,7 @@ const deviceConfig = {
         add_new_date(date) // 添加每个日期到数据中
       })
       this.addslot(weekRange) // 初始化时间段
-      window.addEventListener("DOMContentLoaded", () => {
-        const today = new Date().toISOString().split("T")[0] // 获取今天的日期，格式为 YYYY-MM-DD
-        const dateElements = document.querySelectorAll(".week-date") // 获取所有日期元素
-
-        dateElements.forEach((el) => {
-          if (el.textContent.trim() === today) {
-            el.classList.add("highlight")
-            const parent = el.parentElement
-            const weekTimeSlotItems = parent.querySelectorAll(
-              ".week-time-slot-item"
-            )
-            // 给每个子元素添加背景色
-            weekTimeSlotItems.forEach((item) => {
-              item.style.backgroundColor = "#E0F2FE" // 设置背景色
-            })
-          }
-        })
-      })
+      this.HighlightCheckedSlots() // 高亮今天的时间段
     },
 
     setupSubmitHandler: (realName, color) => {
@@ -486,24 +482,20 @@ const deviceConfig = {
 
 function setupTimeSlotButton(config) {
   let buttons = config.buttonhide
-  console.log("按钮配置:", buttons)
 
   const button_morning = document.querySelector(buttons.morning.selector)
-
   if (button_morning) {
-    button_morning
     button_morning.addEventListener("click", (event) => {
       auto_hidden(event, buttons.morning.timeRange)
-      console.log("上午", buttons.morning.getSlots)
       config.hidden(buttons.morning.getSlots, buttons.weekdates)
     })
     button_morning.click()
   }
+
   const button_night = document.querySelector(buttons.night.selector)
   if (button_night) {
     button_night.addEventListener("click", (event) => {
       auto_hidden(event, buttons.night.timeRange)
-      console.log("晚上", buttons.night.getSlots)
       config.hidden(buttons.night.getSlots, buttons.weekdates)
     })
     button_night.click()
