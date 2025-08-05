@@ -41,7 +41,8 @@ function getCurrentTimeSlotIndex() {
 }
 
 function disableSlot(slot, reasonText) {
-  const checkbox = document.getElementById(`time-slot-${slot}`)
+  const time = document.querySelector("#appointment-date").value
+  const checkbox = document.getElementById(`time-slot-${time}-${slot}`)
   if (checkbox) {
     checkbox.disabled = true
     if (checkbox.parentElement) {
@@ -126,7 +127,8 @@ function createTimeSlotElement(slot, date = null, isMobile = false) {
   option.type = "checkbox"
   option.value = slot
   option.className = isMobile ? "time-slot-option" : "week-time-slot-option"
-  option.id = date ? `time-slot-${date}-${slot}` : `time-slot-${slot}`
+
+  option.id = `time-slot-${date}-${slot}`
   option.name = "time-slot"
   option.checked = false
 
@@ -192,13 +194,26 @@ function auto_hidden(event, text) {
   Button.style.border = newState ? "1px solid #0991B2" : "1px solid#d6dee7" // 更新按钮边框
 }
 
+function nologin_slot() {
+  // 找出所有的no-login-slot类的元素,禁止点击
+  const noLoginSlots = document.querySelectorAll(".no-login-slot")
+  noLoginSlots.forEach((slot) => {
+    //找到类中的input元素
+    const input = slot.querySelector("input[type='checkbox']")
+    if (input) {
+      input.disabled = true // 禁用复选框
+    }
+  })
+}
+
 const deviceConfig = {
   mobile: {
     buttonhide: buttonhideConfigs,
     hidden(hidden_slots) {
       const hidden_slots_arr = hidden_slots()
+      const date = Object.keys(datas)[0]
       hidden_slots_arr.forEach((slot) => {
-        const checkbox = document.getElementById(`time-slot-${slot}`)
+        const checkbox = document.getElementById(`time-slot-${date}-${slot}`)
         const checkboxParent = checkbox.parentElement
         if (checkboxParent) {
           checkboxParent.style.display =
@@ -207,11 +222,11 @@ const deviceConfig = {
       })
     },
     addslot() {
-      document.getElementById("appointment-date").value = getCurrentDateISO()
+      const initTime = getCurrentDateISO()
+      document.getElementById("appointment-date").value = initTime
       let timeSlots = document.getElementById("time-slot")
-
       time_slots.forEach((slot) => {
-        const timeSlotElement = createTimeSlotElement(slot, null, true)
+        const timeSlotElement = createTimeSlotElement(slot, initTime, true)
         timeSlots.appendChild(timeSlotElement)
       })
     },
@@ -221,28 +236,36 @@ const deviceConfig = {
 
       this.addslot() // 初始化时间段
       this.buttonhide.weekdates = [getCurrentDateISO()] // 设置当前日期为本周日期
+      console.log("日期", datas)
       document
         .getElementById("appointment-date")
         .addEventListener("change", function (event) {
-          const newDate = event.target.value
+          const oldDate = Object.keys(datas)[0] // 获取之前的日期
 
-          // 清除之前禁用的样式和提示
-          // 遍历所有时间段项，移除禁用样式和提示文本
+          const newDate = event.target.value
           for (const slot of time_slots) {
-            const checkbox = document.getElementById(`time-slot-${slot}`)
+            const checkbox = document.getElementById(
+              `time-slot-${oldDate}-${slot}`
+            )
             if (checkbox) {
+              console.log(`启用时间段: ${slot}，新日期: ${newDate}`)
               checkbox.disabled = false // 启用复选框
               checkbox.parentElement.classList.remove("disabled-slot") // 移除禁用样式
+              checkbox.id = `time-slot-${newDate}-${slot}` // 更新ID
               const slotLabel = checkbox.nextElementSibling
+
               if (slotLabel) {
                 // 移除“已被 XXX 预约”的文本
                 const slotText = slotLabel.innerHTML.split("<br>")[0] // 只保留时间段部分
                 slotLabel.innerHTML = slotText
+                slotLabel.setAttribute("for", checkbox.id) // 更新label的for属性
               }
             }
           }
+          clear_dates() // 清空之前的日期数据
           add_new_date(newDate) // 添加新的日期到数据中
-          // 清空之前选中的时间段（如果你希望换日期时重置选择）
+          console.log("日期变化:", datas)
+          // 清空之前选中的时间段
           const selected = get_dates(newDate)
           selected.length = 0
           document.querySelectorAll(".time-slot-option").forEach((cb) => {
@@ -260,17 +283,6 @@ const deviceConfig = {
               disableSlot(time_slots[i])
             }
           }
-          //找出所有的no-login-slot类的元素,禁止点击
-          const noLoginSlots = document.querySelectorAll(".no-login-slot")
-          noLoginSlots.forEach((slot) => {
-            //找到类中的input元素
-            const input = slot.querySelector("input[type='checkbox']")
-            if (input) {
-              input.disabled = true // 禁用复选框
-            }
-          })
-
-          // 现在的时间以后的时间段禁止预约，包括对日期的对比和日期修改后的变化
         })
 
       document
@@ -443,9 +455,10 @@ function afterAuthCheck(result, config) {
     console.log("用户未登录")
     document.querySelector("#login").classList.remove("hidden")
     document.querySelector("#register").classList.remove("hidden")
-
+    console.log(time_slots)
+    const time = getCurrentDateISO()
     time_slots.forEach((slot) => {
-      const checkbox = document.getElementById(`time-slot-${slot}`)
+      const checkbox = document.getElementById(`time-slot-${time}-${slot}`)
       if (checkbox) {
         checkbox.disabled = true
         checkbox.parentElement.classList.add("no-login-slot")
@@ -464,6 +477,7 @@ async function initializeApp() {
   // 检查认证状态
   const authStatus = await checkAuthStatus()
   afterAuthCheck(authStatus, config)
+  nologin_slot() // 禁止未登录用户点击
 }
 
 document.querySelector("#login").addEventListener("click", function (event) {

@@ -18,7 +18,7 @@ async function getBookings(date) {
       const name = value.name || "未知用户" // 如果没有name字段，使用默认值
       const color = value.color || "#ffffff" // 如果没有color字段，使用默认值
       console.log(`时间段: ${key}, 预约人: ${name}, 颜色: ${color}`)
-      const checkbox = document.getElementById(`time-slot-${key}`)
+      const checkbox = document.getElementById(`time-slot-${date}-${key}`)
       if (checkbox) {
         if (checkbox.parentElement) {
           checkbox.parentElement.classList.add("disabled-slot") // 添加禁用样式
@@ -46,7 +46,7 @@ async function submitBookings(realName, color, submitData) {
   try {
     // 一次性发送所有时间段
     const appointmentData = {
-      system: "a_device", // 系统ID，根据需要修改
+      system: "a_device",
       date: selectedDate,
       slots: slots, // 发送所有选中的时间段
       name: realName,
