@@ -228,16 +228,11 @@ label {
   border-bottom: 1px solid #cbd5e0; /* 添加底部边框 */
 }
 
-.time-slot-label {
-  display: flex;
-}
-
 .week-time-slot-item {
   position: relative; /* 为 input 的绝对定位提供参照 */
   width: 100%;
   height: 2.2rem;
   box-sizing: border-box;
-  line-height: 2.2rem;
   text-align: center;
   background: rgb(240 253 244);
   border-right: 1px solid #ccc;

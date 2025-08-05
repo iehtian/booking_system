@@ -398,6 +398,10 @@ const deviceConfig = {
       })
       this.addslot(weekRange) // 初始化时间段
       this.HighlightCheckedSlots() // 高亮今天的时间段
+      //获取每个日期的预约信息
+      weekRange.forEach((date) => {
+        getBookings(date)
+      })
     },
 
     setupSubmitHandler: (realName, color) => {

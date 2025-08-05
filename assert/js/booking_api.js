@@ -26,7 +26,7 @@ async function getBookings(date) {
         }
         const slotLabel = checkbox.nextElementSibling
         if (slotLabel) {
-          slotLabel.innerHTML += `<br> 已被 ${name} 预约` // 在标签后添加已预约信息
+          slotLabel.innerHTML += `${name}` // 在标签后添加已预约信息
         }
       }
     })
