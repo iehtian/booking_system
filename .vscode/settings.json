@@ -14,6 +14,5 @@
         "__pycache__": true,
         "LICENSE": true,
     },
-    "stylelint.configFile": "./.stylelintrc.json",
-    "prettier.configPath": "./.prettierrc",
+    "prettier.configPath": ".prettierrc",
 }
