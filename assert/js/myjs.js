@@ -244,10 +244,11 @@ const deviceConfig = {
 
       this.addslot() // 初始化时间段
       this.buttonhide.weekdates = [getCurrentDateISO()] // 设置当前日期为本周日期
-      console.log("日期", datas)
+
       document
         .getElementById("appointment-date")
         .addEventListener("change", function (event) {
+          // 日期变化事件处理
           const oldDate = Object.keys(datas)[0] // 获取之前的日期
 
           const newDate = event.target.value
@@ -281,6 +282,7 @@ const deviceConfig = {
           getBookings(newDate)
           // 获取新的日期的预约信息
           disabledSlotwithDate(time_slots, newDate)
+          nologin_slot()
         })
 
       document
