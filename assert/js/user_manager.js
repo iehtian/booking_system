@@ -38,25 +38,47 @@ async function register(ID, password, name) {
   }
 }
 
-// 登出功能
 async function logout() {
   try {
+    const token = localStorage.getItem("access_token")
+    if (!token) {
+      // 没 token 直接当已退出
+      localStorage.removeItem("access_token")
+      localStorage.removeItem("userInfo")
+      return true
+    }
+
     const response = await fetch(`${host}/api/logout`, {
       method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       credentials: "include",
     })
 
-    const data = await response.json()
-
-    if (data.success) {
+    if (response.status === 401) {
+      // token 无效/过期，也当退出处理
+      console.warn("登出时 token 无效或已过期")
+      localStorage.removeItem("access_token")
       localStorage.removeItem("userInfo")
-      console.log("登出成功")
       return true
     }
-    return false
+
+    const data = await response.json()
+    if (data.success) {
+      console.log("登出成功")
+    } else {
+      console.warn("后端返回登出失败:", data.message)
+    }
+
+    localStorage.removeItem("access_token")
+    localStorage.removeItem("userInfo")
+    return true
   } catch (error) {
     console.error("登出错误:", error)
-    throw error
+    localStorage.removeItem("access_token")
+    localStorage.removeItem("userInfo")
+    return false
   }
 }
 
