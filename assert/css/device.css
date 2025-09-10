@@ -77,20 +77,10 @@ label {
   user-select: none;
 }
 
-.disabled-slot {
-  color: #ca7c7c; /* 将文本颜色变灰 */
-  background: #f3f4f6; /* 浅灰色背景 */
-}
-
 .week-time-slot-option:checked + label {
   color: white;
   background: rgb(59 130 246);
   border: none;
-}
-
-.disabled-slot input[type="checkbox"]:hover + label,
-.no-login-slot input[type="checkbox"]:hover + label {
-  cursor: not-allowed; /* 鼠标悬停时显示禁止图标 */
 }
 
 .time-slot-item input[type="checkbox"]:checked + label {
@@ -244,28 +234,20 @@ label {
   color: red;
 }
 
-footer {
-  position: relative;
-  max-width: 900px;
-  padding: 15px 20px;
-  margin: 10px auto 0;
-  overflow: hidden;
-  font-size: 14px;
-  line-height: 1.6;
-  text-align: center;
-  color: #fff;
-  background: transparent; /* 背景透明 */
-  border-radius: 12px; /* 圆角 */
-  white-space: nowrap;
+.highlight ~ .week-time-slot-item {
+  background-color: #e0f2fe;
 }
 
-footer a {
-  margin-right: 8px;
-  margin-left: 8px;
-  text-decoration: none;
-  color: #ffe066;
+.week-time-slot-item.disabled-slot {
+  background: #f3f4f6;
 }
 
-footer a:hover {
-  text-decoration: underline;
+.disabled-slot {
+  color: #ca7c7c; /* 将文本颜色变灰 */
+  background: #f3f4f6; /* 浅灰色背景 */
+}
+
+.disabled-slot input[type="checkbox"]:hover + label,
+.no-login-slot input[type="checkbox"]:hover + label {
+  cursor: not-allowed; /* 鼠标悬停时显示禁止图标 */
 }

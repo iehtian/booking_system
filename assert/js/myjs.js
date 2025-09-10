@@ -40,17 +40,25 @@ function getCurrentTimeSlotIndex() {
   return slotIndex // 结果是 0 ~ 47
 }
 
-function disableSlot(slot, reasonText) {
-  const time = document.querySelector("#appointment-date").value
+function disableSlot(slot, time) {
   const checkbox = document.getElementById(`time-slot-${time}-${slot}`)
   if (checkbox) {
     checkbox.disabled = true
     if (checkbox.parentElement) {
       checkbox.parentElement.classList.add("disabled-slot")
     }
-    const slotLabel = checkbox.nextElementSibling
-    if (reasonText && slotLabel && !slotLabel.innerHTML.includes(reasonText)) {
-      slotLabel.innerHTML += `<br> ${reasonText}`
+  }
+}
+
+function disabledSlotwithDate(time_slots, newDate) {
+  if (newDate < getCurrentDateISO()) {
+    // 日期已过
+    time_slots.forEach((slot) => disableSlot(slot, newDate))
+  } else if (newDate === getCurrentDateISO()) {
+    // 是今天，禁用当前时间段之前的
+    const currentSlotIndex = getCurrentTimeSlotIndex()
+    for (let i = 0; i < currentSlotIndex; i++) {
+      disableSlot(time_slots[i], newDate)
     }
   }
 }
@@ -248,7 +256,6 @@ const deviceConfig = {
               `time-slot-${oldDate}-${slot}`
             )
             if (checkbox) {
-              console.log(`启用时间段: ${slot}，新日期: ${newDate}`)
               checkbox.disabled = false // 启用复选框
               checkbox.parentElement.classList.remove("disabled-slot") // 移除禁用样式
               checkbox.id = `time-slot-${newDate}-${slot}` // 更新ID
@@ -273,16 +280,7 @@ const deviceConfig = {
           })
           getBookings(newDate)
           // 获取新的日期的预约信息
-          if (newDate < getCurrentDateISO()) {
-            // 日期已过
-            time_slots.forEach((slot) => disableSlot(slot))
-          } else if (newDate === getCurrentDateISO()) {
-            // 是今天，禁用当前时间段之前的
-            const currentSlotIndex = getCurrentTimeSlotIndex()
-            for (let i = 0; i < currentSlotIndex; i++) {
-              disableSlot(time_slots[i])
-            }
-          }
+          disabledSlotwithDate(time_slots, newDate)
         })
 
       document
@@ -312,6 +310,16 @@ const deviceConfig = {
           if (slots.length === 0) continue
           let submit = { date: date, slots: slots }
           submitBookings(realName, color, submit)
+        }
+      })
+    },
+    setupnologin() {
+      const time = getCurrentDateISO()
+      time_slots.forEach((slot) => {
+        const checkbox = document.getElementById(`time-slot-${time}-${slot}`)
+        if (checkbox) {
+          checkbox.disabled = true
+          checkbox.parentElement.classList.add("no-login-slot")
         }
       })
     },
@@ -360,10 +368,6 @@ const deviceConfig = {
           const weekTimeSlotItems = parent.querySelectorAll(
             ".week-time-slot-item"
           )
-          // 给每个子元素添加背景色
-          weekTimeSlotItems.forEach((item) => {
-            item.style.backgroundColor = "#E0F2FE" // 设置背景色
-          })
         }
       })
     },
@@ -402,6 +406,9 @@ const deviceConfig = {
       weekRange.forEach((date) => {
         getBookings(date)
       })
+      weekRange.forEach((date) => {
+        disabledSlotwithDate(time_slots, date)
+      })
     },
 
     setupSubmitHandler: (realName, color) => {
@@ -412,6 +419,20 @@ const deviceConfig = {
           let submit = { date: date, slots: slots }
           submitBookings(realName, color, submit)
         }
+      })
+    },
+    setupnologin() {
+      const weekRange = getWeekRangeMonday()
+      weekRange.forEach((date) => {
+        const time = date
+
+        time_slots.forEach((slot) => {
+          const checkbox = document.getElementById(`time-slot-${time}-${slot}`)
+          if (checkbox) {
+            checkbox.disabled = true
+            checkbox.parentElement.classList.add("no-login-slot")
+          }
+        })
       })
     },
   },
@@ -460,6 +481,7 @@ function afterAuthCheck(result, config) {
     document.querySelector("#login").classList.remove("hidden")
     document.querySelector("#register").classList.remove("hidden")
     console.log(time_slots)
+    config.setupnologin()
     const time = getCurrentDateISO()
     time_slots.forEach((slot) => {
       const checkbox = document.getElementById(`time-slot-${time}-${slot}`)
