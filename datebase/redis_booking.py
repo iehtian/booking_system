@@ -80,10 +80,10 @@ if __name__ == '__main__':
 
     # 查询某天的预订
     print("\n📅 Bookings on 2025-06-21:")
-    for res in search_by_date("a","2025-06-21"):
+    for res in search_by_date("a_device","2025-06-21"):
         print(f"{res[0]}: {res[1]}")
 
     # # 查询 Alice
     # print("\n🧑 Bookings by Alice:")
-    # for key, data in search_by_name("Alice"):
-    #     print(f"{key}: {data}")
+    for key, data in search_by_name("a_device","123"):
+        print(f"{key}: {data}")

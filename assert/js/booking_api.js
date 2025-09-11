@@ -91,7 +91,7 @@ async function getBookings_by_ID(date) {
     })
     const data = await res.json()
     console.log("预约信息", data) // 例如 []
-    return { success: true, bookings: data }
+    return { success: true, times: data }
   } catch (error) {
     console.error("获取预约信息时出错:", error)
     return { success: false, message: "获取预约信息失败" }

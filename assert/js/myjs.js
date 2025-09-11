@@ -242,6 +242,19 @@ const deviceConfig = {
         timeSlots.appendChild(timeSlotElement)
       })
     },
+    async setupcacel() {
+      const date = document.getElementById("appointment-date").value
+      const canceltime = await getBookings_by_ID(date)
+      console.log("取消预约时间段:", canceltime)
+      for (const slot of canceltime.times) {
+        const checkbox = document.getElementById(`time-slot-${date}-${slot}`)
+        if (checkbox) {
+          checkbox.checked = true
+          checkbox.disabled = false
+          checkbox.parentElement.classList.remove("disabled-slot")
+        }
+      }
+    },
     init_slots() {
       clear_dates()
       add_new_date(getCurrentDateISO())
@@ -251,7 +264,7 @@ const deviceConfig = {
 
       document
         .getElementById("appointment-date")
-        .addEventListener("change", function (event) {
+        .addEventListener("change", (event) => {
           // 日期变化事件处理
           const oldDate = Object.keys(datas)[0] // 获取之前的日期
 
@@ -287,6 +300,7 @@ const deviceConfig = {
           // 获取新的日期的预约信息
           disabledSlotwithDate(time_slots, newDate)
           nologin_slot()
+          this.setupcacel()
         })
 
       document
@@ -441,6 +455,7 @@ const deviceConfig = {
         })
       })
     },
+    async setupcacel() {},
   },
 }
 
@@ -484,7 +499,7 @@ async function afterAuthCheck(result, config) {
 
     document.querySelector(".show-name").textContent = `你好，${realName}`
     document.querySelector(".show-name").classList.remove("hidden")
-    const res = await getBookings_by_ID(getCurrentDateISO())
+    config.setupcacel()
   } else {
     console.log("用户未登录")
     document.querySelector("#login").classList.remove("hidden")
