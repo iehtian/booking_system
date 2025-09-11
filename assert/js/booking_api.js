@@ -21,7 +21,9 @@ async function getBookings(date) {
       const checkbox = document.getElementById(`time-slot-${date}-${key}`)
       if (checkbox) {
         if (checkbox.parentElement) {
+          checkbox.disabled = true
           checkbox.parentElement.classList.add("disabled-slot") // 添加禁用样式
+
           checkbox.parentElement.style.backgroundColor = color // 设置背景色
         }
         const slotLabel = checkbox.nextElementSibling
@@ -79,4 +81,20 @@ async function submitBookings(realName, color, submitData) {
   }
 }
 
-export { getBookings, submitBookings }
+async function getBookings_by_ID(date) {
+  try {
+    const token = localStorage.getItem("access_token")
+    const res = await fetch(`${host}/api/bookings_user?date=${date}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    const data = await res.json()
+    console.log("预约信息", data) // 例如 []
+    return { success: true, bookings: data }
+  } catch (error) {
+    console.error("获取预约信息时出错:", error)
+    return { success: false, message: "获取预约信息失败" }
+  }
+}
+export { getBookings, submitBookings, getBookings_by_ID }

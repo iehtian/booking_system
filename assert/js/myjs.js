@@ -1,5 +1,9 @@
 import { logout, checkAuthStatus } from "./user_manager.js"
-import { getBookings, submitBookings } from "./booking_api.js"
+import {
+  getBookings,
+  submitBookings,
+  getBookings_by_ID,
+} from "./booking_api.js"
 const width = document.documentElement.clientWidth || document.body.clientWidth
 console.log("当前屏幕宽度:", width)
 
@@ -462,11 +466,13 @@ function setupTimeSlotButton(config) {
   }
 }
 
-function afterAuthCheck(result, config) {
+async function afterAuthCheck(result, config) {
   if (result.logged_in) {
     console.log("用户已登录:", result.user)
     const submitButton = document.querySelector("#submit-button")
     submitButton.classList.remove("hidden")
+    const cancelButton = document.querySelector("#cancel-button")
+    cancelButton.classList.remove("hidden")
     const logoutButton = document.querySelector("#logout")
     logoutButton.classList.remove("hidden")
 
@@ -478,6 +484,7 @@ function afterAuthCheck(result, config) {
 
     document.querySelector(".show-name").textContent = `你好，${realName}`
     document.querySelector(".show-name").classList.remove("hidden")
+    const res = await getBookings_by_ID(getCurrentDateISO())
   } else {
     console.log("用户未登录")
     document.querySelector("#login").classList.remove("hidden")

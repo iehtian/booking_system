@@ -16,6 +16,7 @@ from .redis_booking import (
     upsert_booking, 
     search_by_date, 
     search_by_name, 
+    search_by_date_and_name,
     create_index as create_booking_index,
     search_all as search_all_bookings
 )

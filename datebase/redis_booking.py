@@ -1,5 +1,6 @@
 import redis
 import json
+from redis.exceptions import ResponseError
 
 r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
@@ -7,7 +8,7 @@ r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 def index_exists(index_name):
     try:
         return index_name in r.execute_command('FT._LIST')
-    except redis.exceptions.ResponseError:
+    except ResponseError:
         return False
 
 # 创建索引
@@ -45,6 +46,11 @@ def search_by_name(system_id, name):
     query = f"@name:{{{name}}} @system_id:{{{system_id}}}"
     return search(query)
 
+def search_by_date_and_name(system_id, date, name):
+    date = date.replace('-', '\\-')  # 格式化日期为 YYYYMMDD
+    query = f"@date:{{{date}}} @name:{{{name}}} @system_id:{{{system_id}}}"
+    return search(query)
+
 # 执行查询并解析结果
 def search(query):
     results = r.execute_command('FT.SEARCH', 'booking-idx', query)
@@ -77,7 +83,7 @@ if __name__ == '__main__':
     for res in search_by_date("a","2025-06-21"):
         print(f"{res[0]}: {res[1]}")
 
-    # 查询 Alice
-    print("\n🧑 Bookings by Alice:")
-    for key, data in search_by_name("Alice"):
-        print(f"{key}: {data}")
+    # # 查询 Alice
+    # print("\n🧑 Bookings by Alice:")
+    # for key, data in search_by_name("Alice"):
+    #     print(f"{key}: {data}")

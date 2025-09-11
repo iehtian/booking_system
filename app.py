@@ -12,6 +12,7 @@ from datebase import (
     upsert_booking, 
     search_by_date, 
     search_by_name,
+    search_by_date_and_name,
     initialize_database,
     search_all_bookings
 )
@@ -150,6 +151,34 @@ def get_bookings():
         # 如果没有提供日期，返回错误提示
         return jsonify({"error": "Date parameter is required"}), 400
 
+@app.route("/api/bookings_user", methods=['GET'])
+@jwt_required()
+def get_user_bookings():
+    """获取特定日期当前用户的所有预约信息"""
+    try:
+        date = request.args.get('date')
+        
+        if not date:
+            return jsonify({"error": "Date parameter is required"}), 400
+            
+        current_user_id = get_jwt_identity()
+        user = search_by_ID(current_user_id)
+
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        user_name = user[0][1]['real_name']
+        print(f"获取用户 {current_user_id} 的预约信息，用户名: {user_name}")
+
+        user_bookings = search_by_date_and_name("a_device", date, user_name)
+        times = [slot[1]['time'] for slot in user_bookings]
+        print(f"当前用户在 {date} 的预约时间段: {times}")
+        return jsonify(times)
+    
+    except Exception as e:
+        print(f"获取用户预约信息时出错: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
 @app.route('/api/register', methods=['POST'])
 def get_register_info():
     data = request.get_json()
@@ -197,7 +226,6 @@ def check_auth():
     """检查登录状态"""
     try:
         current_user_id = get_jwt_identity()
-        claims = get_jwt()
         
         print(f"当前用户: {current_user_id}")
         
@@ -269,8 +297,6 @@ def login():
 @jwt_required()
 def logout():
     try:
-        current_user_id = get_jwt_identity()
-        
         return jsonify({
             'success': True,
             'message': '已登出'
