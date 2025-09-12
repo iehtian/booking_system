@@ -2,6 +2,7 @@ import { logout, checkAuthStatus } from "./user_manager.js"
 import {
   getBookings,
   submitBookings,
+  cancelBooking,
   getBookings_by_ID,
 } from "./booking_api.js"
 const width = document.documentElement.clientWidth || document.body.clientWidth
@@ -249,9 +250,7 @@ const deviceConfig = {
       for (const slot of canceltime.times) {
         const checkbox = document.getElementById(`time-slot-${date}-${slot}`)
         if (checkbox) {
-          checkbox.checked = true
           checkbox.disabled = false
-          checkbox.parentElement.classList.remove("disabled-slot")
         }
       }
     },
@@ -302,7 +301,6 @@ const deviceConfig = {
           nologin_slot()
           this.setupcacel()
         })
-
       document
         .getElementById("appointment-date")
         .dispatchEvent(new Event("change")) // 触发日期变化事件
@@ -340,6 +338,15 @@ const deviceConfig = {
         if (checkbox) {
           checkbox.disabled = true
           checkbox.parentElement.classList.add("no-login-slot")
+        }
+      })
+    },
+    setupCancelHandler: async () => {
+      const cancelButton = document.querySelector("#cancel-button")
+      cancelButton.addEventListener("click", async () => {
+        for (const [date, slots] of Object.entries(datas)) {
+          if (slots.length === 0) continue
+          await cancelBooking(date, slots)
         }
       })
     },
@@ -456,6 +463,7 @@ const deviceConfig = {
       })
     },
     async setupcacel() {},
+    async setupCancelHandler() {},
   },
 }
 
@@ -496,6 +504,7 @@ async function afterAuthCheck(result, config) {
 
     // 设置特定设备的提交处理器
     config.setupSubmitHandler(realName, color)
+    config.setupCancelHandler()
 
     document.querySelector(".show-name").textContent = `你好，${realName}`
     document.querySelector(".show-name").classList.remove("hidden")

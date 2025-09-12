@@ -22,8 +22,6 @@ async function getBookings(date) {
       if (checkbox) {
         if (checkbox.parentElement) {
           checkbox.disabled = true
-          checkbox.parentElement.classList.add("disabled-slot") // 添加禁用样式
-
           checkbox.parentElement.style.backgroundColor = color // 设置背景色
         }
         const slotLabel = checkbox.nextElementSibling
@@ -81,6 +79,35 @@ async function submitBookings(realName, color, submitData) {
   }
 }
 
+async function cancelBooking(date, slots) {
+  try {
+    const cancelDate = {
+      date: date,
+      slots: slots,
+    }
+    console.log("取消预约的数据:", cancelDate)
+    const response = await fetch(`${host}/api/cancel_booking`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(cancelDate),
+    })
+    const result = await response.json()
+    if (response.ok) {
+      console.log("预约已成功取消:", result)
+      location.reload()
+    } else {
+      // 处理错误情况
+      alert("取消预约失败，请重试")
+      console.error("取消失败:", result)
+      location.reload()
+    }
+  } catch (error) {
+    console.error("取消预约时出错:", error)
+  }
+}
+
 async function getBookings_by_ID(date) {
   try {
     const token = localStorage.getItem("access_token")
@@ -97,4 +124,4 @@ async function getBookings_by_ID(date) {
     return { success: false, message: "获取预约信息失败" }
   }
 }
-export { getBookings, submitBookings, getBookings_by_ID }
+export { getBookings, submitBookings, cancelBooking, getBookings_by_ID }

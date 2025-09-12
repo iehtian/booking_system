@@ -13,6 +13,7 @@ from datebase import (
     search_by_date, 
     search_by_name,
     search_by_date_and_name,
+    delete_booking,
     initialize_database,
     search_all_bookings
 )
@@ -113,7 +114,53 @@ def save_info():
     except Exception as e:
         print(f"保存预约时出错: {e}")
         return jsonify({"error": "Internal server error"}), 500
-    
+
+@app.route('/api/cancel_booking', methods=['POST'])
+def cancel_booking():
+    """取消预约信息"""
+    try:
+        data = request.get_json()
+        print(f"接收到的取消预约数据: {data}")
+        system_id = data.get('system', 'a_device')  # 默认为A仪器系统
+        date = data.get('date')
+        slots = data.get('slots')  # 现在接收时间段数组
+
+        
+        if not date or not slots:
+            return jsonify({"error": "Missing required fields: date, slots"}), 400
+
+        if not isinstance(slots, list) or len(slots) == 0:
+            return jsonify({"error": "slots must be a non-empty array"}), 400
+        
+        search_by_date_result = search_by_date(system_id, date)
+        if not search_by_date_result:
+            return jsonify({"error": "No bookings found for the specified date"}), 404
+        
+        tmies = [slot[1]['time'] for slot in search_by_date_result]
+        for slot in slots:
+            if slot not in tmies:
+                return jsonify({"error": f"Time slot {slot} is not booked"}), 404
+        
+        # 所有时间段都已预约，批量删除预约
+        successful_cancellations = []
+        for slot in slots:
+            booking_id = f"{system_id}:{date}:{slot}"
+            delete_booking(booking_id)
+            successful_cancellations.append(slot)
+        
+        print(f"批量取消预约成功: {date} 取消了 {len(successful_cancellations)} 个时间段")
+        print(f"取消的时间段: {successful_cancellations}")
+        
+        return jsonify({
+            "success": True,
+            "message": f"Successfully cancelled {len(successful_cancellations)} time slots on {date}",
+            "cancelled_slots": successful_cancellations
+        })
+        
+    except Exception as e:
+        print(f"取消预约时出错: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
 @app.route('/api/bookings', methods=['GET'])
 def get_bookings():
     """获取预约信息并按时间段排序，返回 {time: name} 字典"""

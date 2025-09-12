@@ -70,6 +70,11 @@ def search_all():
         data.append((key, json_data))
     return data
 
+def delete_booking(booking_id):
+    key = f"booking:{booking_id}"
+    r.delete(key)
+    print(f"Deleted {key}")
+
 # 示例执行逻辑
 if __name__ == '__main__':
     create_index()
