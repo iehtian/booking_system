@@ -101,8 +101,8 @@ label {
 
 .button-box {
   width: 100%;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
   background-color: white;
 }
 
@@ -250,4 +250,8 @@ label {
 .disabled-slot input[type="checkbox"]:hover + label,
 .no-login-slot input[type="checkbox"]:hover + label {
   cursor: not-allowed; /* 鼠标悬停时显示禁止图标 */
+}
+
+.button-hidden {
+  display: none; /* 默认隐藏 */
 }
