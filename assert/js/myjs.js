@@ -337,11 +337,11 @@ const deviceConfig = {
     },
     setupSubmitHandler: (realName, color) => {
       const submitButton = document.querySelector("#submit-button")
-      submitButton.addEventListener("click", () => {
+      submitButton.addEventListener("click", async () => {
         for (const [date, slots] of Object.entries(datas)) {
           if (slots.length === 0) continue
           let submit = { date: date, slots: slots }
-          submitBookings(realName, color, submit)
+          await submitBookings(realName, color, submit)
         }
       })
     },
@@ -454,11 +454,11 @@ const deviceConfig = {
 
     setupSubmitHandler: (realName, color) => {
       const submitButton = document.querySelector("#submit-button")
-      submitButton.addEventListener("click", () => {
+      submitButton.addEventListener("click", async () => {
         for (const [date, slots] of Object.entries(datas)) {
           if (slots.length === 0) continue
           let submit = { date: date, slots: slots }
-          submitBookings(realName, color, submit)
+          await submitBookings(realName, color, submit)
         }
       })
     },
