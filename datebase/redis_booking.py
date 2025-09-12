@@ -53,7 +53,7 @@ def search_by_date_and_name(system_id, date, name):
 
 # 执行查询并解析结果
 def search(query):
-    results = r.execute_command('FT.SEARCH', 'booking-idx', query)
+    results = r.execute_command('FT.SEARCH', 'booking-idx', query, 'LIMIT', '0', '50')
     data = []
     for i in range(1, len(results), 2):
         key = results[i]
