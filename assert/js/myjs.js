@@ -257,9 +257,12 @@ const deviceConfig = {
       const date = document.getElementById("appointment-date").value
       const canceltime = await getBookings_by_ID(date)
       console.log("取消预约时间段:", canceltime)
+
       for (const slot of canceltime.times) {
         const checkbox = document.getElementById(`time-slot-${date}-${slot}`)
-        if (checkbox) {
+        const isDisabledParent =
+          checkbox?.parentElement?.classList.contains("disabled-slot")
+        if (checkbox && !isDisabledParent) {
           checkbox.disabled = false
         }
       }
