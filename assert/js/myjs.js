@@ -166,6 +166,16 @@ function createTimeSlotElement(slot, date = null, isMobile = false) {
   return divtime
 }
 
+function clear_booinginfo() {
+  document.querySelectorAll(".time-slot-item").forEach((item) => {
+    item.style.removeProperty("background-color")
+  })
+  // 找到所有span,删除
+  document.querySelectorAll("span").forEach((span) => {
+    span.remove()
+  })
+}
+
 // 创建日期标题行（仅桌面端使用）
 function createTimeHeaderRow() {
   const div = document.createElement("div")
@@ -287,6 +297,7 @@ const deviceConfig = {
             }
           }
           clear_dates() // 清空之前的日期数据
+          clear_booinginfo() // 清除所有时间段的背景色
           add_new_date(newDate) // 添加新的日期到数据中
           console.log("日期变化:", datas)
           // 清空之前选中的时间段

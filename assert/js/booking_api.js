@@ -26,7 +26,10 @@ async function getBookings(date) {
         }
         const slotLabel = checkbox.nextElementSibling
         if (slotLabel) {
-          slotLabel.innerHTML += `${name}` // 在标签后添加已预约信息
+          // slotLabel中使用span来显示已预约信息
+          const span = document.createElement("span")
+          span.textContent = `已预约: ${name}`
+          slotLabel.appendChild(span)
         }
       }
     })
