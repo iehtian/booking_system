@@ -476,7 +476,20 @@ const deviceConfig = {
         })
       })
     },
-    async setupcacel() {},
+    async setupcacel() {
+      for (const date of this.buttonhide.weekdates) {
+        console.log("取消预约日期:", date)
+        const canceltime = await getBookings_by_ID(date)
+        for (const slot of canceltime.times) {
+          const checkbox = document.getElementById(`time-slot-${date}-${slot}`)
+          const isDisabledParent =
+            checkbox?.parentElement?.classList.contains("disabled-slot")
+          if (checkbox && !isDisabledParent) {
+            checkbox.disabled = false
+          }
+        }
+      }
+    },
     async setupCancelHandler() {},
   },
 }
