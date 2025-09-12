@@ -23,6 +23,16 @@ from datebase import (
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=["http://localhost:5501", "http://127.0.0.1:5501","http://127.0.0.1:5502", "http://localhost:5502"])
 
+@app.after_request
+def add_cache_headers(response):
+    # 仅控制接口缓存，静态文件由前端服务器/CDN 处理
+    if request.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        response.headers["Vary"] = "Authorization, Origin"
+    return response
+
 # JWT配置
 app.config.from_object(Config)  # 加载配置类
 
