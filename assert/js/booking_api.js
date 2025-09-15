@@ -8,9 +8,9 @@ async function getBookings(date) {
         "Content-Type": "application/json",
       },
     })
+    console.log("响应:", response)
 
     const data = await response.json()
-    console.log("已预约时间段数据:", data)
     if (!data.bookings) {
       return
     }

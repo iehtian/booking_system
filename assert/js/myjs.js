@@ -147,7 +147,7 @@ function createTimeSlotElement(slot, date = null, isMobile = false) {
 
   // 添加选中事件监听器
   option.addEventListener("change", (event) => {
-    const targetDate = date || document.getElementById("appointment-date").value
+    const targetDate = document.getElementById("appointment-date").value
     checked_option(event, targetDate, event.target.value)
   })
 
@@ -281,6 +281,7 @@ const deviceConfig = {
           const oldDate = Object.keys(datas)[0] // 获取之前的日期
 
           const newDate = event.target.value
+          add_new_date(newDate)
           for (const slot of time_slots) {
             const checkbox = document.getElementById(
               `time-slot-${oldDate}-${slot}`
@@ -300,10 +301,8 @@ const deviceConfig = {
             }
           }
           clear_dates() // 清空之前的日期数据
-          clear_booinginfo() // 清除所有时间段的背景色
+          clear_booinginfo() // 清除所有时间段的背景色和颜色
           add_new_date(newDate) // 添加新的日期到数据中
-          console.log("日期变化:", datas)
-          // 清空之前选中的时间段
           const selected = get_dates(newDate)
           selected.length = 0
           document.querySelectorAll(".time-slot-option").forEach((cb) => {
