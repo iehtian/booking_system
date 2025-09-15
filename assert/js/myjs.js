@@ -84,7 +84,6 @@ function getWeekRangeMonday(date = new Date()) {
     dayDate.setDate(monday.getDate() + i)
     this_week.push(dayDate.toISOString().split("T")[0])
   }
-  console.log("本周日期范围:", this_week)
   return this_week
 }
 
@@ -168,6 +167,9 @@ function createTimeSlotElement(slot, date = null, isMobile = false) {
 
 function clear_booinginfo() {
   document.querySelectorAll(".time-slot-item").forEach((item) => {
+    item.style.removeProperty("background-color")
+  })
+  document.querySelectorAll(".week-time-slot-item").forEach((item) => {
     item.style.removeProperty("background-color")
   })
   // 找到所有span,删除
@@ -319,13 +321,6 @@ const deviceConfig = {
         .dispatchEvent(new Event("change")) // 触发日期变化事件
       // 发送预约数据到后端的函数
 
-      document
-        .querySelector("#appointment-date")
-        .addEventListener("click", function (event) {
-          //回调函数，打开日期选择器
-          event.target.showPicker() // 显示日期选择器
-        })
-
       document.querySelector("#yestoday").addEventListener("click", (event) => {
         date_change(event, -1) // 点击昨天按钮，日期减1
       })
@@ -397,22 +392,25 @@ const deviceConfig = {
       })
     },
     HighlightCheckedSlots() {
-      // 高亮今天的时间段对应的复选框
-      const today = getCurrentDateISO() // 获取今天的日期
+      // 高亮日期框中日期对应的复选框
+      const today = document.getElementById("appointment-date").value
       const dateElements = document.querySelectorAll(".week-date") // 获取所有日期元素
       console.log("今天的日期:", today)
       dateElements.forEach((el) => {
         if (el.textContent.trim() === today) {
           el.classList.add("highlight")
-          const parent = el.parentElement
-          const weekTimeSlotItems = parent.querySelectorAll(
-            ".week-time-slot-item"
-          )
+        }
+      })
+    },
+    cleanHighlight(date) {
+      const dateElements = document.querySelectorAll(".week-date") // 获取所有日期元素
+      dateElements.forEach((el) => {
+        if (el.textContent.trim() === date) {
+          el.classList.remove("highlight")
         }
       })
     },
     addslot(weekRange) {
-      document.getElementById("appointment-date").value = getCurrentDateISO()
       let timeSlots = document.getElementById("time-slot")
       // 添加时间标题行
       timeSlots.appendChild(createTimeHeaderRow())
@@ -433,21 +431,68 @@ const deviceConfig = {
         timeSlots.appendChild(div)
       })
     },
+    updateslot(weekRange, date) {
+      const weekRanges = document.querySelectorAll(".week-range")
+      weekRanges.forEach((range, index) => {
+        if (index === 0) {
+          // 跳过标题行
+          return
+        }
+        const date = weekRange[index - 1]
+        range.querySelector(".week-date").textContent = date // 更新日期文本
+        range.querySelectorAll("input[type='checkbox']").forEach((cb) => {
+          const timeSlot = cb.value
+          cb.id = `time-slot-${date}-${timeSlot}` // 更新ID
+          const slotLabel = cb.nextElementSibling
+          if (slotLabel) {
+            slotLabel.setAttribute("for", cb.id) // 更新label的for属性
+            // 移除label中的span
+            clear_booinginfo()
+          }
+        })
+      })
+      // 移除所有的disabled-slot类
+      document.querySelectorAll(".disabled-slot").forEach((el) => {
+        el.classList.remove("disabled-slot")
+        el.children[0].disabled = false // 启用复选框
+      })
+    },
     init_slots() {
       clear_dates()
       const weekRange = getWeekRangeMonday()
       this.buttonhide.weekdates = weekRange
-      weekRange.forEach((date) => {
-        add_new_date(date) // 添加每个日期到数据中
-      })
-      this.addslot(weekRange) // 初始化时间段
-      this.HighlightCheckedSlots() // 高亮今天的时间段
+      const appointmentDate = document.getElementById("appointment-date")
+      appointmentDate.value = getCurrentDateISO()
+
+      let oldDate = appointmentDate.value
+      const weekRanges = document.querySelectorAll(".week-range")
+      weekRanges.forEach((range) => range.remove()) // 删除所有时间段
+      this.addslot(weekRange) // 重新添加时间段
+      this.HighlightCheckedSlots(oldDate) // 高亮今天的时间段
       //获取每个日期的预约信息
-      weekRange.forEach((date) => {
-        getBookings(date)
+      weekRange.forEach((oldDate) => {
+        getBookings(oldDate)
+        disabledSlotwithDate(time_slots, oldDate)
       })
-      weekRange.forEach((date) => {
-        disabledSlotwithDate(time_slots, date)
+
+      appointmentDate.addEventListener("change", (event) => {
+        // 日期变化事件处理
+        console.log("old date:", oldDate)
+        this.cleanHighlight(oldDate) // 清除之前的高亮
+        oldDate = event.target.value
+        const weekRange = getWeekRangeMonday(oldDate)
+        console.log("新的本周日期范围:", weekRange)
+        clear_dates() // 清空之前的日期数据
+        weekRange.forEach((date) => {
+          add_new_date(date) // 添加每个日期到数据中
+        })
+        this.updateslot(weekRange)
+        weekRange.forEach((oldDate) => {
+          getBookings(oldDate)
+          disabledSlotwithDate(time_slots, oldDate)
+        })
+
+        this.HighlightCheckedSlots() // 高亮对应的时间段
       })
     },
 
@@ -493,7 +538,7 @@ const deviceConfig = {
   },
 }
 
-function setupTimeSlotButton(config) {
+function setupSlotHidden(config) {
   let buttons = config.buttonhide
 
   const button_morning = document.querySelector(buttons.morning.selector)
@@ -557,7 +602,14 @@ async function initializeApp() {
   const isMobile = width < 768 // 判断是否为移动端
   const config = isMobile ? deviceConfig.mobile : deviceConfig.desktop
   config.init_slots() // 初始化
-  setupTimeSlotButton(config)
+  setupSlotHidden(config)
+
+  document
+    .querySelector("#appointment-date")
+    .addEventListener("click", function (event) {
+      //回调函数，打开日期选择器
+      event.target.showPicker() // 显示日期选择器
+    })
 
   // 检查认证状态
   const authStatus = await checkAuthStatus()
