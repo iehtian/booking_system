@@ -146,7 +146,9 @@ function createTimeSlotElement(slot, date = null, isMobile = false) {
 
   // 添加选中事件监听器
   option.addEventListener("change", (event) => {
-    const targetDate = date
+    const targetDate = isMobile
+      ? document.getElementById("appointment-date").value
+      : date
     checked_option(event, targetDate, event.target.value)
   })
 
