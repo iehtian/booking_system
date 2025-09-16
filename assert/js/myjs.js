@@ -119,6 +119,7 @@ function checked_option(event, data, timeSlot) {
   }
 
   console.log("当前选中的时间段:", selected)
+  console.log("dates", datas)
 }
 
 const buttonhideConfigs = {
@@ -337,9 +338,12 @@ const deviceConfig = {
       submitButton.addEventListener("click", async () => {
         for (const [date, slots] of Object.entries(datas)) {
           if (slots.length === 0) continue
+          console.log("提交的日期和时间段:", date, slots)
           let submit = { date: date, slots: slots }
           await submitBookings(realName, color, submit)
         }
+        // 休眠2分钟
+        await new Promise((resolve) => setTimeout(resolve, 120000))
       })
     },
     setupnologin() {
@@ -424,7 +428,7 @@ const deviceConfig = {
         timeSlots.appendChild(div)
       })
     },
-    updateslot(weekRange, date) {
+    updateslot(weekRange) {
       const weekRanges = document.querySelectorAll(".week-range")
       weekRanges.forEach((range, index) => {
         if (index === 0) {
@@ -491,14 +495,14 @@ const deviceConfig = {
           add_new_date(date) // 添加每个日期到数据中
         })
         clear_booinginfo()
+        this.updateslot(weekRange)
         weekRange.forEach((oldDate) => {
           getBookings(oldDate)
           disabledSlotwithDate(time_slots, oldDate)
         })
-        this.updateslot(weekRange)
 
         this.HighlightCheckedSlots() // 高亮对应的时间段
-        // this.setupcacel()
+        this.setupcacel()
       })
     },
 
@@ -510,6 +514,7 @@ const deviceConfig = {
           let submit = { date: date, slots: slots }
           await submitBookings(realName, color, submit)
         }
+        location.reload()
       })
     },
     setupnologin() {

@@ -67,13 +67,12 @@ async function submitBookings(realName, color, submitData) {
     const result = await response.json()
 
     if (response.ok) {
-      console.log("预约已成功提交:", result)
-      location.reload()
+      return true
     } else {
       // 处理错误情况
       alert("提交预约失败，请重试")
       console.error("提交失败:", result)
-      location.reload()
+      return false
     }
   } catch (error) {
     console.error("提交预约时出错:", error)
