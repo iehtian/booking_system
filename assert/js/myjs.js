@@ -441,27 +441,52 @@ const deviceConfig = {
           const timeSlot = cb.value
           cb.id = `time-slot-${date}-${timeSlot}` // 更新ID
           cb.checked = false // 重置选中状态
-          const slotLabel = cb.nextElementSibling
-          const originalText = slotLabel.textContent
-          cb.addEventListener("change", (event) => {
-            const targetDate = date
-            checked_option(event, targetDate, event.target.value)
-            if (slotLabel) {
-              slotLabel.setAttribute("for", cb.id) // 更新label的for属性
-              console.log("当前时间段标签文本:", slotLabel.textContent)
-              if (slotLabel.textContent === timeSlot) {
-                slotLabel.textContent = originalText
-              } else {
-                slotLabel.textContent = timeSlot
-              }
-            }
-          })
         })
       })
       // 移除所有的disabled-slot类
       document.querySelectorAll(".disabled-slot").forEach((el) => {
         el.classList.remove("disabled-slot")
         el.children[0].disabled = false // 启用复选框
+      })
+      weekRange.forEach((date) => {
+        getBookings(date)
+        disabledSlotwithDate(time_slots, date)
+      })
+      weekRanges.forEach((range, index) => {
+        if (index === 0) {
+          // 跳过标题行
+          return
+        }
+        const date = weekRange[index - 1]
+        range.querySelector(".week-date").textContent = date // 更新日期文本
+        range.querySelectorAll("input[type='checkbox']").forEach((cb) => {
+          const timeSlot = cb.value
+          const slotLabel = cb.nextElementSibling
+
+          cb.addEventListener("change", (event) => {
+            const targetDate = date
+            checked_option(event, targetDate, event.target.value)
+
+            if (!slotLabel) return
+            slotLabel.setAttribute("for", cb.id) // 更新label的for属性
+
+            if (event.target.checked) {
+              // 首次勾选时再“捕获原文”（含HTML），避免异步渲染导致保存为空
+              if (slotLabel.dataset.originalHtmlCaptured !== "true") {
+                slotLabel.dataset.originalHtml = slotLabel.innerHTML || ""
+                slotLabel.dataset.originalHtmlCaptured = "true"
+              }
+              // 覆盖为 timeSlot
+              slotLabel.textContent = timeSlot
+            } else {
+              // 取消 => 恢复原文（含HTML）
+              const restore = slotLabel.dataset.originalHtml
+              if (restore !== undefined) {
+                slotLabel.innerHTML = restore
+              }
+            }
+          })
+        })
       })
     },
     init_slots() {
@@ -479,12 +504,6 @@ const deviceConfig = {
       weekRanges.forEach((range) => range.remove()) // 删除所有时间段
       this.addslot(weekRange) // 重新添加时间段
       this.HighlightCheckedSlots(oldDate) // 高亮今天的时间段
-      //获取每个日期的预约信息
-      weekRange.forEach((date) => {
-        getBookings(date)
-        disabledSlotwithDate(time_slots, date)
-      })
-
       appointmentDate.addEventListener("change", (event) => {
         // 日期变化事件处理
         this.cleanHighlight(oldDate) // 清除之前的高亮
@@ -496,14 +515,13 @@ const deviceConfig = {
         })
         clear_booinginfo()
         this.updateslot(weekRange)
-        weekRange.forEach((oldDate) => {
-          getBookings(oldDate)
-          disabledSlotwithDate(time_slots, oldDate)
-        })
 
         this.HighlightCheckedSlots() // 高亮对应的时间段
         this.setupcacel()
       })
+      document
+        .getElementById("appointment-date")
+        .dispatchEvent(new Event("change")) // 触发日期变化事件
     },
 
     setupSubmitHandler: (realName, color) => {
