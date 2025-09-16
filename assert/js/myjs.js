@@ -97,6 +97,7 @@ function get_dates(data) {
   if (datas[data]) {
     return datas[data]
   } else {
+    console.log("当前已有的日期:", Object.keys(datas))
     console.error("日期不存在:", data)
   }
   return []
@@ -146,7 +147,7 @@ function createTimeSlotElement(slot, date = null, isMobile = false) {
 
   // 添加选中事件监听器
   option.addEventListener("change", (event) => {
-    const targetDate = document.getElementById("appointment-date").value
+    const targetDate = date
     checked_option(event, targetDate, event.target.value)
   })
 
@@ -443,6 +444,12 @@ const deviceConfig = {
         range.querySelectorAll("input[type='checkbox']").forEach((cb) => {
           const timeSlot = cb.value
           cb.id = `time-slot-${date}-${timeSlot}` // 更新ID
+          cb.addEventListener("change", (event) => {
+            const targetDate = date
+            checked_option(event, targetDate, event.target.value)
+          })
+          cb.checked = false // 重置选中状态
+          cb.disabled = false // 启用复选框
           const slotLabel = cb.nextElementSibling
           if (slotLabel) {
             slotLabel.setAttribute("for", cb.id) // 更新label的for属性
@@ -460,28 +467,29 @@ const deviceConfig = {
     init_slots() {
       clear_dates()
       const weekRange = getWeekRangeMonday()
+      weekRange.forEach((date) => {
+        add_new_date(date) // 添加每个日期到数据中
+      })
       this.buttonhide.weekdates = weekRange
+
       const appointmentDate = document.getElementById("appointment-date")
       appointmentDate.value = getCurrentDateISO()
-
       let oldDate = appointmentDate.value
       const weekRanges = document.querySelectorAll(".week-range")
       weekRanges.forEach((range) => range.remove()) // 删除所有时间段
       this.addslot(weekRange) // 重新添加时间段
       this.HighlightCheckedSlots(oldDate) // 高亮今天的时间段
       //获取每个日期的预约信息
-      weekRange.forEach((oldDate) => {
-        getBookings(oldDate)
-        disabledSlotwithDate(time_slots, oldDate)
+      weekRange.forEach((date) => {
+        getBookings(date)
+        disabledSlotwithDate(time_slots, date)
       })
 
       appointmentDate.addEventListener("change", (event) => {
         // 日期变化事件处理
-        console.log("old date:", oldDate)
         this.cleanHighlight(oldDate) // 清除之前的高亮
         oldDate = event.target.value
         const weekRange = getWeekRangeMonday(oldDate)
-        console.log("新的本周日期范围:", weekRange)
         clear_dates() // 清空之前的日期数据
         weekRange.forEach((date) => {
           add_new_date(date) // 添加每个日期到数据中
