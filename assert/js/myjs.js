@@ -105,7 +105,6 @@ function get_dates(data) {
 
 function checked_option(event, data, timeSlot) {
   const selected = get_dates(data)
-  console.log("当前选中的时间段:", selected)
   if (event.target.checked) {
     // 复选框被选中
     selected.push(timeSlot)
@@ -434,17 +433,22 @@ const deviceConfig = {
         range.querySelectorAll("input[type='checkbox']").forEach((cb) => {
           const timeSlot = cb.value
           cb.id = `time-slot-${date}-${timeSlot}` // 更新ID
+          cb.checked = false // 重置选中状态
+          const slotLabel = cb.nextElementSibling
+          const originalText = slotLabel.textContent
           cb.addEventListener("change", (event) => {
             const targetDate = date
             checked_option(event, targetDate, event.target.value)
+            if (slotLabel) {
+              slotLabel.setAttribute("for", cb.id) // 更新label的for属性
+              console.log("当前时间段标签文本:", slotLabel.textContent)
+              if (slotLabel.textContent === timeSlot) {
+                slotLabel.textContent = originalText
+              } else {
+                slotLabel.textContent = timeSlot
+              }
+            }
           })
-          cb.checked = false // 重置选中状态
-          const slotLabel = cb.nextElementSibling
-          if (slotLabel) {
-            slotLabel.setAttribute("for", cb.id) // 更新label的for属性
-            // 移除label中的span
-            clear_booinginfo()
-          }
         })
       })
       // 移除所有的disabled-slot类
@@ -483,11 +487,12 @@ const deviceConfig = {
         weekRange.forEach((date) => {
           add_new_date(date) // 添加每个日期到数据中
         })
-        this.updateslot(weekRange)
+        clear_booinginfo()
         weekRange.forEach((oldDate) => {
           getBookings(oldDate)
           disabledSlotwithDate(time_slots, oldDate)
         })
+        this.updateslot(weekRange)
 
         this.HighlightCheckedSlots() // 高亮对应的时间段
       })
