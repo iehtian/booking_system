@@ -8,7 +8,6 @@ async function getBookings(date) {
         "Content-Type": "application/json",
       },
     })
-    console.log("响应:", response)
 
     const data = await response.json()
     if (!data.bookings) {
@@ -17,7 +16,6 @@ async function getBookings(date) {
     Object.entries(data.bookings).forEach(([key, value]) => {
       const name = value.name || "未知用户" // 如果没有name字段，使用默认值
       const color = value.color || "#ffffff" // 如果没有color字段，使用默认值
-      console.log(`时间段: ${key}, 预约人: ${name}, 颜色: ${color}`)
       const checkbox = document.getElementById(`time-slot-${date}-${key}`)
       if (checkbox) {
         if (checkbox.parentElement) {

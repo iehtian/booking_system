@@ -320,15 +320,6 @@ const deviceConfig = {
       document
         .getElementById("appointment-date")
         .dispatchEvent(new Event("change")) // 触发日期变化事件
-      // 发送预约数据到后端的函数
-
-      document.querySelector("#yestoday").addEventListener("click", (event) => {
-        date_change(event, -1) // 点击昨天按钮，日期减1
-      })
-
-      document.querySelector("#tomorrow").addEventListener("click", (event) => {
-        date_change(event, 1) // 点击明天按钮，日期加1
-      })
     },
     setupSubmitHandler: (realName, color) => {
       const submitButton = document.querySelector("#submit-button")
@@ -363,7 +354,6 @@ const deviceConfig = {
   desktop: {
     buttonhide: buttonhideConfigs,
     hidden(hidden_slots, date) {
-      console.log("hidden_slots:", hidden_slots)
       const hidden_slots_arr = hidden_slots()
       date.forEach((thisdate) => {
         const week_time_slots =
@@ -449,7 +439,6 @@ const deviceConfig = {
             checked_option(event, targetDate, event.target.value)
           })
           cb.checked = false // 重置选中状态
-          cb.disabled = false // 启用复选框
           const slotLabel = cb.nextElementSibling
           if (slotLabel) {
             slotLabel.setAttribute("for", cb.id) // 更新label的for属性
@@ -618,6 +607,13 @@ async function initializeApp() {
       //回调函数，打开日期选择器
       event.target.showPicker() // 显示日期选择器
     })
+
+  document.querySelector("#yestoday").addEventListener("click", (event) => {
+    date_change(event, -1) // 点击昨天按钮，日期减1
+  })
+  document.querySelector("#tomorrow").addEventListener("click", (event) => {
+    date_change(event, 1) // 点击明天按钮，日期加1
+  })
 
   // 检查认证状态
   const authStatus = await checkAuthStatus()
