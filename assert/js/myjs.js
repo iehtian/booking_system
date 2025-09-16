@@ -233,6 +233,16 @@ function nologin_slot() {
   })
 }
 
+async function setupCancelHandler() {
+  const cancelButton = document.querySelector("#cancel-button")
+  cancelButton.addEventListener("click", async () => {
+    for (const [date, slots] of Object.entries(datas)) {
+      if (slots.length === 0) continue
+      await cancelBooking(date, slots)
+    }
+  })
+}
+
 const deviceConfig = {
   mobile: {
     buttonhide: buttonhideConfigs,
@@ -339,15 +349,6 @@ const deviceConfig = {
         if (checkbox) {
           checkbox.disabled = true
           checkbox.parentElement.classList.add("no-login-slot")
-        }
-      })
-    },
-    setupCancelHandler: async () => {
-      const cancelButton = document.querySelector("#cancel-button")
-      cancelButton.addEventListener("click", async () => {
-        for (const [date, slots] of Object.entries(datas)) {
-          if (slots.length === 0) continue
-          await cancelBooking(date, slots)
         }
       })
     },
@@ -497,6 +498,7 @@ const deviceConfig = {
         this.updateslot(weekRange)
 
         this.HighlightCheckedSlots() // 高亮对应的时间段
+        // this.setupcacel()
       })
     },
 
@@ -538,7 +540,6 @@ const deviceConfig = {
         }
       }
     },
-    async setupCancelHandler() {},
   },
 }
 
@@ -579,11 +580,11 @@ async function afterAuthCheck(result, config) {
 
     // 设置特定设备的提交处理器
     config.setupSubmitHandler(realName, color)
-    config.setupCancelHandler()
 
     document.querySelector(".show-name").textContent = `你好，${realName}`
     document.querySelector(".show-name").classList.remove("hidden")
     config.setupcacel()
+    setupCancelHandler()
   } else {
     console.log("用户未登录")
     document.querySelector("#login").classList.remove("hidden")
