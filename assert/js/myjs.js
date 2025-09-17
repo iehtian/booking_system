@@ -342,8 +342,7 @@ const deviceConfig = {
           let submit = { date: date, slots: slots }
           await submitBookings(realName, color, submit)
         }
-        // 休眠2分钟
-        await new Promise((resolve) => setTimeout(resolve, 120000))
+        location.reload()
       })
     },
     setupnologin() {
