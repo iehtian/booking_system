@@ -265,6 +265,10 @@ function buildSlotChangeHandler(date, slotLabel, timeSlot) {
   }
 }
 
+function resetDateDisplay() {
+  const dateElements = document.querySelectorAll(".date-display") // 获取所有日期元素
+}
+
 const deviceConfig = {
   mobile: {
     buttonhide: buttonhideConfigs,
@@ -512,10 +516,8 @@ const deviceConfig = {
       weekRanges.forEach((range) => range.remove()) // 删除所有时间段
       this.addslot(weekRange) // 重新添加时间段
       this.HighlightCheckedSlots(oldDate) // 高亮今天的时间段
-      weekRange.forEach((date) => {
-        getBookings(date)
-        disabledSlotwithDate(time_slots, date)
-      })
+      this.updateslot(weekRange)
+      this.setupcacel()
       appointmentDate.addEventListener("change", (event) => {
         // 日期变化事件处理
         this.cleanHighlight(oldDate) // 清除之前的高亮
@@ -546,14 +548,12 @@ const deviceConfig = {
           this.updateslot(weekRange)
           this.setupcacel()
           oldDate = newdate
+          this.buttonhide.weekdates = weekRange
         }
 
         this.cancelHighlight() // 取消所有高亮
         this.HighlightCheckedSlots() // 高亮对应的时间段
       })
-      document
-        .getElementById("appointment-date")
-        .dispatchEvent(new Event("change")) // 触发日期变化事件
     },
 
     setupSubmitHandler: (realName, color) => {
