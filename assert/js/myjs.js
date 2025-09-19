@@ -108,14 +108,12 @@ function checked_option(event, data, timeSlot) {
   if (event.target.checked) {
     // 复选框被选中
     selected.push(timeSlot)
-    console.log(`选中时间段: ${timeSlot}`)
   } else {
     // 复选框被取消选中
     const index = selected.indexOf(timeSlot)
     if (index > -1) {
       selected.splice(index, 1)
     }
-    console.log(`取消选中时间段: ${timeSlot}`)
   }
 
   console.log("当前选中的时间段:", selected)
@@ -145,13 +143,13 @@ function createTimeSlotElement(slot, date = null, isMobile = false) {
   option.name = "time-slot"
   option.checked = false
 
-  // 添加选中事件监听器
-  option.addEventListener("change", (event) => {
-    const targetDate = isMobile
-      ? document.getElementById("appointment-date").value
-      : date
-    checked_option(event, targetDate, event.target.value)
-  })
+  // 添加选中事件监听器,只有移动端在这里添加，桌面端在更新时添加
+  if (isMobile) {
+    option.addEventListener("change", (event) => {
+      const targetDate = document.getElementById("appointment-date").value
+      checked_option(event, targetDate, event.target.value)
+    })
+  }
 
   const label = document.createElement("label")
   label.htmlFor = option.id
@@ -242,6 +240,29 @@ async function setupCancelHandler() {
       await cancelBooking(date, slots)
     }
   })
+}
+
+function buildSlotChangeHandler(date, slotLabel, timeSlot) {
+  return (event) => {
+    const targetDate = date
+    console.log("targetDate", targetDate)
+    checked_option(event, targetDate, event.target.value)
+    if (event.target.checked) {
+      // 首次勾选时再“捕获原文”（含HTML），避免异步渲染导致保存为空
+      if (slotLabel.dataset.originalHtmlCaptured !== "true") {
+        slotLabel.dataset.originalHtml = slotLabel.innerHTML || ""
+        slotLabel.dataset.originalHtmlCaptured = "true"
+      }
+      // 覆盖为 timeSlot
+      slotLabel.textContent = timeSlot
+    } else {
+      // 取消 => 恢复原文（含HTML）
+      const restore = slotLabel.dataset.originalHtml
+      if (restore !== undefined) {
+        slotLabel.innerHTML = restore
+      }
+    }
+  }
 }
 
 const deviceConfig = {
@@ -398,6 +419,11 @@ const deviceConfig = {
         }
       })
     },
+    cancelHighlight() {
+      document.querySelectorAll(".highlight").forEach((el) => {
+        el.classList.remove("highlight")
+      })
+    },
     cleanHighlight(date) {
       const dateElements = document.querySelectorAll(".week-date") // 获取所有日期元素
       dateElements.forEach((el) => {
@@ -461,30 +487,13 @@ const deviceConfig = {
         range.querySelectorAll("input[type='checkbox']").forEach((cb) => {
           const timeSlot = cb.value
           const slotLabel = cb.nextElementSibling
-
-          cb.addEventListener("change", (event) => {
-            const targetDate = date
-            checked_option(event, targetDate, event.target.value)
-
-            if (!slotLabel) return
-            slotLabel.setAttribute("for", cb.id) // 更新label的for属性
-
-            if (event.target.checked) {
-              // 首次勾选时再“捕获原文”（含HTML），避免异步渲染导致保存为空
-              if (slotLabel.dataset.originalHtmlCaptured !== "true") {
-                slotLabel.dataset.originalHtml = slotLabel.innerHTML || ""
-                slotLabel.dataset.originalHtmlCaptured = "true"
-              }
-              // 覆盖为 timeSlot
-              slotLabel.textContent = timeSlot
-            } else {
-              // 取消 => 恢复原文（含HTML）
-              const restore = slotLabel.dataset.originalHtml
-              if (restore !== undefined) {
-                slotLabel.innerHTML = restore
-              }
-            }
-          })
+          if (!slotLabel) return
+          slotLabel.setAttribute("for", cb.id) // 更新label的for属性
+          cb.removeEventListener("change", buildSlotChangeHandler)
+          cb.addEventListener(
+            "change",
+            buildSlotChangeHandler(date, slotLabel, timeSlot)
+          )
         })
       })
     },
@@ -503,20 +512,44 @@ const deviceConfig = {
       weekRanges.forEach((range) => range.remove()) // 删除所有时间段
       this.addslot(weekRange) // 重新添加时间段
       this.HighlightCheckedSlots(oldDate) // 高亮今天的时间段
+      weekRange.forEach((date) => {
+        getBookings(date)
+        disabledSlotwithDate(time_slots, date)
+      })
       appointmentDate.addEventListener("change", (event) => {
         // 日期变化事件处理
         this.cleanHighlight(oldDate) // 清除之前的高亮
-        oldDate = event.target.value
-        const weekRange = getWeekRangeMonday(oldDate)
-        clear_dates() // 清空之前的日期数据
-        weekRange.forEach((date) => {
-          add_new_date(date) // 添加每个日期到数据中
-        })
-        clear_booinginfo()
-        this.updateslot(weekRange)
+        const newdate = event.target.value
+        const oldweekRange = getWeekRangeMonday(oldDate)
+        const weekRange = getWeekRangeMonday(newdate)
 
+        if (oldweekRange[0] !== weekRange[0]) {
+          console.log("不同周时的处理")
+          clear_dates() // 清空之前的日期数据
+          weekRange.forEach((date) => {
+            add_new_date(date) // 添加每个日期到数据中
+          })
+          //清除所有label的data-original-html属性
+          document.querySelectorAll("label").forEach((label) => {
+            delete label.dataset.originalHtml
+            delete label.dataset.originalHtmlCaptured
+          })
+          //删除所有label中除span之外的内容
+          document.querySelectorAll("label").forEach((label) => {
+            const span = label.querySelector("span")
+            label.textContent = ""
+            if (span) {
+              label.appendChild(span)
+            }
+          })
+          clear_booinginfo()
+          this.updateslot(weekRange)
+          this.setupcacel()
+          oldDate = newdate
+        }
+
+        this.cancelHighlight() // 取消所有高亮
         this.HighlightCheckedSlots() // 高亮对应的时间段
-        this.setupcacel()
       })
       document
         .getElementById("appointment-date")
@@ -550,7 +583,6 @@ const deviceConfig = {
     },
     async setupcacel() {
       for (const date of this.buttonhide.weekdates) {
-        console.log("取消预约日期:", date)
         const canceltime = await getBookings_by_ID(date)
         for (const slot of canceltime.times) {
           const checkbox = document.getElementById(`time-slot-${date}-${slot}`)
