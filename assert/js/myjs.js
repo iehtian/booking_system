@@ -481,6 +481,7 @@ const deviceConfig = {
         getBookings(date)
         disabledSlotwithDate(time_slots, date)
       })
+      nologin_slot()
       weekRanges.forEach((range, index) => {
         if (index === 0) {
           // 跳过标题行
@@ -626,24 +627,12 @@ async function afterAuthCheck(result, config) {
     submitButton.classList.remove("hidden")
     const cancelButton = document.querySelector("#cancel-button")
     cancelButton.classList.remove("hidden")
-    const logoutButton = document.querySelector("#logout")
-    logoutButton.classList.remove("hidden")
-
-    const realName = result.user.name
-    const color = result.user.color
 
     // 设置特定设备的提交处理器
     config.setupSubmitHandler(realName, color)
-
-    document.querySelector(".show-name").textContent = `你好，${realName}`
-    document.querySelector(".show-name").classList.remove("hidden")
     config.setupcacel()
     setupCancelHandler()
   } else {
-    console.log("用户未登录")
-    document.querySelector("#login").classList.remove("hidden")
-    document.querySelector("#register").classList.remove("hidden")
-    console.log(time_slots)
     config.setupnologin()
     const time = getCurrentDateISO()
     time_slots.forEach((slot) => {
@@ -684,15 +673,3 @@ async function initializeApp() {
 }
 
 window.addEventListener("DOMContentLoaded", initializeApp)
-
-document.querySelector("#logout").addEventListener("click", function (event) {
-  event.preventDefault() // 阻止默认链接行为
-  logout()
-    .then(() => {
-      console.log("用户已退出登录")
-      window.location.reload() // 刷新页面
-    })
-    .catch((error) => {
-      console.error("退出登录失败:", error)
-    })
-})
