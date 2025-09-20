@@ -1,52 +1,31 @@
 <!doctype html>
-<html>
+<html lang="zh-CN">
   <head>
-    <meta charset="utf-8" />
-    <title>A仪器</title>
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="./assert/css/device.css" />
-    <link rel="stylesheet" href="./assert/css/footer.css" />
+    <title>功能分发页面</title>
+    <link rel="stylesheet" href="assert/css/index.css" />
+    <script type="module" src="./assert/js/index.js"></script>
   </head>
-
   <body>
-    <div class="container">
-      <h1>A仪器预约系统</h1>
-      <div class="show-name hidden"></div>
-      <div class="date-controls">
-        <a href="#" id="yestoday">前一天</a>
-        <input type="date" name="appointment-date" id="appointment-date" />
-        <a href="#" id="tomorrow">后一天</a>
-      </div>
-      <div class="date-display-box">
-        <input type="button" class="date-display" id="morning" />
-        <input type="button" class="date-display" id="night" />
-      </div>
-      <div class="time-slot" id="time-slot"></div>
-      <div class="button-box hidden" id="submit-button">
-        <input type="button" class="button" value="提交预约" />
-      </div>
-      <div class="button-box hidden" id="cancel-button">
-        <input type="button" class="button" value="取消预约" />
-      </div>
-      <div class="button-box hidden" id="logout">
-        <input type="button" class="button" value="退出登录" />
-      </div>
-      <div class="button-box hidden" id="login">
-        <input type="button" class="button" value="登录" />
-      </div>
-      <div class="button-box hidden" id="register">
-        <input type="button" class="button" value="注册" />
-      </div>
+    <!-- 顶部导航 -->
+    <header class="navbar">
+      <div class="logo">实验平台</div>
+      <nav class="user-actions">
+        <span class="show-name hidden" id="showname">你好，user</span>
+        <a href="#" class="hidden" id="login">登录</a>
+        <a href="#" class="hidden" id="register">注册</a>
+        <a href="#" class="hidden" id="logout">退出登录</a>
+      </nav>
+    </header>
 
-      <script type="module" src="./assert/js/myjs.js"></script>
-    </div>
+    <!-- 主体内容 -->
+    <main class="main-container">
+      <h1 class="title">选择您的仪器</h1>
+      <div class="button-group">
+        <a href="./pages/a_device.html" class="instrument-btn">A 仪器</a>
+        <a href="#" class="instrument-btn">B 仪器</a>
+      </div>
+    </main>
   </body>
-  <footer>
-    &copy; 2025
-    <a href="https://iehtian.top/" target="_blank">iehtian</a> 备案号：<a
-      href="https://beian.miit.gov.cn/"
-      target="_blank"
-      >豫ICP备2024069173号</a
-    >
-  </footer>
 </html>

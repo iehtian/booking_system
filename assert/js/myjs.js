@@ -683,21 +683,7 @@ async function initializeApp() {
   nologin_slot() // 禁止未登录用户点击
 }
 
-document.querySelector("#login").addEventListener("click", function (event) {
-  event.preventDefault() // 阻止默认链接行为
-  const loginUrl = `pages/login.html`
-  // 跳转到登录页面，新页面打开
-  window.open(loginUrl, "_blank")
-})
-
 window.addEventListener("DOMContentLoaded", initializeApp)
-
-document.querySelector("#register").addEventListener("click", function (event) {
-  event.preventDefault() // 阻止默认链接行为
-  const registerUrl = `pages/register.html`
-  // 跳转到注册页面，新页面打开
-  window.open(registerUrl, "_blank")
-})
 
 document.querySelector("#logout").addEventListener("click", function (event) {
   event.preventDefault() // 阻止默认链接行为

@@ -110,37 +110,7 @@ label {
   display: none; /* 默认隐藏 */
 }
 
-.show-name {
-  margin-bottom: 0.5rem;
-  font-size: 1.25rem;
-  text-align: center;
-  background: linear-gradient(
-    45deg,
-    #ff6b6b,
-    #4ecdc4,
-    #45b7d1,
-    #96ceb4,
-    #feca57
-  );
-  background-size: 300% 300%;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gradient-shift 3s ease-in-out infinite;
-}
 
-@keyframes gradient-shift {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
-}
 
 /* 美化日期选择框 */
 #appointment-date {
