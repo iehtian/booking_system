@@ -82,42 +82,41 @@ async function logout() {
   }
 }
 
-try {
-  document.querySelector("#login").addEventListener("click", function (event) {
-    event.preventDefault() // 阻止默认行为
-    const ID = document.querySelector("#ID").value
-    const password = document.querySelector("#password").value
+document.addEventListener("DOMContentLoaded", () => {
+  const loginBtn = document.querySelector("#login")
+  if (loginBtn) {
+    loginBtn.addEventListener("click", function (event) {
+      event.preventDefault()
+      const ID = document.querySelector("#ID").value
+      const password = document.querySelector("#password").value
 
-    if (ID === "" || password === "") {
-      alert("Please fill in all fields.")
-      return
-    }
+      if (ID === "" || password === "") {
+        alert("Please fill in all fields.")
+        return
+      }
 
-    console.log("Logging in user:", ID, password)
-    // 调用登录函数
-    login(ID, password)
-      .then((success) => {
-        if (!success) {
-          alert("Login failed. Please check your ID and password.")
-          return
-        }
-        alert("Login successful!")
-        window.location.href = "../index.html"
-      })
-      .catch((error) => {
-        console.error("登录错误:", error)
-        alert("An error occurred during login. Please try again later.")
-      })
-  })
-} catch (error) {
-  console.error("没有登陆按钮:", error)
-}
+      console.log("Logging in user:", ID, password)
+      // 调用登录函数
+      login(ID, password)
+        .then((success) => {
+          if (!success) {
+            alert("Login failed. Please check your ID and password.")
+            return
+          }
+          alert("Login successful!")
+          window.location.href = "../index.html"
+        })
+        .catch((error) => {
+          console.error("登录错误:", error)
+          alert("An error occurred during login. Please try again later.")
+        })
+    })
+  }
 
-try {
-  document
-    .querySelector("#register")
-    .addEventListener("click", function (event) {
-      event.preventDefault() // 阻止默认行为
+  const registerBtn = document.querySelector("#register")
+  if (registerBtn) {
+    registerBtn.addEventListener("click", function (event) {
+      event.preventDefault()
       const ID = document.querySelector("#ID").value
       const password = document.querySelector("#password").value
       const name = document.querySelector("#name").value
@@ -139,7 +138,6 @@ try {
           console.log("注册成功:", data)
           alert("Registration successful! You can now log in.")
           window.location.href = "../index.html"
-          // 可以在这里处理注册成功后的逻辑，比如自动登录或跳转到登录页面
         })
         .catch((error) => {
           console.error("注册错误:", error)
@@ -148,9 +146,8 @@ try {
           )
         })
     })
-} catch (error) {
-  console.error("没有注册按钮:", error)
-}
+  }
+})
 
 // 检查登录状态
 async function checkAuthStatus() {

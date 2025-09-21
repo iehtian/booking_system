@@ -1,13 +1,16 @@
 import { host } from "./config.js"
 
-async function getBookings(date) {
+async function getBookings(system, date) {
   try {
-    const response = await fetch(`${host}/api/bookings?date=${date}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
+    const response = await fetch(
+      `${host}/api/bookings?system=${system}&date=${date}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    )
 
     const data = await response.json()
     if (!data.bookings) {
@@ -36,7 +39,7 @@ async function getBookings(date) {
   }
 }
 
-async function submitBookings(realName, color, submitData) {
+async function submitBookings(system, realName, color, submitData) {
   const selectedDate = submitData.date
   const slots = submitData.slots
   if (!selectedDate || slots.length === 0) {
@@ -47,7 +50,7 @@ async function submitBookings(realName, color, submitData) {
   try {
     // 一次性发送所有时间段
     const appointmentData = {
-      system: "a_device",
+      system: system,
       date: selectedDate,
       slots: slots, // 发送所有选中的时间段
       name: realName,
@@ -79,19 +82,20 @@ async function submitBookings(realName, color, submitData) {
   }
 }
 
-async function cancelBooking(date, slots) {
+async function cancelBooking(system, date, slots) {
   try {
-    const cancelDate = {
+    const cancelData = {
+      system: system,
       date: date,
       slots: slots,
     }
-    console.log("取消预约的数据:", cancelDate)
+    console.log("取消预约的数据:", cancelData)
     const response = await fetch(`${host}/api/cancel_booking`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(cancelDate),
+      body: JSON.stringify(cancelData),
     })
     const result = await response.json()
     if (response.ok) {
@@ -108,14 +112,17 @@ async function cancelBooking(date, slots) {
   }
 }
 
-async function getBookings_by_ID(date) {
+async function getBookings_by_ID(system, date) {
   try {
     const token = localStorage.getItem("access_token")
-    const res = await fetch(`${host}/api/bookings_user?date=${date}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    const res = await fetch(
+      `${host}/api/bookings_user?system=${system}&date=${date}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
     const data = await res.json()
     return { success: true, times: data }
   } catch (error) {

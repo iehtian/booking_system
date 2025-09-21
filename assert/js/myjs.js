@@ -1,12 +1,16 @@
-import { logout, checkAuthStatus } from "./user_manager.js"
+import { checkAuthStatus } from "./user_manager.js"
 import {
   getBookings,
   submitBookings,
   cancelBooking,
   getBookings_by_ID,
 } from "./booking_api.js"
+import { devices_map } from "./devices.js"
 const width = document.documentElement.clientWidth || document.body.clientWidth
 console.log("当前屏幕宽度:", width)
+const devicename = document.querySelector("title").innerText
+const device = devices_map[devicename]
+console.log("当前设备:", device)
 
 function generateTimeIntervalsSimple() {
   const intervals = []
@@ -237,7 +241,7 @@ async function setupCancelHandler() {
   cancelButton.addEventListener("click", async () => {
     for (const [date, slots] of Object.entries(datas)) {
       if (slots.length === 0) continue
-      await cancelBooking(date, slots)
+      await cancelBooking(device, date, slots)
     }
   })
 }
@@ -295,7 +299,7 @@ const deviceConfig = {
     },
     async setupcacel() {
       const date = document.getElementById("appointment-date").value
-      const canceltime = await getBookings_by_ID(date)
+      const canceltime = await getBookings_by_ID(device, date)
       console.log("取消预约时间段:", canceltime)
 
       for (const slot of canceltime.times) {
@@ -348,7 +352,7 @@ const deviceConfig = {
           document.querySelectorAll(".time-slot-option").forEach((cb) => {
             cb.checked = false
           })
-          getBookings(newDate)
+          getBookings(device, newDate)
           // 获取新的日期的预约信息
           disabledSlotwithDate(time_slots, newDate)
           nologin_slot()
@@ -365,7 +369,7 @@ const deviceConfig = {
           if (slots.length === 0) continue
           console.log("提交的日期和时间段:", date, slots)
           let submit = { date: date, slots: slots }
-          await submitBookings(realName, color, submit)
+          await submitBookings(device, realName, color, submit)
         }
         location.reload()
       })
@@ -478,7 +482,7 @@ const deviceConfig = {
         el.children[0].disabled = false // 启用复选框
       })
       weekRange.forEach((date) => {
-        getBookings(date)
+        getBookings(device, date)
         disabledSlotwithDate(time_slots, date)
       })
       nologin_slot()
@@ -563,7 +567,7 @@ const deviceConfig = {
         for (const [date, slots] of Object.entries(datas)) {
           if (slots.length === 0) continue
           let submit = { date: date, slots: slots }
-          await submitBookings(realName, color, submit)
+          await submitBookings(device, realName, color, submit)
         }
         location.reload()
       })
@@ -584,7 +588,7 @@ const deviceConfig = {
     },
     async setupcacel() {
       for (const date of this.buttonhide.weekdates) {
-        const canceltime = await getBookings_by_ID(date)
+        const canceltime = await getBookings_by_ID(device, date)
         for (const slot of canceltime.times) {
           const checkbox = document.getElementById(`time-slot-${date}-${slot}`)
           const isDisabledParent =
@@ -627,6 +631,8 @@ async function afterAuthCheck(result, config) {
     submitButton.classList.remove("hidden")
     const cancelButton = document.querySelector("#cancel-button")
     cancelButton.classList.remove("hidden")
+    const realName = result.user.name
+    const color = result.user.color
 
     // 设置特定设备的提交处理器
     config.setupSubmitHandler(realName, color)

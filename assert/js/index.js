@@ -14,7 +14,18 @@ document.querySelector("#register").addEventListener("click", function (event) {
   window.open(registerUrl, "_blank")
 })
 
-// ...existing code...
+document.querySelector("#logout").addEventListener("click", function (event) {
+  event.preventDefault() // 阻止默认链接行为
+  logout()
+    .then(() => {
+      console.log("用户已退出登录")
+      window.location.reload() // 刷新页面
+    })
+    .catch((error) => {
+      console.error("退出登录失败:", error)
+    })
+})
+
 async function initUser() {
   // 兼容不同返回结构：true/false 或 { logged_in, user }
   const result = await checkAuthStatus()
@@ -28,8 +39,7 @@ async function initUser() {
     document.querySelector("#register").classList.remove("hidden")
   }
 }
-// ...existing code...
-// 页面就绪后初始化用户状态
+
 document.addEventListener("DOMContentLoaded", () => {
   initUser().catch(console.error)
 })

@@ -12,7 +12,7 @@ def index_exists(index_name):
         return False
 
 # 创建索引
-def create_index():
+def create_booking_index():
     index_name = 'booking-idx'
     if index_exists(index_name):
         print(f"Index '{index_name}' already exists.")
@@ -23,9 +23,24 @@ def create_index():
         'PREFIX', '1', 'booking:',
         'SCHEMA',
         '$.date', 'AS', 'date', 'TAG',
-        '$.system_id', 'AS', 'system_id', 'TAG',
         '$.time', 'AS', 'time', 'TEXT',
         '$.name', 'AS', 'name', 'TAG'
+    )
+    print(f"Index '{index_name}' created.")
+
+    # 创建索引
+def create_user_index():
+    index_name = 'user-idx'
+    if index_exists(index_name):
+        print(f"Index '{index_name}' already exists.")
+        return
+    r.execute_command(
+        'FT.CREATE', index_name,
+        'ON', 'JSON',
+        'PREFIX', '1', 'user:',
+        'SCHEMA',
+        '$.ID', 'AS', 'ID', 'TAG',
+        '$.real_name', 'AS', 'real_name', 'TAG'
     )
     print(f"Index '{index_name}' created.")
 
@@ -51,6 +66,10 @@ def search_by_date_and_name(system_id, date, name):
     date = date.replace('-', '\\-')  # 格式化日期为 YYYYMMDD
     query = f"@date:{{{date}}} @name:{{{name}}} @system_id:{{{system_id}}}"
     return search(query)
+
+
+
+
 
 # 执行查询并解析结果
 def search(query):

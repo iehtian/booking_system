@@ -214,10 +214,11 @@ def get_user_bookings():
     """获取特定日期当前用户的所有预约信息"""
     try:
         date = request.args.get('date')
+        system = request.args.get('system')
         
-        if not date:
-            return jsonify({"error": "Date parameter is required"}), 400
-            
+        if not date or not system:
+            return jsonify({"error": "Date and system parameters are required"}), 400
+
         current_user_id = get_jwt_identity()
         user = search_by_ID(current_user_id)
 
@@ -227,7 +228,7 @@ def get_user_bookings():
         user_name = user[0][1]['real_name']
         print(f"获取用户 {current_user_id} 的预约信息，用户名: {user_name}")
 
-        user_bookings = search_by_date_and_name("a_device", date, user_name)
+        user_bookings = search_by_date_and_name(system, date, user_name)
         print(f"用户 {user_name} 在 {date} 的预约记录: {user_bookings}")
         times = [slot[1]['time'] for slot in user_bookings]
         print(f"当前用户在 {date} 的预约时间段: {times}")
