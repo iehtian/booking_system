@@ -7,12 +7,10 @@ This package contains Redis operations for users and bookings.
 from .redis import (
     upsert_user,
     search_user_by_ID,
-    search_user_by_real_name,
     search_all_users,
     create_user_index,
     upsert_booking,
     search_booking_by_date,
-    search_booking_by_name,
     search_booking_by_date_and_name,
     search_all_bookings,
     create_booking_index,
@@ -40,15 +38,11 @@ def initialize_database():
 __all__ = [
     'upsert_user',
     'search_user_by_ID',
-    'search_user_by_real_name',
     'search_all_users',
-    'create_user_index',
     'upsert_booking',
     'search_booking_by_date',
-    'search_booking_by_name',
     'search_booking_by_date_and_name',
     'search_all_bookings',
-    'create_booking_index',
     'delete_booking',
     'initialize_database'
 ]

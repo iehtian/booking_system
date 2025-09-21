@@ -36,10 +36,6 @@ def search_user_by_ID(ID):
     query = f"@ID:{{{ID}}}"
     return search_user(query)
 
-def search_user_by_real_name(real_name):
-    query = f"@real_name:{{{real_name}}}"
-    return search_user(query)
-
 def search_user(query):
     results = r.execute_command('FT.SEARCH', 'user-idx', query)
     data = []
@@ -93,10 +89,6 @@ def search_booking_by_date(system_id, date):
     query = f"@date:{{{date}}} @system_id:{{{system_id}}}"
     return search_booking(query)
 
-def search_booking_by_name(system_id, name):
-    query = f"@name:{{{name}}} @system_id:{{{system_id}}}"
-    return search_booking(query)
-
 def search_booking_by_date_and_name(system_id, date, name):
     date = date.replace('-', '\\-')
     query = f"@date:{{{date}}} @name:{{{name}}} @system_id:{{{system_id}}}"
@@ -144,17 +136,8 @@ if __name__ == '__main__':
         print(f"{key}: {data}")
 
     print("\n🧑 users by Alice:")
-    data = search_user_by_real_name("Alice")
-    if data:
-        print(f"{data[0]}")
-    print("\n🧑 All users:")
-    print(len(search_all_users()))
 
     # 预约示例
     print("\n📅 Bookings on 2025-06-21:")
     for res in search_booking_by_date("a_device", "2025-06-21"):
         print(f"{res[0]}: {res[1]}")
-
-    print("\n🧑 Bookings by 123:")
-    for key, data in search_booking_by_name("a_device", "123"):
-        print(f"{key}: {data}")
