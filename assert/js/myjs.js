@@ -498,11 +498,12 @@ const deviceConfig = {
           const slotLabel = cb.nextElementSibling
           if (!slotLabel) return
           slotLabel.setAttribute("for", cb.id) // 更新label的for属性
-          cb.removeEventListener("change", buildSlotChangeHandler)
-          cb.addEventListener(
-            "change",
-            buildSlotChangeHandler(date, slotLabel, timeSlot)
-          )
+          if (cb._slotChangeHandler) {
+            cb.removeEventListener("change", cb._slotChangeHandler)
+          }
+          const handler = buildSlotChangeHandler(date, slotLabel, timeSlot)
+          cb._slotChangeHandler = handler
+          cb.addEventListener("change", handler)
         })
       })
     },
