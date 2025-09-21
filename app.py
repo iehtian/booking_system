@@ -1,21 +1,22 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
-from datetime import timedelta
 import bcrypt
 from config import Config
 from datebase import (
-    upsert_user, 
-    search_by_ID, 
-    search_by_real_name,
+    upsert_user,
+    search_user_by_ID,
+    search_user_by_real_name,
     search_all_users,
-    upsert_booking, 
-    search_by_date, 
-    search_by_name,
-    search_by_date_and_name,
+    create_user_index,
+    upsert_booking,
+    search_booking_by_date,
+    search_booking_by_name,
+    search_booking_by_date_and_name,
+    search_all_bookings,
+    create_booking_index,
     delete_booking,
-    initialize_database,
-    search_all_bookings
+    initialize_database
 )
 
 
@@ -92,7 +93,7 @@ def save_info():
         if not isinstance(slots, list) or len(slots) == 0:
             return jsonify({"error": "slots must be a non-empty array"}), 400
         
-        search_by_date_result = search_by_date(system_id, date)
+        search_by_date_result = search_booking_by_date(system_id, date)
         if search_by_date_result:
             tmies = [slot[1]['time'] for slot in search_by_date_result]
             for slot in slots:
@@ -142,7 +143,7 @@ def cancel_booking():
         if not isinstance(slots, list) or len(slots) == 0:
             return jsonify({"error": "slots must be a non-empty array"}), 400
         
-        search_by_date_result = search_by_date(system_id, date)
+        search_by_date_result = search_booking_by_date(system_id, date)
         if not search_by_date_result:
             return jsonify({"error": "No bookings found for the specified date"}), 404
         
@@ -180,7 +181,7 @@ def get_bookings():
     
     if date:
         # 返回特定日期的预约
-        search_by_date_result = search_by_date(system_id, date)
+        search_by_date_result = search_booking_by_date(system_id, date)
         print(f"原始数据库查询结果: {search_by_date_result}") # 保持原始结果的打印
         
         if not search_by_date_result:
@@ -220,7 +221,7 @@ def get_user_bookings():
             return jsonify({"error": "Date and system parameters are required"}), 400
 
         current_user_id = get_jwt_identity()
-        user = search_by_ID(current_user_id)
+        user = search_user_by_ID(current_user_id)
 
         if not user:
             return jsonify({"error": "User not found"}), 404
@@ -228,7 +229,7 @@ def get_user_bookings():
         user_name = user[0][1]['real_name']
         print(f"获取用户 {current_user_id} 的预约信息，用户名: {user_name}")
 
-        user_bookings = search_by_date_and_name(system, date, user_name)
+        user_bookings = search_booking_by_date_and_name(system, date, user_name)
         print(f"用户 {user_name} 在 {date} 的预约记录: {user_bookings}")
         times = [slot[1]['time'] for slot in user_bookings]
         print(f"当前用户在 {date} 的预约时间段: {times}")
@@ -250,7 +251,7 @@ def get_register_info():
     print(f"获取注册信息: ID={ID}, password=[已隐藏], namespace={name}")
 
     if ID and password and name:
-        if(search_by_ID(ID)):
+        if(search_user_by_ID(ID)):
             return jsonify({"error": "User already exists"}), 400
         
         user_color = random_hsl_color()  # 生成随机颜色
@@ -289,7 +290,7 @@ def check_auth():
         print(f"当前用户: {current_user_id}")
         
         # 验证用户是否仍然存在
-        user = search_by_ID(current_user_id)
+        user = search_user_by_ID(current_user_id)
         if not user:
             print(f"用户 {current_user_id} 不存在")
             return jsonify({'logged_in': False, 'message': 'User not found'}), 401
@@ -320,7 +321,7 @@ def login():
         return jsonify({'success': False, 'message': '用户名和密码不能为空'}), 400
     
     # 验证用户
-    user = search_by_ID(ID)
+    user = search_user_by_ID(ID)
     if not user:
         return jsonify({'success': False, 'message': '用户名或密码错误'}), 401
     
@@ -371,7 +372,7 @@ def refresh():
     """刷新JWT token"""
     try:
         current_user_id = get_jwt_identity()
-        user = search_by_ID(current_user_id)
+        user = search_user_by_ID(current_user_id)
         
         if not user:
             return jsonify({'success': False, 'message': 'User not found'}), 401

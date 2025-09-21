@@ -3,23 +3,21 @@ Database operations package for order management system.
 This package contains Redis operations for users and bookings.
 """
 
-# 导入Redis操作函数
-from .redis_user import (
-    upsert_user, 
-    search_by_ID, 
-    search_by_real_name, 
-    create_index as create_user_index,
-    search_all as search_all_users
-)
 
-from .redis_booking import (
-    upsert_booking, 
-    search_by_date, 
-    search_by_name, 
-    search_by_date_and_name,
+from .redis import (
+    upsert_user,
+    search_user_by_ID,
+    search_user_by_real_name,
+    search_all_users,
+    create_user_index,
+    upsert_booking,
+    search_booking_by_date,
+    search_booking_by_name,
+    search_booking_by_date_and_name,
+    search_all_bookings,
+    create_booking_index,
     delete_booking,
-    create_index as create_booking_index,
-    search_all as search_all_bookings
+    initialize_database
 )
 
 # 包版本信息
@@ -40,13 +38,17 @@ def initialize_database():
 
 # 导出所有公共接口
 __all__ = [
-    'upsert_user', 
-    'search_by_ID', 
-    'search_by_real_name',
+    'upsert_user',
+    'search_user_by_ID',
+    'search_user_by_real_name',
     'search_all_users',
-    'upsert_booking', 
-    'search_by_date', 
-    'search_by_name',
+    'create_user_index',
+    'upsert_booking',
+    'search_booking_by_date',
+    'search_booking_by_name',
+    'search_booking_by_date_and_name',
     'search_all_bookings',
+    'create_booking_index',
+    'delete_booking',
     'initialize_database'
 ]
