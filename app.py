@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 import bcrypt
+import os
+from datetime import datetime
 from config import Config
 from datebase import (
     upsert_user,
@@ -15,7 +17,29 @@ from datebase import (
     initialize_database,
 )
 
+# 创建logs目录（如果不存在）
+if not os.path.exists('logs'):
+    os.makedirs('logs')
 
+def log_print(*args, **kwargs):
+    """自定义打印函数，同时输出到控制台和文件"""
+    # 先正常打印到控制台
+    print(*args, **kwargs)
+    
+    # 然后写入文件
+    try:
+        # 获取当前时间
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        # 将所有参数转换为字符串并连接
+        message = ' '.join(str(arg) for arg in args)
+        
+        # 写入文件
+        with open('logs/log.txt', 'a', encoding='utf-8') as f:
+            f.write(f"{timestamp} - {message}\n")
+    except Exception as e:
+        # 如果写入文件失败，只在控制台输出错误，不影响主程序
+        print(f"写入日志文件失败: {e}")
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=["http://localhost:5501", "http://127.0.0.1:5501","http://127.0.0.1:5502", "http://localhost:5502"])
@@ -48,7 +72,7 @@ def verify_password(password, hashed_password):
     try:
         return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
     except Exception as e:
-        print(f"密码验证出错: {e}")
+        log_print(f"密码验证出错: {e}")
         return False
 
 def random_hsl_color():
@@ -74,7 +98,7 @@ def save_info():
     try:
         
         data = request.get_json()
-        print(f"接收到的预约数据: {data}")
+        log_print(f"接收到的预约数据: {data}")
         system_id = data.get('system', 'a_device')  # 默认为A仪器系统
         date = data.get('date')
         slots = data.get('slots')  # 现在接收时间段数组
@@ -109,8 +133,8 @@ def save_info():
             )
             successful_slots.append(slot)
         
-        print(f"批量预约成功: {name} 在 {date} 预约了 {len(successful_slots)} 个时间段")
-        print(f"预约的时间段: {successful_slots}")
+        log_print(f"批量预约成功: {name} 在 {date} 预约了 {len(successful_slots)} 个时间段")
+        log_print(f"预约的时间段: {successful_slots}")
         
         return jsonify({
             "success": True, 
@@ -119,7 +143,7 @@ def save_info():
         })
         
     except Exception as e:
-        print(f"保存预约时出错: {e}")
+        log_print(f"保存预约时出错: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 @app.route('/api/cancel_booking', methods=['POST'])
@@ -127,7 +151,7 @@ def cancel_booking():
     """取消预约信息"""
     try:
         data = request.get_json()
-        print(f"接收到的取消预约数据: {data}")
+        log_print(f"接收到的取消预约数据: {data}")
         system_id = data.get('system', 'a_device')  # 默认为A仪器系统
         date = data.get('date')
         slots = data.get('slots')  # 现在接收时间段数组
@@ -155,8 +179,8 @@ def cancel_booking():
             delete_booking(booking_id)
             successful_cancellations.append(slot)
         
-        print(f"批量取消预约成功: {date} 取消了 {len(successful_cancellations)} 个时间段")
-        print(f"取消的时间段: {successful_cancellations}")
+        log_print(f"批量取消预约成功: {date} 取消了 {len(successful_cancellations)} 个时间段")
+        log_print(f"取消的时间段: {successful_cancellations}")
         
         return jsonify({
             "success": True,
@@ -165,7 +189,7 @@ def cancel_booking():
         })
         
     except Exception as e:
-        print(f"取消预约时出错: {e}")
+        log_print(f"取消预约时出错: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 @app.route('/api/bookings', methods=['GET'])
@@ -173,12 +197,12 @@ def get_bookings():
     """获取预约信息并按时间段排序，返回 {time: name} 字典"""
     system_id = request.args.get('system', 'a_device')
     date = request.args.get('date')
-    print(f"获取预约信息: system_id={system_id}, date={date}")
+    log_print(f"获取预约信息: system_id={system_id}, date={date}")
     
     if date:
         # 返回特定日期的预约
         search_by_date_result = search_booking_by_date(system_id, date)
-        print(f"原始数据库查询结果: {search_by_date_result}") # 保持原始结果的打印
+        log_print(f"原始数据库查询结果: {search_by_date_result}") # 保持原始结果的打印
         
         if not search_by_date_result:
             return jsonify({"booking": ""}), 200
@@ -196,7 +220,7 @@ def get_bookings():
                 "color": color
             }
         # 打印转换后的字典，保持风格
-        print(f"时间段和预约人 (字典格式): {bookings_dict}")
+        log_print(f"时间段和预约人 (字典格式): {bookings_dict}")
         
         # 将字典打包成 JSON 响应
         res = jsonify({"bookings": bookings_dict})
@@ -223,16 +247,16 @@ def get_user_bookings():
             return jsonify({"error": "User not found"}), 404
         
         user_name = user[0][1]['real_name']
-        print(f"获取用户 {current_user_id} 的预约信息，用户名: {user_name}")
+        log_print(f"获取用户 {current_user_id} 的预约信息，用户名: {user_name}")
 
         user_bookings = search_booking_by_date_and_name(system, date, user_name)
-        print(f"用户 {user_name} 在 {date} 的预约记录: {user_bookings}")
+        log_print(f"用户 {user_name} 在 {date} 的预约记录: {user_bookings}")
         times = [slot[1]['time'] for slot in user_bookings]
-        print(f"当前用户在 {date} 的预约时间段: {times}")
+        log_print(f"当前用户在 {date} 的预约时间段: {times}")
         return jsonify(times)
     
     except Exception as e:
-        print(f"获取用户预约信息时出错: {e}")
+        log_print(f"获取用户预约信息时出错: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 @app.route('/api/register', methods=['POST'])
@@ -244,7 +268,7 @@ def get_register_info():
     ID = data.get('ID', 'default_user')
     password = data.get('password', 'default_password')
     name = data.get('name', 'default_name')
-    print(f"获取注册信息: ID={ID}, password=[已隐藏], namespace={name}")
+    log_print(f"获取注册信息: ID={ID}, password=[已隐藏], namespace={name}")
 
     if ID and password and name:
         if(search_user_by_ID(ID)):
@@ -267,7 +291,7 @@ def get_register_info():
                 'color': user_color
             }
         )
-        print(f"用户 {ID} 注册成功，生成JWT token")
+        log_print(f"用户 {ID} 注册成功，生成JWT token")
         return jsonify({
             "success": True, 
             "user": {"ID": ID, "name": name, "color": user_color},
@@ -283,16 +307,18 @@ def check_auth():
     try:
         current_user_id = get_jwt_identity()
         
-        print(f"当前用户: {current_user_id}")
+        # 这里不再打印频繁的认证检查信息，避免日志过多
+        # log_print(f"当前用户: {current_user_id}")
         
         # 验证用户是否仍然存在
         user = search_user_by_ID(current_user_id)
         if not user:
-            print(f"用户 {current_user_id} 不存在")
+            log_print(f"用户 {current_user_id} 不存在")
             return jsonify({'logged_in': False, 'message': 'User not found'}), 401
         
         user_data = user[0][1]
-        print(f"用户 {current_user_id} 已登录")
+        # 这里也不再打印频繁的登录状态信息
+        # log_print(f"用户 {current_user_id} 已登录")
         
         return jsonify({
             'logged_in': True,
@@ -304,7 +330,7 @@ def check_auth():
         })
         
     except Exception as e:
-        print(f"检查认证时出错: {e}")
+        log_print(f"检查认证时出错: {e}")
         return jsonify({'logged_in': False, 'message': 'Invalid token'}), 401
 
 @app.route('/api/login', methods=['POST'])
@@ -336,7 +362,7 @@ def login():
         }
     )
 
-    print(f"用户 {ID} 登录成功，生成JWT token")
+    log_print(f"用户 {ID} 登录成功，生成JWT token")
     
     return jsonify({
         'success': True,
@@ -359,7 +385,7 @@ def logout():
         })
         
     except Exception as e:
-        print(f"登出时出错: {e}")
+        log_print(f"登出时出错: {e}")
         return jsonify({'success': False, 'message': 'Logout failed'}), 500
 
 @app.route('/api/refresh', methods=['POST'])
@@ -390,12 +416,14 @@ def refresh():
         })
         
     except Exception as e:
-        print(f"刷新token时出错: {e}")
+        log_print(f"刷新token时出错: {e}")
         return jsonify({'success': False, 'message': 'Token refresh failed'}), 500
 
 if __name__ == '__main__':
     if initialize_database():
-        print("数据库初始化完成，系统已准备好运行。")
+        log_print("数据库初始化完成，系统已准备好运行。")
     else:
-        print("数据库初始化失败，请检查错误日志。")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+        log_print("数据库初始化失败，请检查错误日志。")
+    
+    log_print("Flask应用启动")
+    app.run(host='0.0.0.0', port=5000)

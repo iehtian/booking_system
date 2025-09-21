@@ -6,3 +6,4 @@ datebase/__pycache__
 *.bak
 config.py
 __pycache__
+logs/

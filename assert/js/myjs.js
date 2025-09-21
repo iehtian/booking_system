@@ -101,7 +101,7 @@ function get_dates(data) {
   if (datas[data]) {
     return datas[data]
   } else {
-    console.log("当前已有的日期:", Object.keys(datas))
+    console.error("当前已有的日期:", Object.keys(datas))
     console.error("日期不存在:", data)
   }
   return []
@@ -121,7 +121,6 @@ function checked_option(event, data, timeSlot) {
   }
 
   console.log("当前选中的时间段:", selected)
-  console.log("dates", datas)
 }
 
 const buttonhideConfigs = {
@@ -249,7 +248,6 @@ async function setupCancelHandler() {
 function buildSlotChangeHandler(date, slotLabel, timeSlot) {
   return (event) => {
     const targetDate = date
-    console.log("targetDate", targetDate)
     checked_option(event, targetDate, event.target.value)
     if (event.target.checked) {
       // 首次勾选时再“捕获原文”（含HTML），避免异步渲染导致保存为空
