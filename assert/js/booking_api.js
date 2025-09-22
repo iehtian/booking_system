@@ -46,6 +46,60 @@ function getGroupTimeRanges(mergedBookings) {
   })
 }
 
+function desktop_booking_display(bookings, date) {
+  const mergedBookings = mergeBookings(data.bookings)
+  const groupRanges = getGroupTimeRanges(mergedBookings)
+  console.log("Merged Bookings:", mergedBookings)
+  // 遍历mergedBookings，显示合并后的预约信息
+  mergedBookings.forEach((group, i) => {
+    const name = group[0].name || "未知用户" // 使用组内第一个元素的name
+    const color = group[0].color || "#ffffff" // 使用组内第一个元素的color
+    console.log(`Group ${i}: Name=${name}, Color=${color}`)
+    const totalRange = groupRanges[i]
+    group.forEach((item, j) => {
+      const checkbox = document.getElementById(
+        `time-slot-${date}-${item.timeRange}`
+      )
+      if (checkbox && checkbox.parentElement) {
+        checkbox.disabled = true
+        checkbox.parentElement.style.backgroundColor = color // 设置背景色
+      }
+      if (j === 0) {
+        const slotLabel = checkbox ? checkbox.nextElementSibling : null
+        if (slotLabel) {
+          // slotLabel中使用span来显示已预约信息
+          const span = document.createElement("span")
+          span.style.whiteSpace = "pre"
+          span.classList.add("weekly-text") // 添加类名以应用样式
+          span.textContent = `${name}    (${totalRange})`
+          slotLabel.appendChild(span)
+        }
+      }
+    })
+  })
+}
+
+function mobile_booking_display(bookings, date) {
+  Object.entries(bookings).forEach(([key, value]) => {
+    const name = value.name || "未知用户" // 如果没有name字段，使用默认值
+    const color = value.color || "#ffffff" // 如果没有color字段，使用默认值
+    const checkbox = document.getElementById(`time-slot-${date}-${key}`)
+    if (checkbox) {
+      if (checkbox.parentElement) {
+        checkbox.disabled = true
+        checkbox.parentElement.style.backgroundColor = color // 设置背景色
+      }
+      const slotLabel = checkbox.nextElementSibling
+      if (slotLabel) {
+        // slotLabel中使用span来显示已预约信息
+        const span = document.createElement("span")
+        span.textContent = `已预约: ${name}`
+        slotLabel.appendChild(span)
+      }
+    }
+  })
+}
+
 async function getBookings(system, date) {
   try {
     const response = await fetch(
@@ -62,35 +116,14 @@ async function getBookings(system, date) {
     if (!data.bookings) {
       return
     }
-    const mergedBookings = mergeBookings(data.bookings)
-    const groupRanges = getGroupTimeRanges(mergedBookings)
-    console.log("Merged Bookings:", mergedBookings)
-    // 遍历mergedBookings，显示合并后的预约信息
-    mergedBookings.forEach((group, i) => {
-      const name = group[0].name || "未知用户" // 使用组内第一个元素的name
-      const color = group[0].color || "#ffffff" // 使用组内第一个元素的color
-      console.log(`Group ${i}: Name=${name}, Color=${color}`)
-      const totalRange = groupRanges[i]
-      group.forEach((item, j) => {
-        const checkbox = document.getElementById(
-          `time-slot-${date}-${item.timeRange}`
-        )
-        if (checkbox && checkbox.parentElement) {
-          checkbox.disabled = true
-          checkbox.parentElement.style.backgroundColor = color // 设置背景色
-        }
-        if (j === 0) {
-          const slotLabel = checkbox ? checkbox.nextElementSibling : null
-          if (slotLabel) {
-            // slotLabel中使用span来显示已预约信息
-            const span = document.createElement("span")
-            span.style.whiteSpace = "pre"
-            span.textContent = `${name}    (${totalRange})`
-            slotLabel.appendChild(span)
-          }
-        }
-      })
-    })
+    const width =
+      document.documentElement.clientWidth || document.body.clientWidth
+    const isMobile = width < 768 // 判断是否为移动端
+    if (isMobile) {
+      mobile_booking_display(data.bookings, date)
+    } else {
+      desktop_booking_display(data.bookings, date)
+    }
   } catch (error) {
     console.error("获取已预约时间段时出错:", error)
   }

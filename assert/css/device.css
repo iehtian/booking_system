@@ -223,6 +223,6 @@ label {
   display: none; /* 默认隐藏 */
 }
 
-span {
+.weekly-text {
   font-size: 20px;
 }

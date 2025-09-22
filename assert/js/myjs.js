@@ -655,6 +655,13 @@ async function initializeApp() {
   const isMobile = width < 768 // 判断是否为移动端
   const config = isMobile ? deviceConfig.mobile : deviceConfig.desktop
   config.init_slots() // 初始化
+  if (isMobile) {
+    // 给所有label添加样式
+    document.querySelectorAll("label").forEach((label) => {
+      // 增加flex-direction: column;
+      label.style.flexDirection = "column"
+    })
+  }
   setupSlotHidden(config)
 
   document
