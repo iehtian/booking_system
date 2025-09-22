@@ -47,7 +47,7 @@ function getGroupTimeRanges(mergedBookings) {
 }
 
 function desktop_booking_display(bookings, date) {
-  const mergedBookings = mergeBookings(data.bookings)
+  const mergedBookings = mergeBookings(bookings)
   const groupRanges = getGroupTimeRanges(mergedBookings)
   console.log("Merged Bookings:", mergedBookings)
   // 遍历mergedBookings，显示合并后的预约信息
