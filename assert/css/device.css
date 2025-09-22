@@ -73,7 +73,6 @@ label {
   height: 100%; /* 确保 label 占据其父容器 .time-slot-item 的全部高度 */
   text-align: center; /* 确保多行文本在各自的行内水平居中 */
   cursor: pointer;
-  flex-direction: column; /* 让 label 内部的文本（两行）垂直排列 */
   user-select: none;
 }
 
@@ -109,8 +108,6 @@ label {
 .hidden {
   display: none; /* 默认隐藏 */
 }
-
-
 
 /* 美化日期选择框 */
 #appointment-date {
@@ -224,4 +221,8 @@ label {
 
 .button-hidden {
   display: none; /* 默认隐藏 */
+}
+
+span {
+  font-size: 20px;
 }
