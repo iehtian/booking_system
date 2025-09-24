@@ -71,7 +71,7 @@ function desktop_booking_display(bookings, date) {
           const span = document.createElement("span")
           span.style.whiteSpace = "pre"
           span.classList.add("weekly-text") // 添加类名以应用样式
-          span.textContent = `${name}    (${totalRange})`
+          span.textContent = `${name}  (${totalRange})`
           slotLabel.appendChild(span)
         }
       }
