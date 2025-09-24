@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 import bcrypt
+import random
 from config import Config
 from datebase import (
     upsert_user,
@@ -51,17 +52,9 @@ def verify_password(password, hashed_password):
         print(f"密码验证出错: {e}")
         return False
 
-def random_hsl_color():
-    import colorsys
-    import random
-    # 随机色相(0-360度)，固定饱和度和亮度保证颜色鲜艳
-    hue = random.random()  # 0-1
-    saturation = random.uniform(0.6, 0.9)  # 60%-90%饱和度
-    lightness = random.uniform(0.4, 0.7)   # 40%-70%亮度
-    
-    rgb = colorsys.hls_to_rgb(hue, lightness, saturation)
-    r, g, b = [int(x * 255) for x in rgb]
-    return f"#{r:02x}{g:02x}{b:02x}"
+def random_color():
+    colors = ["#FFC48A",'#79CB9B','#4292C5','#FFAEB0','#F28147','#90BFF9','#8B90CE']
+    return random.choice(colors)
 
 @app.route('/hello_world', methods=['GET'])
 def hello_world():
@@ -250,7 +243,7 @@ def get_register_info():
         if(search_user_by_ID(ID)):
             return jsonify({"error": "User already exists"}), 400
         
-        user_color = random_hsl_color()  # 生成随机颜色
+        user_color = random_color()  # 生成随机颜色
         
         # 使用bcrypt加密密码
         hashed_password = hash_password(password)
