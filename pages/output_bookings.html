@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>预约信息打印系统</title>
+    <link rel="stylesheet" href="../assert/css/output_bookings.css" />
+    <script type="module" src="../assert/js/output_bookings.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>预约信息打印系统</h1>
+        <p>选择筛选条件，查询并打印预约信息</p>
+      </div>
+
+      <div class="main-content">
+        <div class="filter-panel">
+          <div class="filter-group">
+            <label for="userSelect">用户选择</label>
+            <select id="userSelect" class="form-control">
+              <option value="">全部用户</option>
+              <option value="user1">张三 (ID: 001)</option>
+              <option value="user2">李四 (ID: 002)</option>
+              <option value="user3">王五 (ID: 003)</option>
+              <option value="user4">赵六 (ID: 004)</option>
+              <option value="user5">孙七 (ID: 005)</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="deviceSelect">仪器选择</label>
+            <select id="deviceSelect" class="form-control">
+              <option value="">全部仪器</option>
+              <option value="device1">高效液相色谱仪 HPLC-001</option>
+              <option value="device2">气相色谱仪 GC-002</option>
+              <option value="device3">原子吸收光谱仪 AAS-003</option>
+              <option value="device4">扫描电镜 SEM-004</option>
+              <option value="device5">X射线衍射仪 XRD-005</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="dateRangePicker">日期范围</label>
+            <div class="date-range-picker" id="dateRangePicker">
+              <input
+                type="text"
+                class="form-control date-range-input"
+                id="dateRangeDisplay"
+                placeholder="点击选择日期范围"
+                readonly
+              />
+              <div class="date-picker-popup" id="datePickerPopup">
+                <div class="date-picker-header">
+                  <button type="button" class="nav-btn" id="prevMonth">
+                    ‹
+                  </button>
+                  <span class="month-year" id="monthYear"></span>
+                  <button type="button" class="nav-btn" id="nextMonth">
+                    ›
+                  </button>
+                </div>
+                <div class="weekdays">
+                  <div>日</div>
+                  <div>一</div>
+                  <div>二</div>
+                  <div>三</div>
+                  <div>四</div>
+                  <div>五</div>
+                  <div>六</div>
+                </div>
+                <div class="days-grid" id="daysGrid"></div>
+                <div class="date-picker-footer">
+                  <div class="selection-status" id="selectionStatus">
+                    请选择开始日期
+                  </div>
+                  <div class="footer-buttons">
+                    <button type="button" class="btn-clear" id="clearDates">
+                      清空
+                    </button>
+                    <button type="button" class="btn-confirm" id="confirmDates">
+                      确认
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label for="statusSelect">预约状态</label>
+            <select id="statusSelect" class="form-control">
+              <option value="">全部状态</option>
+              <option value="confirmed">已确认</option>
+              <option value="pending">待确认</option>
+              <option value="cancelled">已取消</option>
+            </select>
+          </div>
+
+          <div class="button-group">
+            <button class="btn btn-primary" onclick="searchReservations()">
+              查询预约
+            </button>
+            <button class="btn btn-secondary" onclick="clearFilters()">
+              清空条件
+            </button>
+          </div>
+        </div>
+
+        <div class="results-panel">
+          <div id="statsCards" class="stats-cards" style="display: none">
+            <div class="stats-card">
+              <h3 id="totalCount">0</h3>
+              <p>总预约数</p>
+            </div>
+            <div class="stats-card">
+              <h3 id="confirmedCount">0</h3>
+              <p>已确认</p>
+            </div>
+            <div class="stats-card">
+              <h3 id="pendingCount">0</h3>
+              <p>待确认</p>
+            </div>
+          </div>
+
+          <div id="resultsContainer">
+            <div class="no-results">
+              <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3">
+                📅
+              </div>
+              <h3>请选择筛选条件并点击查询</h3>
+              <p>支持按用户、仪器、日期、状态等条件组合查询</p>
+            </div>
+          </div>
+
+          <div id="printButtons" class="button-group" style="display: none">
+            <button class="btn btn-success" onclick="printResults()">
+              打印结果
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
