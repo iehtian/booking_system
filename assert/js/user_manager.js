@@ -1,4 +1,5 @@
 import { host } from "./config.js"
+
 // 登录功能
 async function login(ID, password) {
   try {
@@ -11,11 +12,13 @@ async function login(ID, password) {
     console.log("登录响应:", data)
     if (data.access_token) {
       localStorage.setItem("access_token", data.access_token)
+      return { success: true, ...data }
     }
-    return data
+    // 没有 token 当作登录失败
+    return { success: false, message: data.message || "登录失败", ...data }
   } catch (error) {
     console.error("登录错误:", error)
-    return false
+    return { success: false, message: "网络或服务器错误" }
   }
 }
 
@@ -98,12 +101,13 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Logging in user:", ID, password)
       // 调用登录函数
       login(ID, password)
-        .then((success) => {
-          if (!success) {
-            alert("Login failed. Please check your ID and password.")
+        .then((res) => {
+          if (!res.success) {
+            alert(
+              res.message || "Login failed. Please check your ID and password."
+            )
             return
           }
-          alert("Login successful!")
           window.location.href = "../index.html"
         })
         .catch((error) => {
@@ -153,6 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
 async function checkAuthStatus() {
   try {
     const token = localStorage.getItem("access_token")
+    if (!token) return { logged_in: false }
     const controller = new AbortController()
     const timeoutId = setTimeout(() => {
       controller.abort() // 超时后中止请求
