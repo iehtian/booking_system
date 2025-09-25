@@ -372,6 +372,8 @@ function combineTimeSlots(slots) {
 }
 
 function renderResults(deviceText, results) {
+  // 保存最近渲染的数据供复制使用
+  window.__lastRenderedResults = { deviceText, results }
   const container = document.getElementById("resultsContainer")
   if (!container) return
   container.innerHTML = ""
@@ -416,12 +418,98 @@ function renderResults(deviceText, results) {
       }
 
       dayDiv.appendChild(ul)
+
+      // 单日复制按钮
+      const copyDayBtn = document.createElement("button")
+      copyDayBtn.className = "btn btn-mini copy-day-btn"
+      copyDayBtn.type = "button"
+      copyDayBtn.textContent = "复制本日"
+      copyDayBtn.addEventListener("click", () => {
+        const text = mergedTimes.length
+          ? `${r.date} - ${deviceText}\n` + mergedTimes.join("\n")
+          : `${r.date} - ${deviceText}\n无预约时间段`
+        copyText(text)
+      })
+      dayDiv.appendChild(copyDayBtn)
     }
 
     wrapper.appendChild(dayDiv)
   })
 
   container.appendChild(wrapper)
+}
+
+function buildAllResultsPlainText() {
+  const data = window.__lastRenderedResults
+  if (!data) return ""
+  const { deviceText, results } = data
+  const lines = []
+  results.forEach((r) => {
+    if (r.error) {
+      lines.push(`${r.date} - ${deviceText}\n(加载失败)`)
+    } else {
+      const rawTimes =
+        r.data && r.data.success && Array.isArray(r.data.times)
+          ? r.data.times
+          : []
+      const mergedTimes = combineTimeSlots(rawTimes)
+      if (mergedTimes.length === 0) {
+        lines.push(`${r.date} - ${deviceText}\n无预约时间段`)
+      } else {
+        lines.push(`${r.date} - ${deviceText}\n${mergedTimes.join("\n")}`)
+      }
+    }
+  })
+  return lines.join("\n\n")
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text)
+    showCopyTip("已复制")
+  } catch (e) {
+    // 回退方式
+    const ta = document.createElement("textarea")
+    ta.value = text
+    document.body.appendChild(ta)
+    ta.select()
+    try {
+      document.execCommand("copy")
+      showCopyTip("已复制")
+    } catch (err) {
+      alert("复制失败")
+    } finally {
+      document.body.removeChild(ta)
+    }
+  }
+}
+
+function copyAllResults() {
+  const text = buildAllResultsPlainText()
+  if (!text) {
+    showCopyTip("无可复制内容")
+    return
+  }
+  copyText(text)
+}
+
+function showCopyTip(msg) {
+  let tip = document.getElementById("copyToast")
+  if (!tip) {
+    tip = document.createElement("div")
+    tip.id = "copyToast"
+    tip.style.cssText =
+      "position:fixed;top:20px;right:20px;background:#333;color:#fff;padding:8px 14px;border-radius:4px;font-size:12px;z-index:9999;box-shadow:0 2px 6px rgba(0,0,0,.2);opacity:0;transition:opacity .25s;"
+    document.body.appendChild(tip)
+  }
+  tip.textContent = msg
+  requestAnimationFrame(() => {
+    tip.style.opacity = "1"
+  })
+  clearTimeout(window.__copyToastTimer)
+  window.__copyToastTimer = setTimeout(() => {
+    tip.style.opacity = "0"
+  }, 1800)
 }
 
 async function searchReservations() {
@@ -463,6 +551,8 @@ async function searchReservations() {
   })
   const deviceText = selectdevice.label || selectdevice.value
   renderResults(deviceText, results)
+  // 展示打印/复制按钮
+  document.getElementById("printButtons").style.display = "flex"
 }
 document
   .querySelector(".btn-primary")
