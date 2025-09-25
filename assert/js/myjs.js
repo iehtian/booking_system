@@ -588,6 +588,7 @@ const deviceConfig = {
     async setupcacel() {
       for (const date of this.buttonhide.weekdates) {
         const canceltime = await getBookings_by_ID(device, date)
+        console.log("取消预约时间段:", canceltime)
         for (const slot of canceltime.times) {
           const checkbox = document.getElementById(`time-slot-${date}-${slot}`)
           const isDisabledParent =

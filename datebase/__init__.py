@@ -4,7 +4,7 @@ This package contains Redis operations for users and bookings.
 """
 
 
-from .redis import (
+from .redis_client import (
     upsert_user,
     search_user_by_ID,
     search_all_users,

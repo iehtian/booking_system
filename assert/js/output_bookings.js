@@ -1,180 +1,12 @@
-const mockReservations = [
-  {
-    id: "R001",
-    user: "张三",
-    userId: "user1",
-    device: "高效液相色谱仪 HPLC-001",
-    deviceId: "device1",
-    date: "2024-09-25",
-    time: "09:00-11:00",
-    status: "confirmed",
-    purpose: "药物成分分析",
-  },
-  {
-    id: "R002",
-    user: "李四",
-    userId: "user2",
-    device: "气相色谱仪 GC-002",
-    deviceId: "device2",
-    date: "2024-09-25",
-    time: "14:00-16:00",
-    status: "pending",
-    purpose: "环境污染物检测",
-  },
-  {
-    id: "R003",
-    user: "王五",
-    userId: "user3",
-    device: "原子吸收光谱仪 AAS-003",
-    deviceId: "device3",
-    date: "2024-09-26",
-    time: "10:00-12:00",
-    status: "confirmed",
-    purpose: "金属元素含量测定",
-  },
-  {
-    id: "R004",
-    user: "张三",
-    userId: "user1",
-    device: "扫描电镜 SEM-004",
-    deviceId: "device4",
-    date: "2024-09-26",
-    time: "15:00-17:00",
-    status: "cancelled",
-    purpose: "材料微观结构观察",
-  },
-  {
-    id: "R005",
-    user: "赵六",
-    userId: "user4",
-    device: "X射线衍射仪 XRD-005",
-    deviceId: "device5",
-    date: "2024-09-27",
-    time: "09:00-11:00",
-    status: "confirmed",
-    purpose: "晶体结构分析",
-  },
-  {
-    id: "R006",
-    user: "孙七",
-    userId: "user5",
-    device: "高效液相色谱仪 HPLC-001",
-    deviceId: "device1",
-    date: "2024-09-27",
-    time: "13:00-15:00",
-    status: "pending",
-    purpose: "蛋白质纯度检测",
-  },
-]
-
-function searchReservations() {
-  const userId = document.getElementById("userSelect").value
-  const deviceId = document.getElementById("deviceSelect").value
-  const dateRange = getSelectedDateRange()
-  const status = document.getElementById("statusSelect").value
-
-  // 筛选数据
-  let filteredData = mockReservations.filter((reservation) => {
-    let matches = true
-
-    if (userId && reservation.userId !== userId) matches = false
-    if (deviceId && reservation.deviceId !== deviceId) matches = false
-    if (dateRange.start && reservation.date < dateRange.start) matches = false
-    if (dateRange.end && reservation.date > dateRange.end) matches = false
-    if (status && reservation.status !== status) matches = false
-
-    return matches
-  })
-
-  displayResults(filteredData)
-}
+import { devices_map } from "./devices.js"
+import { getBookings_by_ID } from "./booking_api.js"
+import { checkAuthStatus } from "./user_manager.js"
 
 function getSelectedDateRange() {
   return {
     start: window.selectedStartDate || "",
     end: window.selectedEndDate || "",
   }
-}
-
-function displayResults(data) {
-  const resultsContainer = document.getElementById("resultsContainer")
-  const statsCards = document.getElementById("statsCards")
-  const printButtons = document.getElementById("printButtons")
-
-  if (data.length === 0) {
-    resultsContainer.innerHTML = `
-                    <div class="no-results">
-                        <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">🔍</div>
-                        <h3>未找到符合条件的预约信息</h3>
-                        <p>请调整筛选条件重新查询</p>
-                    </div>
-                `
-    statsCards.style.display = "none"
-    printButtons.style.display = "none"
-    return
-  }
-
-  // 更新统计卡片
-  const confirmedCount = data.filter((r) => r.status === "confirmed").length
-  const pendingCount = data.filter((r) => r.status === "pending").length
-
-  document.getElementById("totalCount").textContent = data.length
-  document.getElementById("confirmedCount").textContent = confirmedCount
-  document.getElementById("pendingCount").textContent = pendingCount
-
-  statsCards.style.display = "grid"
-  printButtons.style.display = "flex"
-
-  // 生成表格
-  const tableHTML = `
-                <div class="results-table">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>预约编号</th>
-                                <th>用户</th>
-                                <th>仪器</th>
-                                <th>日期</th>
-                                <th>时间</th>
-                                <th>状态</th>
-                                <th>用途</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${data
-                              .map(
-                                (reservation) => `
-                                <tr>
-                                    <td>${reservation.id}</td>
-                                    <td>${reservation.user}</td>
-                                    <td>${reservation.device}</td>
-                                    <td>${reservation.date}</td>
-                                    <td>${reservation.time}</td>
-                                    <td>
-                                        <span class="status-badge status-${reservation.status}">
-                                            ${getStatusText(reservation.status)}
-                                        </span>
-                                    </td>
-                                    <td>${reservation.purpose}</td>
-                                </tr>
-                            `
-                              )
-                              .join("")}
-                        </tbody>
-                    </table>
-                </div>
-            `
-
-  resultsContainer.innerHTML = tableHTML
-}
-
-function getStatusText(status) {
-  const statusMap = {
-    confirmed: "已确认",
-    pending: "待确认",
-    cancelled: "已取消",
-  }
-  return statusMap[status] || status
 }
 
 function clearFilters() {
@@ -440,3 +272,198 @@ function updateDisplayValue() {
 function formatDateForDisplay(date) {
   return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`
 }
+
+function add_device_filter() {
+  // 遍历devices_map，添加选项
+  const deviceSelect = document.querySelector("#deviceSelect")
+  Object.entries(devices_map).forEach(([key, value]) => {
+    const option = document.createElement("option")
+    option.value = value
+    option.textContent = key
+    deviceSelect.appendChild(option)
+  })
+}
+
+add_device_filter()
+
+function getSelectedDevice() {
+  const sel = document.getElementById("deviceSelect")
+  if (!sel) return null
+  console.log(
+    "Selected device:",
+    sel.value,
+    sel.options[sel.selectedIndex].text
+  )
+  return {
+    value: sel.value, // 你在 option.value 里放的 devices_map 映射值
+    label: sel.options[sel.selectedIndex].text, // 下拉显示的中文名称（key）
+  }
+}
+
+function getDateArrayInclusive(startStr, endStr) {
+  if (!startStr || !endStr) return []
+  // 若顺序颠倒则交换
+  let s = startStr
+  let e = endStr
+  if (s > e) [s, e] = [e, s]
+
+  const toDate = (str) => {
+    const [y, m, d] = str.split("-").map(Number)
+    return new Date(y, m - 1, d) // 本地时区，避免时区偏移
+  }
+
+  const pad = (n) => String(n).padStart(2, "0")
+  const toStr = (dt) =>
+    `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`
+
+  const startDate = toDate(s)
+  const endDate = toDate(e)
+  const arr = []
+  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    arr.push(toStr(d))
+  }
+  return arr
+}
+
+function combineTimeSlots(slots) {
+  if (!Array.isArray(slots) || slots.length === 0) return []
+  const toMin = (t) => {
+    const [H, M] = t.split(":").map(Number)
+    return H * 60 + M
+  }
+  // 解析
+  const intervals = slots
+    .map((s) => {
+      if (typeof s !== "string" || !s.includes("-")) return null
+      const [start, end] = s.split("-").map((v) => v.trim())
+      if (!start || !end) return null
+      return { start, end, sMin: toMin(start), eMin: toMin(end) }
+    })
+    .filter(Boolean)
+
+  // 排序
+  intervals.sort((a, b) => a.sMin - b.sMin || a.eMin - b.eMin)
+
+  // 合并
+  const merged = []
+  for (const it of intervals) {
+    if (!merged.length) {
+      merged.push({ ...it })
+      continue
+    }
+    const last = merged[merged.length - 1]
+    // 若重叠或首尾相接 (it.sMin <= last.eMin) 则合并
+    if (it.sMin <= last.eMin) {
+      if (it.eMin > last.eMin) ((last.eMin = it.eMin), (last.end = it.end))
+    } else {
+      merged.push({ ...it })
+    }
+  }
+
+  // 格式化
+  const pad = (n) => String(n).padStart(2, "0")
+  return merged.map((m) => {
+    const sh = Math.floor(m.sMin / 60)
+    const sm = m.sMin % 60
+    const eh = Math.floor(m.eMin / 60)
+    const em = m.eMin % 60
+    return `${pad(sh)}:${pad(sm)}-${pad(eh)}:${pad(em)}`
+  })
+}
+
+function renderResults(deviceText, results) {
+  const container = document.getElementById("resultsContainer")
+  if (!container) return
+  container.innerHTML = ""
+
+  const wrapper = document.createElement("div")
+  wrapper.className = "results-list"
+
+  results.forEach((r) => {
+    const dayDiv = document.createElement("div")
+    dayDiv.className = "result-day"
+    const header = document.createElement("div")
+    header.className = "result-day-header"
+
+    if (r.error) {
+      header.innerHTML = `<strong>${r.date}</strong> - <span class="device">${deviceText}</span> <span style="color:#d9534f">加载失败</span>`
+      dayDiv.appendChild(header)
+    } else {
+      header.innerHTML = `<strong>${r.date}</strong> - <span class="device">${deviceText}</span>`
+      dayDiv.appendChild(header)
+
+      const rawTimes =
+        r.data && r.data.success && Array.isArray(r.data.times)
+          ? r.data.times
+          : []
+      // 合并处理
+      const mergedTimes = combineTimeSlots(rawTimes)
+
+      const ul = document.createElement("ul")
+      ul.className = "time-slots"
+
+      if (mergedTimes.length === 0) {
+        const li = document.createElement("li")
+        li.className = "empty"
+        li.textContent = "无预约时间段"
+        ul.appendChild(li)
+      } else {
+        mergedTimes.forEach((t) => {
+          const li = document.createElement("li")
+          li.textContent = t
+          ul.appendChild(li)
+        })
+      }
+
+      dayDiv.appendChild(ul)
+    }
+
+    wrapper.appendChild(dayDiv)
+  })
+
+  container.appendChild(wrapper)
+}
+
+async function searchReservations() {
+  const selectdevice = getSelectedDevice()
+  const { start, end } = getSelectedDateRange()
+  console.log("Searching reservations from", start, "to", end)
+  if (!start || !end) {
+    alert("请先选择完整的开始与结束日期")
+    return
+  }
+  const user_info = await checkAuthStatus()
+  console.log("User info:", user_info)
+  const ID = user_info.user.ID
+  console.log(ID)
+  const dates = getDateArrayInclusive(start, end)
+  // for (const d of dates) {
+  //   try {
+  //     const res = await getBookings_by_ID(selectdevice.value, d)
+  //     // TODO: 在这里处理 res（例如累加、渲染 DOM 等）
+  //     console.log("单日结果", d, res)
+  //   } catch (err) {
+  //     console.error("获取失败", d, err)
+  //   }
+  // }
+  const results = await Promise.all(
+    dates.map((d) =>
+      getBookings_by_ID(selectdevice.value, d)
+        .then((data) => ({ date: d, data }))
+        .catch((error) => ({ date: d, error }))
+    )
+  )
+  results.forEach((r) => {
+    if (r.error) {
+      console.error("失败", r.date, r.error)
+    } else {
+      console.log("成功", r.date, r.data)
+      // TODO: 处理 r.data
+    }
+  })
+  const deviceText = selectdevice.label || selectdevice.value
+  renderResults(deviceText, results)
+}
+document
+  .querySelector(".btn-primary")
+  .addEventListener("click", searchReservations)

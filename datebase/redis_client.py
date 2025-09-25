@@ -141,3 +141,8 @@ if __name__ == '__main__':
     print("\n📅 Bookings on 2025-06-21:")
     for res in search_booking_by_date("a_device", "2025-06-21"):
         print(f"{res[0]}: {res[1]}")
+
+    data = search_all_users()
+    for key, user in data:
+        print(f"Upserting user {user['real_name']}")
+        upsert_user(user_id=key.split(':')[1], ID=user['ID'], password=user['password'], real_name=user['real_name'], color=user['color'])
