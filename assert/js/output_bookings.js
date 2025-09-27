@@ -10,15 +10,13 @@ function getSelectedDateRange() {
 }
 
 function clearFilters() {
-  document.getElementById("userSelect").value = ""
   const devSel = document.getElementById("deviceSelect")
   if (devSel) {
     // 清空多选/单选的选择状态
     Array.from(devSel.options).forEach((opt) => (opt.selected = false))
-    devSel.value = ""
+    devSel.options[0].selected = true // 默认选中“所有仪器”
   }
   document.getElementById("dateRangeDisplay").value = ""
-  document.getElementById("statusSelect").value = ""
 
   // 清空日期选择
   window.selectedStartDate = null
@@ -29,7 +27,6 @@ function clearFilters() {
                 <div class="no-results">
                     <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">📅</div>
                     <h3>请选择筛选条件并点击查询</h3>
-                    <p>支持按用户、仪器、日期、状态等条件组合查询</p>
                 </div>
             `
   document.getElementById("statsCards").style.display = "none"
@@ -640,3 +637,5 @@ async function searchReservations() {
 document
   .querySelector(".btn-primary")
   .addEventListener("click", searchReservations)
+
+document.querySelector(".btn-secondary").addEventListener("click", clearFilters)
