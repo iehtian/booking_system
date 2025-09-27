@@ -3,15 +3,13 @@ import { logout, checkAuthStatus } from "./user_manager.js"
 document.querySelector("#login").addEventListener("click", function (event) {
   event.preventDefault() // 阻止默认链接行为
   const loginUrl = `pages/login.html`
-  // 跳转到登录页面，新页面打开
-  window.open(loginUrl, "_blank")
+  window.location.href = loginUrl
 })
 
 document.querySelector("#register").addEventListener("click", function (event) {
   event.preventDefault() // 阻止默认链接行为
   const registerUrl = `pages/register.html`
-  // 跳转到注册页面，新页面打开
-  window.open(registerUrl, "_blank")
+  window.location.href = registerUrl
 })
 
 document.querySelector("#logout").addEventListener("click", function (event) {
