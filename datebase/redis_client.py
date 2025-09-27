@@ -26,6 +26,17 @@ def create_user_index():
     )
     print(f"Index '{index_name}' created.")
 
+def escape_redis_search_value(value):
+    """转义RediSearch中的特殊字符"""
+    special_chars = {'-', '+', '=', '!', '(', ')', '{', '}', '[', ']', '^', '"', '~', '*', '?', ':', '\\', '/'}
+    out = []
+    for ch in value:
+        if ch in special_chars:
+            out.append('\\' + ch)
+        else:
+            out.append(ch)
+    return ''.join(out)
+
 def upsert_user(user_id, ID, password, real_name, color):
     key = f"user:{user_id}"
     data = {"ID": ID, "password": password, "real_name": real_name, "color": color}
@@ -33,7 +44,8 @@ def upsert_user(user_id, ID, password, real_name, color):
     print(f"Upserted {key}: {data}")
 
 def search_user_by_ID(ID):
-    query = f"@ID:{{{ID}}}"
+    escaped_id = escape_redis_search_value(ID)
+    query = f'@ID:{{{escaped_id}}}'
     return search_user(query)
 
 def search_user(query):
@@ -85,12 +97,15 @@ def upsert_booking(booking_id, system_id, date, time, name, color):
     print(f"Upserted {key}: {data}")
 
 def search_booking_by_date(system_id, date):
-    date = date.replace('-', '\\-')
+    date = escape_redis_search_value(date)
+    system_id = escape_redis_search_value(system_id)
     query = f"@date:{{{date}}} @system_id:{{{system_id}}}"
     return search_booking(query)
 
 def search_booking_by_date_and_name(system_id, date, name):
-    date = date.replace('-', '\\-')
+    date = escape_redis_search_value(date)
+    name = escape_redis_search_value(name)
+    system_id = escape_redis_search_value(system_id)
     query = f"@date:{{{date}}} @name:{{{name}}} @system_id:{{{system_id}}}"
     return search_booking(query)
 
