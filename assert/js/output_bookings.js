@@ -395,6 +395,18 @@ function renderResults(groupedResults) {
   wrapper.className = "results-list"
 
   groupedResults.forEach((day) => {
+    // 若该日所有仪器均无预约时间段（忽略错误项），则不渲染此日期框
+    const hasAnyTimes = day.items.some((item) => {
+      if (!item || item.error) return false
+      const rawTimes =
+        item.data && item.data.success && Array.isArray(item.data.times)
+          ? item.data.times
+          : []
+      const mergedTimes = combineTimeSlots(rawTimes)
+      return mergedTimes.length > 0
+    })
+    if (!hasAnyTimes) return
+
     const dayDiv = document.createElement("div")
     dayDiv.className = "result-day"
     const header = document.createElement("div")
@@ -407,42 +419,45 @@ function renderResults(groupedResults) {
       const deviceName =
         item.device?.label || item.device?.value || "未命名仪器"
 
-      const deviceBlock = document.createElement("div")
-      deviceBlock.className = "device-result"
-
-      const deviceHeader = document.createElement("div")
-      deviceHeader.className = "device-name"
+      // 错误直接渲染错误块
       if (item.error) {
+        const deviceBlock = document.createElement("div")
+        deviceBlock.className = "device-result"
+        const deviceHeader = document.createElement("div")
+        deviceHeader.className = "device-name"
         deviceHeader.innerHTML = `<span class="device">${deviceName}</span> <span style="color:#d9534f">加载失败</span>`
         deviceBlock.appendChild(deviceHeader)
-      } else {
-        deviceHeader.innerHTML = `<span class="device">${deviceName}</span>`
-        deviceBlock.appendChild(deviceHeader)
-
-        const rawTimes =
-          item.data && item.data.success && Array.isArray(item.data.times)
-            ? item.data.times
-            : []
-        const mergedTimes = combineTimeSlots(rawTimes)
-
-        const ul = document.createElement("ul")
-        ul.className = "time-slots"
-
-        if (mergedTimes.length === 0) {
-          const li = document.createElement("li")
-          li.className = "empty"
-          li.textContent = "无预约时间段"
-          ul.appendChild(li)
-        } else {
-          mergedTimes.forEach((t) => {
-            const li = document.createElement("li")
-            li.textContent = t
-            ul.appendChild(li)
-          })
-        }
-        deviceBlock.appendChild(ul)
+        dayDiv.appendChild(deviceBlock)
+        return
       }
 
+      const rawTimes =
+        item.data && item.data.success && Array.isArray(item.data.times)
+          ? item.data.times
+          : []
+      const mergedTimes = combineTimeSlots(rawTimes)
+
+      // 无预约时间段则不渲染任何内容（包括外层时间框）
+      if (mergedTimes.length === 0) {
+        return
+      }
+
+      // 有时间段才渲染该仪器的卡片
+      const deviceBlock = document.createElement("div")
+      deviceBlock.className = "device-result"
+      const deviceHeader = document.createElement("div")
+      deviceHeader.className = "device-name"
+      deviceHeader.innerHTML = `<span class="device">${deviceName}</span>`
+      deviceBlock.appendChild(deviceHeader)
+
+      const ul = document.createElement("ul")
+      ul.className = "time-slots"
+      mergedTimes.forEach((t) => {
+        const li = document.createElement("li")
+        li.textContent = t
+        ul.appendChild(li)
+      })
+      deviceBlock.appendChild(ul)
       dayDiv.appendChild(deviceBlock)
     })
 
@@ -452,21 +467,27 @@ function renderResults(groupedResults) {
     copyDayBtn.type = "button"
     copyDayBtn.textContent = "复制本日"
     copyDayBtn.addEventListener("click", () => {
-      const blocks = day.items.map((item) => {
-        const deviceName =
-          item.device?.label || item.device?.value || "未命名仪器"
-        if (item.error) {
-          return `${day.date} - ${deviceName}\n(加载失败)`
-        }
-        const rawTimes =
-          item.data && item.data.success && Array.isArray(item.data.times)
-            ? item.data.times
-            : []
-        const mergedTimes = combineTimeSlots(rawTimes)
-        return mergedTimes.length
-          ? `${day.date} - ${deviceName}\n${mergedTimes.join("\n")}`
-          : `${day.date} - ${deviceName}\n无预约时间段`
-      })
+      const blocks = day.items
+        .map((item) => {
+          const deviceName =
+            item.device?.label || item.device?.value || "未命名仪器"
+          if (item.error) {
+            return `${day.date} - ${deviceName}\n(加载失败)`
+          }
+          const rawTimes =
+            item.data && item.data.success && Array.isArray(item.data.times)
+              ? item.data.times
+              : []
+          const mergedTimes = combineTimeSlots(rawTimes)
+          if (mergedTimes.length === 0) return null
+          return `${day.date} - ${deviceName}\n${mergedTimes.join("\n")}`
+        })
+        .filter(Boolean)
+
+      if (blocks.length === 0) {
+        showCopyTip("本日无可复制内容")
+        return
+      }
       copyText(blocks.join("\n\n"))
     })
     dayDiv.appendChild(copyDayBtn)
@@ -489,18 +510,16 @@ function buildAllResultsPlainText() {
         item.device?.label || item.device?.value || "未命名仪器"
       if (item.error) {
         lines.push(`${day.date} - ${deviceName}\n(加载失败)`)
-      } else {
-        const rawTimes =
-          item.data && item.data.success && Array.isArray(item.data.times)
-            ? item.data.times
-            : []
-        const mergedTimes = combineTimeSlots(rawTimes)
-        if (mergedTimes.length === 0) {
-          lines.push(`${day.date} - ${deviceName}\n无预约时间段`)
-        } else {
-          lines.push(`${day.date} - ${deviceName}\n${mergedTimes.join("\n")}`)
-        }
+        return
       }
+      const rawTimes =
+        item.data && item.data.success && Array.isArray(item.data.times)
+          ? item.data.times
+          : []
+      const mergedTimes = combineTimeSlots(rawTimes)
+      // 无预约时间段则不输出任何文本
+      if (mergedTimes.length === 0) return
+      lines.push(`${day.date} - ${deviceName}\n${mergedTimes.join("\n")}`)
     })
   })
   return lines.join("\n\n")
