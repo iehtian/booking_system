@@ -11,7 +11,12 @@ function getSelectedDateRange() {
 
 function clearFilters() {
   document.getElementById("userSelect").value = ""
-  document.getElementById("deviceSelect").value = ""
+  const devSel = document.getElementById("deviceSelect")
+  if (devSel) {
+    // 清空多选/单选的选择状态
+    Array.from(devSel.options).forEach((opt) => (opt.selected = false))
+    devSel.value = ""
+  }
   document.getElementById("dateRangeDisplay").value = ""
   document.getElementById("statusSelect").value = ""
 
@@ -288,16 +293,24 @@ add_device_filter()
 
 function getSelectedDevice() {
   const sel = document.getElementById("deviceSelect")
-  if (!sel) return null
+  if (sel.value === "alldevice") {
+    let arr = []
+    for (const [key, value] of Object.entries(devices_map)) {
+      arr.push({ value, label: key })
+    }
+    return arr
+  }
   console.log(
     "Selected device:",
     sel.value,
     sel.options[sel.selectedIndex].text
   )
-  return {
-    value: sel.value, // 你在 option.value 里放的 devices_map 映射值
-    label: sel.options[sel.selectedIndex].text, // 下拉显示的中文名称（key）
-  }
+  return [
+    {
+      value: sel.value, // 你在 option.value 里放的 devices_map 映射值
+      label: sel.options[sel.selectedIndex].text, // 下拉显示的中文名称（key）
+    },
+  ]
 }
 
 function getDateArrayInclusive(startStr, endStr) {
@@ -371,9 +384,9 @@ function combineTimeSlots(slots) {
   })
 }
 
-function renderResults(deviceText, results) {
+function renderResults(groupedResults) {
   // 保存最近渲染的数据供复制使用
-  window.__lastRenderedResults = { deviceText, results }
+  window.__lastRenderedResults = { groupedResults }
   const container = document.getElementById("resultsContainer")
   if (!container) return
   container.innerHTML = ""
@@ -381,57 +394,82 @@ function renderResults(deviceText, results) {
   const wrapper = document.createElement("div")
   wrapper.className = "results-list"
 
-  results.forEach((r) => {
+  groupedResults.forEach((day) => {
     const dayDiv = document.createElement("div")
     dayDiv.className = "result-day"
     const header = document.createElement("div")
     header.className = "result-day-header"
+    header.innerHTML = `<strong>${day.date}</strong>`
+    dayDiv.appendChild(header)
 
-    if (r.error) {
-      header.innerHTML = `<strong>${r.date}</strong> - <span class="device">${deviceText}</span> <span style="color:#d9534f">加载失败</span>`
-      dayDiv.appendChild(header)
-    } else {
-      header.innerHTML = `<strong>${r.date}</strong> - <span class="device">${deviceText}</span>`
-      dayDiv.appendChild(header)
+    // 为当天的每台仪器分别渲染
+    day.items.forEach((item) => {
+      const deviceName =
+        item.device?.label || item.device?.value || "未命名仪器"
 
-      const rawTimes =
-        r.data && r.data.success && Array.isArray(r.data.times)
-          ? r.data.times
-          : []
-      // 合并处理
-      const mergedTimes = combineTimeSlots(rawTimes)
+      const deviceBlock = document.createElement("div")
+      deviceBlock.className = "device-result"
 
-      const ul = document.createElement("ul")
-      ul.className = "time-slots"
-
-      if (mergedTimes.length === 0) {
-        const li = document.createElement("li")
-        li.className = "empty"
-        li.textContent = "无预约时间段"
-        ul.appendChild(li)
+      const deviceHeader = document.createElement("div")
+      deviceHeader.className = "device-name"
+      if (item.error) {
+        deviceHeader.innerHTML = `<span class="device">${deviceName}</span> <span style="color:#d9534f">加载失败</span>`
+        deviceBlock.appendChild(deviceHeader)
       } else {
-        mergedTimes.forEach((t) => {
+        deviceHeader.innerHTML = `<span class="device">${deviceName}</span>`
+        deviceBlock.appendChild(deviceHeader)
+
+        const rawTimes =
+          item.data && item.data.success && Array.isArray(item.data.times)
+            ? item.data.times
+            : []
+        const mergedTimes = combineTimeSlots(rawTimes)
+
+        const ul = document.createElement("ul")
+        ul.className = "time-slots"
+
+        if (mergedTimes.length === 0) {
           const li = document.createElement("li")
-          li.textContent = t
+          li.className = "empty"
+          li.textContent = "无预约时间段"
           ul.appendChild(li)
-        })
+        } else {
+          mergedTimes.forEach((t) => {
+            const li = document.createElement("li")
+            li.textContent = t
+            ul.appendChild(li)
+          })
+        }
+        deviceBlock.appendChild(ul)
       }
 
-      dayDiv.appendChild(ul)
+      dayDiv.appendChild(deviceBlock)
+    })
 
-      // 单日复制按钮
-      const copyDayBtn = document.createElement("button")
-      copyDayBtn.className = "btn btn-mini copy-day-btn"
-      copyDayBtn.type = "button"
-      copyDayBtn.textContent = "复制本日"
-      copyDayBtn.addEventListener("click", () => {
-        const text = mergedTimes.length
-          ? `${r.date} - ${deviceText}\n` + mergedTimes.join("\n")
-          : `${r.date} - ${deviceText}\n无预约时间段`
-        copyText(text)
+    // 单日复制按钮（包含当天所有选择的仪器）
+    const copyDayBtn = document.createElement("button")
+    copyDayBtn.className = "btn btn-mini copy-day-btn"
+    copyDayBtn.type = "button"
+    copyDayBtn.textContent = "复制本日"
+    copyDayBtn.addEventListener("click", () => {
+      const blocks = day.items.map((item) => {
+        const deviceName =
+          item.device?.label || item.device?.value || "未命名仪器"
+        if (item.error) {
+          return `${day.date} - ${deviceName}\n(加载失败)`
+        }
+        const rawTimes =
+          item.data && item.data.success && Array.isArray(item.data.times)
+            ? item.data.times
+            : []
+        const mergedTimes = combineTimeSlots(rawTimes)
+        return mergedTimes.length
+          ? `${day.date} - ${deviceName}\n${mergedTimes.join("\n")}`
+          : `${day.date} - ${deviceName}\n无预约时间段`
       })
-      dayDiv.appendChild(copyDayBtn)
-    }
+      copyText(blocks.join("\n\n"))
+    })
+    dayDiv.appendChild(copyDayBtn)
 
     wrapper.appendChild(dayDiv)
   })
@@ -441,24 +479,29 @@ function renderResults(deviceText, results) {
 
 function buildAllResultsPlainText() {
   const data = window.__lastRenderedResults
-  if (!data) return ""
-  const { deviceText, results } = data
+  if (!data || !data.groupedResults) return ""
+  const { groupedResults } = data
   const lines = []
-  results.forEach((r) => {
-    if (r.error) {
-      lines.push(`${r.date} - ${deviceText}\n(加载失败)`)
-    } else {
-      const rawTimes =
-        r.data && r.data.success && Array.isArray(r.data.times)
-          ? r.data.times
-          : []
-      const mergedTimes = combineTimeSlots(rawTimes)
-      if (mergedTimes.length === 0) {
-        lines.push(`${r.date} - ${deviceText}\n无预约时间段`)
+
+  groupedResults.forEach((day) => {
+    day.items.forEach((item) => {
+      const deviceName =
+        item.device?.label || item.device?.value || "未命名仪器"
+      if (item.error) {
+        lines.push(`${day.date} - ${deviceName}\n(加载失败)`)
       } else {
-        lines.push(`${r.date} - ${deviceText}\n${mergedTimes.join("\n")}`)
+        const rawTimes =
+          item.data && item.data.success && Array.isArray(item.data.times)
+            ? item.data.times
+            : []
+        const mergedTimes = combineTimeSlots(rawTimes)
+        if (mergedTimes.length === 0) {
+          lines.push(`${day.date} - ${deviceName}\n无预约时间段`)
+        } else {
+          lines.push(`${day.date} - ${deviceName}\n${mergedTimes.join("\n")}`)
+        }
       }
-    }
+    })
   })
   return lines.join("\n\n")
 }
@@ -513,11 +556,15 @@ function showCopyTip(msg) {
 }
 
 async function searchReservations() {
-  const selectdevice = getSelectedDevice()
+  const selectdevice = getSelectedDevice() // 现在是数组，可能包含多台仪器
   const { start, end } = getSelectedDateRange()
   console.log("Searching reservations from", start, "to", end)
   if (!start || !end) {
     alert("请先选择完整的开始与结束日期")
+    return
+  }
+  if (!selectdevice || selectdevice.length === 0) {
+    alert("请先选择至少一台仪器")
     return
   }
   const user_info = await checkAuthStatus()
@@ -534,23 +581,40 @@ async function searchReservations() {
   //     console.error("获取失败", d, err)
   //   }
   // }
-  const results = await Promise.all(
-    dates.map((d) =>
-      getBookings_by_ID(selectdevice.value, d)
-        .then((data) => ({ date: d, data }))
-        .catch((error) => ({ date: d, error }))
-    )
-  )
-  results.forEach((r) => {
+  // 针对多仪器 x 多日期并发获取
+  const tasks = []
+  for (const dev of selectdevice) {
+    for (const d of dates) {
+      tasks.push(
+        getBookings_by_ID(dev.value, d)
+          .then((data) => ({ date: d, device: dev, data }))
+          .catch((error) => ({ date: d, device: dev, error }))
+      )
+    }
+  }
+  const flatResults = await Promise.all(tasks)
+
+  // 日志输出
+  flatResults.forEach((r) => {
     if (r.error) {
-      console.error("失败", r.date, r.error)
+      console.error("失败", r.date, r.device?.label || r.device?.value, r.error)
     } else {
-      console.log("成功", r.date, r.data)
-      // TODO: 处理 r.data
+      console.log("成功", r.date, r.device?.label || r.device?.value, r.data)
     }
   })
-  const deviceText = selectdevice.label || selectdevice.value
-  renderResults(deviceText, results)
+
+  // 按日期分组，并确保日期与设备的显示顺序稳定
+  const groupedResults = dates.map((d) => ({
+    date: d,
+    items: selectdevice.map(
+      (dev) =>
+        flatResults.find(
+          (r) => r.date === d && r.device?.value === dev.value
+        ) || { date: d, device: dev, error: new Error("无数据") }
+    ),
+  }))
+
+  renderResults(groupedResults)
   // 展示打印/复制按钮
   document.getElementById("printButtons").style.display = "flex"
 }
