@@ -242,29 +242,48 @@ function updateSelectionStatus() {
     statusElement.textContent = "请选择开始日期"
     statusElement.style.color = "#667eea"
   } else if (!selectedEndDate && isSelectingEnd) {
-    const startFormatted = formatDateForDisplay(new Date(selectedStartDate))
+    const startFormatted = formatDateForDisplay(
+      parseDateLocal(selectedStartDate)
+    )
     statusElement.textContent = `开始: ${startFormatted} | 请选择结束日期`
     statusElement.style.color = "#856404"
   } else if (selectedStartDate && selectedEndDate) {
-    const startFormatted = formatDateForDisplay(new Date(selectedStartDate))
-    const endFormatted = formatDateForDisplay(new Date(selectedEndDate))
+    const startFormatted = formatDateForDisplay(
+      parseDateLocal(selectedStartDate)
+    )
+    const endFormatted = formatDateForDisplay(parseDateLocal(selectedEndDate))
     statusElement.textContent = `${startFormatted} 至 ${endFormatted}`
     statusElement.style.color = "#155724"
   }
 }
 
 function formatDate(date) {
-  return date.toISOString().split("T")[0]
+  // 使用本地时区拼接，避免 toISOString 造成 UTC 偏移（选 27 显示 26）
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
+}
+
+// 将 "YYYY-MM-DD" 按本地时区解析为 Date，避免直接 new Date(string) 的 UTC 语义
+function parseDateLocal(dateStr) {
+  if (!dateStr) return null
+  const [y, m, d] = dateStr.split("-").map(Number)
+  return new Date(y, m - 1, d)
 }
 
 function updateDisplayValue() {
   const dateRangeDisplay = document.getElementById("dateRangeDisplay")
   if (selectedStartDate && selectedEndDate) {
-    const startFormatted = formatDateForDisplay(new Date(selectedStartDate))
-    const endFormatted = formatDateForDisplay(new Date(selectedEndDate))
+    const startFormatted = formatDateForDisplay(
+      parseDateLocal(selectedStartDate)
+    )
+    const endFormatted = formatDateForDisplay(parseDateLocal(selectedEndDate))
     dateRangeDisplay.value = `${startFormatted} 至 ${endFormatted}`
   } else if (selectedStartDate) {
-    const startFormatted = formatDateForDisplay(new Date(selectedStartDate))
+    const startFormatted = formatDateForDisplay(
+      parseDateLocal(selectedStartDate)
+    )
     dateRangeDisplay.value = `${startFormatted} 至 ...`
   } else {
     dateRangeDisplay.value = ""
