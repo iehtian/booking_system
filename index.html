@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>功能分发页面</title>
     <link rel="stylesheet" href="assert/css/index.css" />
-    <link rel="stylesheet" href="../assert/css/navbar.css" />
+    <link rel="stylesheet" href="./assert/css/navbar.css" />
     <script type="module" src="./assert/js/index.js"></script>
   </head>
   <body>
@@ -23,6 +23,10 @@
     <!-- 主体内容 -->
     <main class="main-container">
       <h1 class="title">选择您的仪器</h1>
+      <!-- 登录提示（未登录时显示） -->
+      <div id="login-hint" class="login-hint hidden">
+        如需预约，请在右上角<strong>登录</strong>/<strong>注册</strong> ↗
+      </div>
       <div class="button-group">
         <a href="./pages/a_device.html" class="instrument-btn">A 仪器</a>
         <a href="./pages/b_device.html" class="instrument-btn">B 仪器</a>

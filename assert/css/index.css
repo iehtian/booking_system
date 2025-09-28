@@ -39,6 +39,37 @@ body {
   text-shadow: 0 2px 6px rgb(0 0 0 / 20%);
 }
 
+/* 登录提示条 */
+.login-hint {
+  display: inline-block;
+  padding: 0.9rem 1.2rem;
+  margin: -0.5rem 0 2rem;
+  font-size: 1.05rem;
+  color: #1b4b91;
+  background: #eaf3ff;
+  border: 1px solid #bcd6ff;
+  border-radius: 10px;
+  box-shadow: 0 6px 14px rgb(0 0 0 / 10%);
+  animation: hint-pop 300ms ease-out;
+}
+
+/* 当带有 hidden 类时强制隐藏（覆盖 display） */
+.login-hint.hidden {
+  display: none;
+}
+
+@keyframes hint-pop {
+  0% {
+    opacity: 0.6;
+    transform: scale(0.96);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* 仪器按钮组 - 垂直排列 */
 .button-group {
   display: flex;

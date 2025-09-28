@@ -27,15 +27,18 @@ document.querySelector("#logout").addEventListener("click", function (event) {
 async function initUser() {
   // 兼容不同返回结构：true/false 或 { logged_in, user }
   const result = await checkAuthStatus()
+  const loginHintEl = document.querySelector("#login-hint")
   if (result.logged_in) {
     document.querySelector("#logout").classList.remove("hidden")
     const realName = result.user.name
     document.querySelector(".show-name").textContent = `你好，${realName}`
     document.querySelector(".show-name").classList.remove("hidden")
     document.querySelector("#outputBookingsBtn").classList.remove("hidden")
+    if (loginHintEl) loginHintEl.classList.add("hidden")
   } else {
     document.querySelector("#login").classList.remove("hidden")
     document.querySelector("#register").classList.remove("hidden")
+    if (loginHintEl) loginHintEl.classList.remove("hidden")
   }
 }
 
