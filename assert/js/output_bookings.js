@@ -33,20 +33,7 @@ function clearFilters() {
   document.getElementById("printButtons").style.display = "none"
 }
 
-function printResults() {
-  // 添加打印日期到页面头部
-  const header = document.querySelector(".header p")
-  const originalText = header.textContent
-  header.textContent = `打印时间：${new Date().toLocaleString("zh-CN")}`
-
-  // 执行打印
-  window.print()
-
-  // 恢复原始文本
-  setTimeout(() => {
-    header.textContent = originalText
-  }, 100)
-}
+// 已移除打印功能
 
 // 日期范围选择器相关变量和函数
 let currentDate = new Date()
@@ -576,18 +563,35 @@ function showCopyTip(msg) {
   if (!tip) {
     tip = document.createElement("div")
     tip.id = "copyToast"
-    tip.style.cssText =
-      "position:fixed;top:20px;right:20px;background:#333;color:#fff;padding:8px 14px;border-radius:4px;font-size:12px;z-index:9999;box-shadow:0 2px 6px rgba(0,0,0,.2);opacity:0;transition:opacity .25s;"
+    // 提升可见性：居中，较大字号，半透明背景，轻微放大动画
+    tip.style.cssText = [
+      "position:fixed",
+      "top:50%",
+      "left:50%",
+      "transform:translate(-50%,-50%) scale(0.96)",
+      "background:rgba(0,0,0,0.85)",
+      "color:#fff",
+      "padding:14px 22px",
+      "border-radius:8px",
+      "font-size:16px",
+      "letter-spacing:.5px",
+      "z-index:9999",
+      "box-shadow:0 6px 24px rgba(0,0,0,.3)",
+      "opacity:0",
+      "transition:opacity .25s, transform .25s",
+    ].join(";")
     document.body.appendChild(tip)
   }
   tip.textContent = msg
   requestAnimationFrame(() => {
     tip.style.opacity = "1"
+    tip.style.transform = "translate(-50%,-50%) scale(1)"
   })
   clearTimeout(window.__copyToastTimer)
   window.__copyToastTimer = setTimeout(() => {
     tip.style.opacity = "0"
-  }, 1800)
+    tip.style.transform = "translate(-50%,-50%) scale(0.98)"
+  }, 2200)
 }
 
 async function searchReservations() {
@@ -650,11 +654,29 @@ async function searchReservations() {
   }))
 
   renderResults(groupedResults)
-  // 展示打印/复制按钮
-  document.getElementById("printButtons").style.display = "flex"
+  // 展示复制按钮容器
+  const btnBox = document.getElementById("printButtons")
+  if (btnBox) btnBox.style.display = "flex"
 }
 document
   .querySelector(".btn-primary")
   .addEventListener("click", searchReservations)
 
-document.querySelector(".btn-secondary").addEventListener("click", clearFilters)
+document
+  .querySelector("#btn-clearFiltersBtn")
+  .addEventListener("click", clearFilters)
+
+// 绑定“复制全部”按钮（不使用全局 onclick，避免 ESM 下 window 作用域问题）
+document.addEventListener("DOMContentLoaded", () => {
+  const copyAllBtn = document.getElementById("copyAllBtn")
+  if (copyAllBtn) {
+    copyAllBtn.addEventListener("click", () => {
+      const text = buildAllResultsPlainText()
+      if (!text) {
+        showCopyTip("无可复制内容")
+        return
+      }
+      copyText(text)
+    })
+  }
+})
