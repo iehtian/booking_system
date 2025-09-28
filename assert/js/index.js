@@ -32,6 +32,7 @@ async function initUser() {
     const realName = result.user.name
     document.querySelector(".show-name").textContent = `你好，${realName}`
     document.querySelector(".show-name").classList.remove("hidden")
+    document.querySelector("#outputBookingsBtn").classList.remove("hidden")
   } else {
     document.querySelector("#login").classList.remove("hidden")
     document.querySelector("#register").classList.remove("hidden")
