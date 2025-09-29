@@ -1,6 +1,5 @@
 const devices_map = {
-  A仪器: "a_device",
-  B仪器: "b_device",
+  细胞房: "a_device",
 }
 
 export { devices_map }
