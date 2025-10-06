@@ -660,23 +660,16 @@ async function searchReservations() {
 }
 document
   .querySelector(".btn-primary")
-  .addEventListener("click", searchReservations)
+  ?.addEventListener("click", searchReservations)
 
 document
-  .querySelector("#btn-clearFiltersBtn")
-  .addEventListener("click", clearFilters)
+  .querySelector("#clearFiltersBtn")
+  ?.addEventListener("click", clearFilters)
 
 // 绑定“复制全部”按钮（不使用全局 onclick，避免 ESM 下 window 作用域问题）
 document.addEventListener("DOMContentLoaded", () => {
   const copyAllBtn = document.getElementById("copyAllBtn")
   if (copyAllBtn) {
-    copyAllBtn.addEventListener("click", () => {
-      const text = buildAllResultsPlainText()
-      if (!text) {
-        showCopyTip("无可复制内容")
-        return
-      }
-      copyText(text)
-    })
+    copyAllBtn.addEventListener("click", copyAllResults)
   }
 })
