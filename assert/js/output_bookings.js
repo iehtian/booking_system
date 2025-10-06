@@ -528,6 +528,45 @@ function buildAllResultsPlainText() {
   return lines.join("\n\n")
 }
 
+function buildAllResultsCSV() {
+  const data = window.__lastRenderedResults
+  if (!data || !data.groupedResults) return ""
+  const { groupedResults } = data
+  const rows = []
+  // Header
+  rows.push(["日期", "仪器", "开始时间", "结束时间"])
+
+  const pushRow = (date, deviceName, start, end) => {
+    const esc = (v) => {
+      if (v == null) return ""
+      const s = String(v)
+      // 若包含逗号、引号或换行，用双引号包裹，并转义内部引号
+      if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"'
+      return s
+    }
+    rows.push([esc(date), esc(deviceName), esc(start), esc(end)])
+  }
+
+  groupedResults.forEach((day) => {
+    day.items.forEach((item) => {
+      const deviceName =
+        item.device?.label || item.device?.value || "未命名仪器"
+      if (item?.data?.success && Array.isArray(item.data.times)) {
+        // 合并后的时间段更干净
+        const mergedTimes = combineTimeSlots(item.data.times)
+        mergedTimes.forEach((slot) => {
+          const [start, end] = slot.split("-").map((v) => v.trim())
+          pushRow(day.date, deviceName, start, end)
+        })
+      }
+    })
+  })
+
+  // 若只有表头则表示无数据
+  if (rows.length === 1) return ""
+  return rows.map((arr) => arr.join(",")).join("\n")
+}
+
 async function copyText(text) {
   try {
     await navigator.clipboard.writeText(text)
@@ -556,6 +595,38 @@ function copyAllResults() {
     return
   }
   copyText(text)
+}
+
+function downloadAllResultsAsFile() {
+  const csv = buildAllResultsCSV()
+  if (!csv) {
+    showCopyTip("无可打印内容")
+    return
+  }
+  // 生成文件名：包含已选日期范围；若无则使用当前日期时间
+  const { start, end } = getSelectedDateRange()
+  const stamp = (() => {
+    if (start && end) return `${start}_to_${end}`
+    const now = new Date()
+    const pad = (n) => String(n).padStart(2, "0")
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`
+  })()
+  const filename = `预约信息_${stamp}.csv`
+
+  // 为避免中文在部分编辑器/平台乱码，添加 UTF-8 BOM
+  const BOM = "\uFEFF"
+  const blob = new Blob([BOM + csv + "\n"], {
+    type: "text/csv;charset=utf-8",
+  })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+  showCopyTip("已生成 CSV 文件")
 }
 
 function showCopyTip(msg) {
@@ -671,5 +742,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const copyAllBtn = document.getElementById("copyAllBtn")
   if (copyAllBtn) {
     copyAllBtn.addEventListener("click", copyAllResults)
+  }
+  const printAllBtn = document.getElementById("printAllBtn")
+  if (printAllBtn) {
+    printAllBtn.addEventListener("click", downloadAllResultsAsFile)
   }
 })
