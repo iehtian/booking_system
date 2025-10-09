@@ -93,7 +93,7 @@ function mobile_booking_display(bookings, date) {
       if (slotLabel) {
         // slotLabel中使用span来显示已预约信息
         const span = document.createElement("span")
-        span.textContent = `已预约: ${name}`
+        span.textContent = `${name}`
         slotLabel.appendChild(span)
       }
     }
