@@ -246,9 +246,7 @@ def get_register_info():
         # 使用bcrypt加密密码
         hashed_password = hash_password(password)
         
-        # 保存用户信息
-        user_order = len(search_all_users()) + 1
-        upsert_user(user_order, ID, hashed_password, name, user_color)
+        upsert_user(f"byID:{ID}", ID, hashed_password, name, user_color)
         
         # 注册成功后自动生成JWT token
         access_token = create_access_token(
