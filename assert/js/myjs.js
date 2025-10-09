@@ -5,12 +5,12 @@ import {
   cancelBooking,
   getBookings_by_ID,
 } from "./booking_api.js"
-import { devices_map } from "./devices.js"
+import { instruments_map } from "./instruments.js"
 const width = document.documentElement.clientWidth || document.body.clientWidth
 console.log("当前屏幕宽度:", width)
-const devicename = document.querySelector("title").innerText
-const device = devices_map[devicename]
-console.log("当前设备:", device)
+const instrumentname = document.querySelector("title").innerText
+const instrument = instruments_map[instrumentname]
+console.log("当前仪器:", instrument)
 
 function generateTimeIntervalsSimple() {
   const intervals = []
@@ -244,7 +244,7 @@ async function setupCancelHandler() {
   cancelButton.addEventListener("click", async () => {
     for (const [date, slots] of Object.entries(datas)) {
       if (slots.length === 0) continue
-      await cancelBooking(device, date, slots)
+      await cancelBooking(instrument, date, slots)
     }
   })
 }
@@ -275,7 +275,7 @@ function resetDateDisplay() {
   const dateElements = document.querySelectorAll(".date-display") // 获取所有日期元素
 }
 
-const deviceConfig = {
+const instrumentConfig = {
   mobile: {
     buttonhide: buttonhideConfigs,
     hidden(hidden_slots) {
@@ -301,7 +301,7 @@ const deviceConfig = {
     },
     async setupcacel() {
       const date = document.getElementById("appointment-date").value
-      const canceltime = await getBookings_by_ID(device, date)
+      const canceltime = await getBookings_by_ID(instrument, date)
       console.log("取消预约时间段:", canceltime)
 
       for (const slot of canceltime.times) {
@@ -354,7 +354,7 @@ const deviceConfig = {
           document.querySelectorAll(".time-slot-option").forEach((cb) => {
             cb.checked = false
           })
-          getBookings(device, newDate)
+          getBookings(instrument, newDate)
           // 获取新的日期的预约信息
           disabledSlotwithDate(time_slots, newDate)
           nologin_slot()
@@ -371,7 +371,7 @@ const deviceConfig = {
           if (slots.length === 0) continue
           console.log("提交的日期和时间段:", date, slots)
           let submit = { date: date, slots: slots }
-          await submitBookings(device, realName, color, submit)
+          await submitBookings(instrument, realName, color, submit)
         }
         location.reload()
       })
@@ -484,7 +484,7 @@ const deviceConfig = {
         el.children[0].disabled = false // 启用复选框
       })
       weekRange.forEach((date) => {
-        getBookings(device, date)
+        getBookings(instrument, date)
         disabledSlotwithDate(time_slots, date)
       })
       nologin_slot()
@@ -570,7 +570,7 @@ const deviceConfig = {
         for (const [date, slots] of Object.entries(datas)) {
           if (slots.length === 0) continue
           let submit = { date: date, slots: slots }
-          await submitBookings(device, realName, color, submit)
+          await submitBookings(instrument, realName, color, submit)
         }
         location.reload()
       })
@@ -591,7 +591,7 @@ const deviceConfig = {
     },
     async setupcacel() {
       for (const date of this.buttonhide.weekdates) {
-        const canceltime = await getBookings_by_ID(device, date)
+        const canceltime = await getBookings_by_ID(instrument, date)
         console.log("取消预约时间段:", canceltime)
         for (const slot of canceltime.times) {
           const checkbox = document.getElementById(`time-slot-${date}-${slot}`)
@@ -658,7 +658,7 @@ async function afterAuthCheck(result, config) {
 // 统一的初始化函数
 async function initializeApp() {
   const isMobile = width < 768 // 判断是否为移动端
-  const config = isMobile ? deviceConfig.mobile : deviceConfig.desktop
+  const config = isMobile ? instrumentConfig.mobile : instrumentConfig.desktop
   config.init_slots() // 初始化
   if (isMobile) {
     // 给所有label添加样式

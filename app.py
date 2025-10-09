@@ -67,8 +67,7 @@ def save_info():
     try:
         data = request.get_json()
         print(f"接收到的预约数据: {data}")
-        # 兼容旧参数名 instrument，优先使用 device
-        device = data.get('device') or data.get('instrument', 'a_device')  # 默认为A仪器系统
+        instrument = data.get('instrument') or data.get('instrument', 'a_instrument')  # 默认为A仪器系统
         date = data.get('date')
         slots = data.get('slots')  # 现在接收时间段数组
         name = data.get('name')
@@ -82,7 +81,7 @@ def save_info():
         if not isinstance(slots, list) or len(slots) == 0:
             return jsonify({"error": "slots must be a non-empty array"}), 400
         
-        search_by_date_result = search_booking_by_date(device, date)
+        search_by_date_result = search_booking_by_date(instrument, date)
         if search_by_date_result:
             tmies = [slot[1]['time'] for slot in search_by_date_result]
             for slot in slots:
@@ -93,8 +92,8 @@ def save_info():
         successful_slots = []
         for slot in slots:
             upsert_booking(
-                booking_id=f"{device}:{date}:{slot}", 
-                instrument_id=device, 
+                booking_id=f"{instrument}:{date}:{slot}", 
+                instrument_id=instrument, 
                 date=date, 
                 time=slot, 
                 name=name,
@@ -121,8 +120,7 @@ def cancel_booking():
     try:
         data = request.get_json()
         print(f"接收到的取消预约数据: {data}")
-        # 兼容旧参数名 instrument，优先使用 device
-        device = data.get('device') or data.get('instrument', 'a_device')  # 默认为A仪器系统
+        instrument = data.get('instrument') or data.get('instrument', 'a_instrument')  # 默认为A仪器系统
         date = data.get('date')
         slots = data.get('slots')  # 现在接收时间段数组
 
@@ -133,7 +131,7 @@ def cancel_booking():
         if not isinstance(slots, list) or len(slots) == 0:
             return jsonify({"error": "slots must be a non-empty array"}), 400
         
-        search_by_date_result = search_booking_by_date(device, date)
+        search_by_date_result = search_booking_by_date(instrument, date)
         if not search_by_date_result:
             return jsonify({"error": "No bookings found for the specified date"}), 404
         
@@ -145,7 +143,7 @@ def cancel_booking():
         # 所有时间段都已预约，批量删除预约
         successful_cancellations = []
         for slot in slots:
-            booking_id = f"{device}:{date}:{slot}"
+            booking_id = f"{instrument}:{date}:{slot}"
             delete_booking(booking_id)
             successful_cancellations.append(slot)
         
@@ -165,14 +163,13 @@ def cancel_booking():
 @app.route('/api/bookings', methods=['GET'])
 def get_bookings():
     """获取预约信息并按时间段排序，返回 {time: name} 字典"""
-    # 兼容旧参数名 instrument，优先使用 device
-    device = request.args.get('device') or request.args.get('instrument', 'a_device')
+    instrument = request.args.get('instrument') or request.args.get('instrument', 'a_instrument')
     date = request.args.get('date')
-    print(f"获取预约信息: device={device}, date={date}")
+    print(f"获取预约信息: instrument={instrument}, date={date}")
     
     if date:
         # 返回特定日期的预约
-        search_by_date_result = search_booking_by_date(device, date)
+        search_by_date_result = search_booking_by_date(instrument, date)
         print(f"原始数据库查询结果: {search_by_date_result}") # 保持原始结果的打印
         
         if not search_by_date_result:
@@ -206,11 +203,10 @@ def get_user_bookings():
     """获取特定日期当前用户的所有预约信息"""
     try:
         date = request.args.get('date')
-        # 兼容旧参数名 instrument，优先使用 device
-        device = request.args.get('device') or request.args.get('instrument')
+        instrument = request.args.get('instrument') or request.args.get('instrument')
         
-        if not date or not device:
-            return jsonify({"error": "Date and device parameters are required"}), 400
+        if not date or not instrument:
+            return jsonify({"error": "Date and instrument parameters are required"}), 400
 
         current_user_id = get_jwt_identity()
         user = search_user_by_ID(current_user_id)
@@ -220,7 +216,7 @@ def get_user_bookings():
         
         user_name = user[0][1]['real_name']
         print(f"获取用户 {current_user_id} 的预约信息，用户名: {user_name}")
-        user_bookings = search_booking_by_date_and_name(device, date, user_name)
+        user_bookings = search_booking_by_date_and_name(instrument, date, user_name)
         print(f"用户 {user_name} 在 {date} 的预约记录: {user_bookings}")
         times = [slot[1]['time'] for slot in user_bookings]
         print(f"当前用户在 {date} 的预约时间段: {times}")
