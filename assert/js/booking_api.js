@@ -100,10 +100,10 @@ function mobile_booking_display(bookings, date) {
   })
 }
 
-async function getBookings(system, date) {
+async function getBookings(device, date) {
   try {
     const response = await fetch(
-      `${host}/api/bookings?system=${system}&date=${date}`,
+      `${host}/api/bookings?device=${device}&date=${date}`,
       {
         method: "GET",
         headers: {
@@ -129,7 +129,7 @@ async function getBookings(system, date) {
   }
 }
 
-async function submitBookings(system, realName, color, submitData) {
+async function submitBookings(device, realName, color, submitData) {
   const selectedDate = submitData.date
   const slots = submitData.slots
   if (!selectedDate || slots.length === 0) {
@@ -140,7 +140,7 @@ async function submitBookings(system, realName, color, submitData) {
   try {
     // 一次性发送所有时间段
     const appointmentData = {
-      system: system,
+      device: device,
       date: selectedDate,
       slots: slots, // 发送所有选中的时间段
       name: realName,
@@ -172,10 +172,10 @@ async function submitBookings(system, realName, color, submitData) {
   }
 }
 
-async function cancelBooking(system, date, slots) {
+async function cancelBooking(device, date, slots) {
   try {
     const cancelData = {
-      system: system,
+      device: device,
       date: date,
       slots: slots,
     }
@@ -202,11 +202,11 @@ async function cancelBooking(system, date, slots) {
   }
 }
 
-async function getBookings_by_ID(system, date) {
+async function getBookings_by_ID(device, date) {
   try {
     const token = localStorage.getItem("access_token")
     const res = await fetch(
-      `${host}/api/bookings_user?system=${system}&date=${date}`,
+      `${host}/api/bookings_user?device=${device}&date=${date}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,

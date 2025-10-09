@@ -84,29 +84,29 @@ def create_booking_index():
         'PREFIX', '1', 'booking:',
         'SCHEMA',
         '$.date', 'AS', 'date', 'TAG',
-        '$.system_id', 'AS', 'system_id', 'TAG',
+        '$.instrument_id', 'AS', 'instrument_id', 'TAG',
         '$.time', 'AS', 'time', 'TEXT',
         '$.name', 'AS', 'name', 'TAG'
     )
     print(f"Index '{index_name}' created.")
 
-def upsert_booking(booking_id, system_id, date, time, name, color):
+def upsert_booking(booking_id, instrument_id, date, time, name, color):
     key = f"booking:{booking_id}"
-    data = {"date": date, "system_id": system_id, "time": time, "name": name, "color": color}
+    data = {"date": date, "instrument_id": instrument_id, "time": time, "name": name, "color": color}
     r.execute_command('JSON.SET', key, '$', json.dumps(data))
     print(f"Upserted {key}: {data}")
 
-def search_booking_by_date(system_id, date):
+def search_booking_by_date(instrument_id, date):
     date = escape_redis_search_value(date)
-    system_id = escape_redis_search_value(system_id)
-    query = f"@date:{{{date}}} @system_id:{{{system_id}}}"
+    instrument_id = escape_redis_search_value(instrument_id)
+    query = f"@date:{{{date}}} @instrument_id:{{{instrument_id}}}"
     return search_booking(query)
 
-def search_booking_by_date_and_name(system_id, date, name):
+def search_booking_by_date_and_name(instrument_id, date, name):
     date = escape_redis_search_value(date)
     name = escape_redis_search_value(name)
-    system_id = escape_redis_search_value(system_id)
-    query = f"@date:{{{date}}} @name:{{{name}}} @system_id:{{{system_id}}}"
+    instrument_id = escape_redis_search_value(instrument_id)
+    query = f"@date:{{{date}}} @name:{{{name}}} @instrument_id:{{{instrument_id}}}"
     return search_booking(query)
 
 def search_booking(query):
