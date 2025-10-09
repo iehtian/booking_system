@@ -15,4 +15,17 @@
         "LICENSE": true,
     },
     "prettier.configPath": ".prettierrc",
+    // 忽略日志目录，避免触发前端页面热重载/刷新
+    "files.watcherExclude": {
+        "**/logs/**": true,
+        "**/*.log": true
+    },
+    // 如果使用 Live Server，请忽略日志与后端相关文件
+    "liveServer.settings.ignoreFiles": [
+        "**/logs/**",
+        "**/*.log",
+        "**/__pycache__/**",
+        "**/*.py",
+        "**/datebase/**"
+    ]
 }
