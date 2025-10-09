@@ -387,9 +387,27 @@ function combineTimeSlots(slots) {
   })
 }
 
+function prebuildAllResultsCSVAsync() {
+  const build = () => {
+    try {
+      buildAllResultsCSV()
+    } catch (e) {
+      // 静默失败，避免影响主流程
+      console.error("预生成 CSV 失败：", e)
+    }
+  }
+  if (typeof window.requestIdleCallback === "function") {
+    if (window.__csvIdleId && typeof window.cancelIdleCallback === "function") {
+      window.cancelIdleCallback(window.__csvIdleId)
+    }
+    window.__csvIdleId = window.requestIdleCallback(build, { timeout: 1500 })
+  }
+}
+
 function renderResults(groupedResults) {
   // 保存最近渲染的数据供复制使用
   window.__lastRenderedResults = { groupedResults }
+  prebuildAllResultsCSVAsync() // 预生成 CSV，提升后续下载速度
   const container = document.getElementById("resultsContainer")
   if (!container) return
   container.innerHTML = ""
@@ -501,33 +519,6 @@ function renderResults(groupedResults) {
   container.appendChild(wrapper)
 }
 
-function buildAllResultsPlainText() {
-  const data = window.__lastRenderedResults
-  if (!data || !data.groupedResults) return ""
-  const { groupedResults } = data
-  const lines = []
-
-  groupedResults.forEach((day) => {
-    day.items.forEach((item) => {
-      const deviceName =
-        item.device?.label || item.device?.value || "未命名仪器"
-      if (item.error) {
-        lines.push(`${day.date} - ${deviceName}\n(加载失败)`)
-        return
-      }
-      const rawTimes =
-        item.data && item.data.success && Array.isArray(item.data.times)
-          ? item.data.times
-          : []
-      const mergedTimes = combineTimeSlots(rawTimes)
-      // 无预约时间段则不输出任何文本
-      if (mergedTimes.length === 0) return
-      lines.push(`${day.date} - ${deviceName}\n${mergedTimes.join("\n")}`)
-    })
-  })
-  return lines.join("\n\n")
-}
-
 function buildAllResultsCSV() {
   const data = window.__lastRenderedResults
   if (!data || !data.groupedResults) return ""
@@ -598,7 +589,7 @@ function copyAllResults() {
 }
 
 function downloadAllResultsAsFile() {
-  const csv = buildAllResultsCSV()
+  const csv = window.__lastCSV ?? buildAllResultsCSV()
   if (!csv) {
     showCopyTip("无可打印内容")
     return
@@ -682,15 +673,6 @@ async function searchReservations() {
   const ID = user_info.user.ID
   console.log(ID)
   const dates = getDateArrayInclusive(start, end)
-  // for (const d of dates) {
-  //   try {
-  //     const res = await getBookings_by_ID(selectdevice.value, d)
-  //     // TODO: 在这里处理 res（例如累加、渲染 DOM 等）
-  //     console.log("单日结果", d, res)
-  //   } catch (err) {
-  //     console.error("获取失败", d, err)
-  //   }
-  // }
   // 针对多仪器 x 多日期并发获取
   const tasks = []
   for (const dev of selectdevice) {
