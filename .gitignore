@@ -7,3 +7,4 @@ datebase/__pycache__
 config.py
 __pycache__
 logs/
+dist/
