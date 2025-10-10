@@ -19,7 +19,7 @@ from datebase import (
 
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["http://localhost:5501", "http://127.0.0.1:5501","http://127.0.0.1:5502", "http://localhost:5502"])
+CORS(app, supports_credentials=True, origins=["http://localhost:5501","http://localhost:5173"])
 
 @app.after_request
 def add_cache_headers(response):
