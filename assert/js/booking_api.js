@@ -64,6 +64,12 @@ function desktop_booking_display(bookings, date) {
         checkbox.disabled = true
         // 将 hex 颜色转换为 rgba 并设置 60% 透明度
         let bgColor = color
+        if (/^#([0-9a-fA-F]{6})$/.test(color)) {
+          const r = parseInt(color.slice(1, 3), 16)
+          const g = parseInt(color.slice(3, 5), 16)
+          const b = parseInt(color.slice(5, 7), 16)
+          bgColor = `rgba(${r},${g},${b},0.4)`
+        }
         checkbox.parentElement.style.backgroundColor = bgColor // 设置背景色
       }
       if (j === 0) {
