@@ -21,11 +21,12 @@ h1 {
 html,
 body {
   height: 100%;
-  padding: 0;
   margin: 0;
 }
 
 body {
+  /* 与固定导航栏高度保持一致的安全区，防止构建后 CSS 顺序变化导致被覆盖 */
+  padding-top: var(--nav-h, 3.5rem);
   background: linear-gradient(135deg, #74ebd5, #acb6e5);
 
   /* 从浅蓝到淡紫的渐变 */
