@@ -159,22 +159,47 @@ async function checkAuthStatus() {
     const token = localStorage.getItem("access_token")
     if (!token) return { logged_in: false }
     const controller = new AbortController()
+    // 给认证检查稍微更宽松的超时，避免后端轻微抖动导致误报
     const timeoutId = setTimeout(() => {
       controller.abort() // 超时后中止请求
-    }, 1000) // 设置超时时间为1秒
+    }, 5000)
     const res = await fetch(`${host}/api/check-auth`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
       signal: controller.signal,
     })
+    // 关键：fetch 已返回，立即清除超时，避免在 res.json() 期间被 abort
+    clearTimeout(timeoutId)
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        // token 无效/过期
+        localStorage.removeItem("access_token")
+        localStorage.removeItem("userInfo")
+        return { logged_in: false }
+      }
+      let errBody
+      try {
+        errBody = await res.json()
+      } catch (_) {
+        // 忽略解析错误
+      }
+      console.warn(
+        "检查认证状态请求失败:",
+        res.status,
+        errBody && errBody.message ? errBody.message : ""
+      )
+      return { logged_in: false, status: res.status, message: errBody?.message }
+    }
+
     const data = await res.json()
-    clearTimeout(timeoutId) // 清除超时定时器
     return data
   } catch (error) {
     if (error.name === "AbortError") {
-      console.error("检查认证状态请求超时，检查后端链接")
-      return { logged_in: false }
+      // 降级为 warning，避免误导；返回一个标记方便上层决定是否重试
+      console.warn("检查认证状态请求超时")
+      return { logged_in: false, timeout: true }
     }
     console.error("检查认证状态错误:", error)
     return { logged_in: false }
