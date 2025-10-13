@@ -7,11 +7,11 @@ export default defineConfig({
   appType: "mpa",
   plugins: [basicSsl()],
   server: {
-    https: true, // ✅ 启用 https
+    https: false, // ✅ 启用 https
     port: 5173, // 可选：指定端口
   },
   preview: {
-    https: true, // 预览环境同样启用 https（npm run serve）
+    https: false, // 预览环境同样启用 https（npm run serve）
   },
   build: {
     rollupOptions: {
