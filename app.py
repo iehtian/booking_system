@@ -19,7 +19,18 @@ from datebase import (
 
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["http://localhost:5501","http://localhost:5173"])
+# 允许本地 http 与 https 的前端来源；开发推荐使用 Vite 代理后可不依赖 CORS
+CORS(
+    app,
+    supports_credentials=True,
+    origins=[
+        "http://localhost:5501",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://localhost:5173",
+        "https://127.0.0.1:5173",
+    ],
+)
 
 @app.after_request
 def add_cache_headers(response):
