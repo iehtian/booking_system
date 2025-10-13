@@ -598,7 +598,7 @@ const instrumentConfig = {
     async setupcacel() {
       for (const date of this.buttonhide.weekdates) {
         const canceltime = await getBookings_by_ID(instrument, date)
-        console.log("取消预约时间段:", canceltime)
+        console.log(date, "取消预约时间段:", canceltime)
         if (
           !canceltime ||
           !canceltime.success ||
@@ -653,7 +653,6 @@ async function afterAuthCheck(result, config) {
 
     // 设置特定设备的提交处理器
     config.setupSubmitHandler(realName, color)
-    config.setupcacel()
     setupCancelHandler()
   } else {
     config.setupnologin()
