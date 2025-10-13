@@ -216,7 +216,6 @@ label {
 }
 
 .disabled-slot {
-  color: #ca7c7c; /* 将文本颜色变灰 */
   background: #f3f4f6; /* 浅灰色背景 */
 }
 
