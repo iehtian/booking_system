@@ -460,6 +460,7 @@ select.form-control {
   opacity: 0.3;
 }
 
+/* 控制左侧边栏的滑入 */
 @keyframes slide-in-left {
   from {
     opacity: 0;
