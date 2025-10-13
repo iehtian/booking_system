@@ -29,6 +29,7 @@
 
 body {
   min-height: 100vh;
+  margin: 1% auto 0;
   font-family: "Microsoft YaHei", Arial, sans-serif;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }

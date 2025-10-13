@@ -1,13 +1,35 @@
+:root {
+  /* 导航背景不透明度（0~1），0.85 表示 85% 可见、15% 透明 */
+  --navbar-bg-alpha: 0.85;
+
+  /* 导航高度，供各页面用于计算顶部内边距和粘性定位 */
+  --nav-h: 3.5rem;
+}
+
+/* 任何引入 navbar.css 的页面，默认为内容预留与导航相同的高度 */
+body {
+  padding-top: var(--nav-h);
+}
+
 .navbar {
-  position: sticky;
+  /* 使头部始终固定在页面最上方 */
+  position: fixed;
   top: 0;
-  z-index: 10;
+  left: 0;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 3.5rem;
-  padding: 1rem 2rem;
-  background: rgb(255 255 255);
+  width: 100%;
+
+  /* 使用统一变量控制导航总高度 */
+  height: var(--nav-h);
+
+  /* 垂直方向设为 0，避免实际高度 > --nav-h 导致遮挡 */
+  padding: 0 2rem;
+
+  /* 使用带透明度的背景，数值由 --navbar-bg-alpha 控制 */
+  background: rgb(255 255 255 / var(--navbar-bg-alpha));
   box-shadow: 0 2px 6px rgb(0 0 0 / 10%);
   backdrop-filter: blur(6px);
 }
@@ -16,4 +38,13 @@
   font-size: 1.4rem;
   font-weight: bold;
   color: #2c3e50;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Keyboard focus style for accessibility */
+header.navbar .logo:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid #0991b2;
+  outline-offset: 2px;
 }
