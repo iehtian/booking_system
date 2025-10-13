@@ -213,6 +213,10 @@ async function cancelBooking(instrument, date, slots) {
 async function getBookings_by_ID(instrument, date) {
   try {
     const token = localStorage.getItem("access_token")
+    if (!token) {
+      console.warn("未登录，跳过获取用户预约信息")
+      return { success: false, message: "未登录" }
+    }
     const res = await fetch(
       `${host}/api/bookings_user?instrument=${instrument}&date=${date}`,
       {
@@ -221,6 +225,18 @@ async function getBookings_by_ID(instrument, date) {
         },
       }
     )
+    if (!res.ok) {
+      // 返回更清晰的错误信息，便于定位 401/422 等
+      const text = await res.text().catch(() => "")
+      console.error(
+        `获取预约信息请求失败: ${res.status} ${res.statusText} - ${text}`
+      )
+      return {
+        success: false,
+        message: `请求失败: ${res.status}`,
+        detail: text,
+      }
+    }
     const data = await res.json()
     return { success: true, times: data }
   } catch (error) {
