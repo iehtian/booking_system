@@ -271,10 +271,6 @@ function buildSlotChangeHandler(date, slotLabel, timeSlot) {
   }
 }
 
-function resetDateDisplay() {
-  const dateElements = document.querySelectorAll(".date-display") // 获取所有日期元素
-}
-
 const instrumentConfig = {
   mobile: {
     buttonhide: buttonhideConfigs,
