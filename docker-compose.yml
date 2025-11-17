@@ -1,0 +1,15 @@
+services:
+  dateplan-db:
+    image: mysql
+    container_name: dateplan-db
+    environment:
+      MYSQL_ROOT_PASSWORD: iehtian
+      MYSQL_DATABASE: dateplan
+      MYSQL_USER: dateplan_user
+      MYSQL_PASSWORD: dateplan_pass
+    ports:
+      - '3308:3306'
+    volumes:
+      - dateplan-db-data:/var/lib/mysql
+volumes:
+  dateplan-db-data:
