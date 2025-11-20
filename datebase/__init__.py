@@ -3,7 +3,6 @@ Database operations package for order management system.
 This package contains Redis operations for users and bookings.
 """
 
-
 from .redis_client import (
     upsert_user,
     search_user_by_ID,
@@ -12,15 +11,16 @@ from .redis_client import (
     upsert_booking,
     search_booking_by_date,
     search_booking_by_date_and_name,
-    search_all_bookings,
     create_booking_index,
     delete_booking,
-    initialize_database
 )
+
+from .mysql_client import connect_to_database, insert_plan
 
 # 包版本信息
 __version__ = "1.0.0"
 __author__ = "Order Management System"
+
 
 # 包级别的初始化函数
 def initialize_database():
@@ -28,21 +28,24 @@ def initialize_database():
     try:
         create_user_index()
         create_booking_index()
+        connect_to_database()
         print("📊 Database indexes initialized successfully!")
         return True
     except Exception as e:
         print(f"❌ Database initialization failed: {e}")
         return False
 
+
 # 导出所有公共接口
 __all__ = [
-    'upsert_user',
-    'search_user_by_ID',
-    'search_all_users',
-    'upsert_booking',
-    'search_booking_by_date',
-    'search_booking_by_date_and_name',
-    'search_all_bookings',
-    'delete_booking',
-    'initialize_database'
+    "upsert_user",
+    "search_user_by_ID",
+    "search_all_users",
+    "upsert_booking",
+    "search_booking_by_date",
+    "search_booking_by_date_and_name",
+    "delete_booking",
+    "initialize_database",
+    "connect_to_database",
+    "insert_plan",
 ]
