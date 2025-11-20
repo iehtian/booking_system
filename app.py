@@ -431,6 +431,29 @@ def refresh():
         return jsonify({"success": False, "message": "Token refresh failed"}), 500
 
 
+@app.route("/api/date_plan/add", methods=["POST"])
+def add_date_plan():
+    """添加每日计划"""
+    try:
+        data = request.get_json()
+        print(f"接收到的每日计划数据: {data}")
+        user_id = data.get("user_id")
+        plan = data.get("todayplan")
+
+        if not user_id or not plan:
+            return jsonify({"error": "Missing required fields: user_id, plan"}), 400
+
+        db = connect_to_database()
+        insert_plan(db, user_id, plan)
+        db.close()
+
+        return jsonify({"success": True, "message": "Plan added successfully"})
+
+    except Exception as e:
+        print(f"添加每日计划时出错: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
 if __name__ == "__main__":
     if initialize_database():
         print("数据库初始化完成，系统已准备好运行。")
