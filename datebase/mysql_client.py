@@ -25,21 +25,14 @@ def get_planinfo(db, user_id, date):
     return results
 
 
-def insert_plan(db, user_id, plan, date):
+def update_plan(db, user_id, plan, date):
     cursor = db.cursor()
-    sql = "INSERT INTO plans (user_id,date,plan) VALUES (%s, %s, %s)"
-    val = (user_id, date, plan)
-
-    cursor.execute(sql, val)
-    db.commit()
-    print("插入成功!")
-
-
-def update_plan(db, user_id, date, new_plan):
-    cursor = db.cursor()
-    sql = "UPDATE plans SET plan = %s WHERE user_id = %s AND date = %s"
-    val = (new_plan, user_id, date)
-
+    if get_planinfo(db, user_id, date):
+        sql = "UPDATE plans SET plan = %s WHERE user_id = %s AND date = %s"
+        val = (plan, user_id, date)
+    else:
+        sql = "INSERT INTO plans (user_id,date,plan) VALUES (%s, %s, %s)"
+        val = (user_id, date, plan)
     cursor.execute(sql, val)
     db.commit()
     print("更新成功!")
@@ -47,5 +40,5 @@ def update_plan(db, user_id, date, new_plan):
 
 if __name__ == "__main__":
     db = connect_to_database()
-    insert_plan(db, 1, "完成代码编写", "2024-06-15")
+    update_plan(db, 1, "完成代码编写", "2024-06-15")
     db.close()

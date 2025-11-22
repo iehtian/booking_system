@@ -41,9 +41,9 @@ async function addPlan(user_id, todayplan, date) {
   })
   const data = await res.json()
   if (data.success) {
-    alert("计划添加成功")
+    window.location.reload()
   } else {
-    alert("计划添加失败: " + data.message)
+    alert("计划修改失败: " + data.message)
   }
 }
 
@@ -54,6 +54,11 @@ document.getElementById("addPlanBtn").addEventListener("click", function () {
   console.log(todayplan)
   const res = addPlan(1, todayplan, date)
   console.log(res)
+})
+
+document.getElementById("editPlanBtn").addEventListener("click", function () {
+  document.getElementById("todayplan").disabled = false
+  document.getElementById("addPlanBtn").disabled = false
 })
 
 async function init() {

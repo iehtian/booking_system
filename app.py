@@ -20,7 +20,7 @@ from datebase import (
     delete_booking,
     initialize_database,
     connect_to_database,
-    insert_plan,
+    update_plan,
     get_planinfo,
 )
 
@@ -448,7 +448,7 @@ def add_date_plan():
             ), 400
 
         db = connect_to_database()
-        insert_plan(db, user_id, plan, date)
+        update_plan(db, user_id, plan, date)
         db.close()
 
         return jsonify({"success": True, "message": "Plan added successfully"})
