@@ -5,7 +5,6 @@ from flask_jwt_extended import (
     create_access_token,
     jwt_required,
     get_jwt_identity,
-    get_jwt,
 )
 import bcrypt
 import random
@@ -13,15 +12,14 @@ from config import Config
 from datebase import (
     upsert_user,
     search_user_by_ID,
-    search_all_users,
     upsert_booking,
     search_booking_by_date,
     search_booking_by_date_and_name,
     delete_booking,
     initialize_database,
     connect_to_database,
-    update_plan,
-    get_planinfo,
+    upsert_plan_field,
+    get_dateinfo,
 )
 
 
@@ -160,15 +158,12 @@ def cancel_booking():
     try:
         data = request.get_json()
         print(f"接收到的取消预约数据: {data}")
-        instrument = data.get("instrument") or data.get(
-            "instrument", "a_instrument"
-        )  # 默认为A仪器系统
+        instrument = data.get("instrument") or "a_instrument"
         date = data.get("date")
-        slots = data.get("slots")  # 现在接收时间段数组
+        slots = data.get("slots")
 
         if not date or not slots:
             return jsonify({"error": "Missing required fields: date, slots"}), 400
-
         if not isinstance(slots, list) or len(slots) == 0:
             return jsonify({"error": "slots must be a non-empty array"}), 400
 
@@ -176,12 +171,11 @@ def cancel_booking():
         if not search_by_date_result:
             return jsonify({"error": "No bookings found for the specified date"}), 404
 
-        tmies = [slot[1]["time"] for slot in search_by_date_result]
+        times = [slot[1]["time"] for slot in search_by_date_result]
         for slot in slots:
-            if slot not in tmies:
+            if slot not in times:
                 return jsonify({"error": f"Time slot {slot} is not booked"}), 404
 
-        # 所有时间段都已预约，批量删除预约
         successful_cancellations = []
         for slot in slots:
             booking_id = f"{instrument}:{date}:{slot}"
@@ -192,7 +186,6 @@ def cancel_booking():
             f"批量取消预约成功: {date} 取消了 {len(successful_cancellations)} 个时间段"
         )
         print(f"取消的时间段: {successful_cancellations}")
-
         return jsonify(
             {
                 "success": True,
@@ -200,47 +193,77 @@ def cancel_booking():
                 "cancelled_slots": successful_cancellations,
             }
         )
-
     except Exception as e:
         print(f"取消预约时出错: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 
+@app.route("/api/date_plan/update", methods=["POST"])
+def update_date_plan():
+    """统一的每日计划字段更新接口。
+    请求体可包含 plan / status / remark 中的任意组合；缺失的字段不更新。
+    示例 JSON:
+    {"user_id":1,"date":"2025-11-22","plan":"学习","status":"进行中","remark":"加油"}
+    """
+    try:
+        data = request.get_json() or {}
+        print(f"接收到的每日计划更新数据: {data}")
+        user_id = data.get("user_id")
+        date = data.get("date")
+        if not user_id or not date:
+            return jsonify({"error": "Missing required fields: user_id, date"}), 400
+
+        # 前端字段与数据库字段的映射
+        field_key_map = {
+            "plan": "plan",  # 兼容旧前端命名
+            "status": "status",
+            "remark": "remark",
+        }
+
+        db = connect_to_database()
+        updated = []
+        for payload_key, db_field in field_key_map.items():
+            value = data.get(payload_key)
+            if value is not None and value != "":  # 仅在有值时更新
+                upsert_plan_field(db, user_id, date, db_field, value)
+                updated.append(db_field)
+        db.close()
+
+        if not updated:
+            return jsonify({"error": "No updatable fields provided"}), 400
+
+        return jsonify({"success": True, "updated": updated})
+
+    except Exception as e:
+        print(f"更新每日计划字段时出错: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
 @app.route("/api/bookings", methods=["GET"])
 def get_bookings():
-    """获取预约信息并按时间段排序，返回 {time: name} 字典"""
-    instrument = request.args.get("instrument") or request.args.get(
-        "instrument", "a_instrument"
-    )
+    """获取预约信息并按时间段排序，返回 {time: {name,color}} 字典"""
+    instrument = request.args.get("instrument") or "a_instrument"
     date = request.args.get("date")
     print(f"获取预约信息: instrument={instrument}, date={date}")
 
-    if date:
-        # 返回特定日期的预约
-        search_by_date_result = search_booking_by_date(instrument, date)
-        print(f"原始数据库查询结果: {search_by_date_result}")  # 保持原始结果的打印
-
-        if not search_by_date_result:
-            return jsonify({"booking": ""}), 200
-
-        # 将结果转换为 {时间段: 预约人} 的字典格式
-        bookings_dict = {}
-        for slot in search_by_date_result:
-            time_slot = slot[1]["time"]
-            name = slot[1]["name"]
-            # 假设数据库中有 color 字段，如果没有则设置默认值
-            color = slot[1].get("color", "#ffffff")  # 默认黑色
-
-            bookings_dict[time_slot] = {"name": name, "color": color}
-        # 打印转换后的字典，保持风格
-        print(f"时间段和预约人 (字典格式): {bookings_dict}")
-
-        # 将字典打包成 JSON 响应
-        res = jsonify({"bookings": bookings_dict})
-        return res
-    else:
-        # 如果没有提供日期，返回错误提示
+    if not date:
         return jsonify({"error": "Date parameter is required"}), 400
+
+    search_by_date_result = search_booking_by_date(instrument, date)
+    print(f"原始数据库查询结果: {search_by_date_result}")
+
+    if not search_by_date_result:
+        return jsonify({"booking": ""}), 200
+
+    bookings_dict = {}
+    for slot in search_by_date_result:
+        time_slot = slot[1]["time"]
+        name = slot[1]["name"]
+        color = slot[1].get("color", "#ffffff")
+        bookings_dict[time_slot] = {"name": name, "color": color}
+
+    print(f"时间段和预约人 (字典格式): {bookings_dict}")
+    return jsonify({"bookings": bookings_dict})
 
 
 @app.route("/api/bookings_user", methods=["GET"])
@@ -432,32 +455,6 @@ def refresh():
         return jsonify({"success": False, "message": "Token refresh failed"}), 500
 
 
-@app.route("/api/date_plan/add", methods=["POST"])
-def add_date_plan():
-    """添加每日计划"""
-    try:
-        data = request.get_json()
-        print(f"接收到的每日计划数据: {data}")
-        user_id = data.get("user_id")
-        plan = data.get("todayplan")
-        date = data.get("date")
-
-        if not user_id or not plan or not date:
-            return jsonify(
-                {"error": "Missing required fields: user_id, plan, date"}
-            ), 400
-
-        db = connect_to_database()
-        update_plan(db, user_id, plan, date)
-        db.close()
-
-        return jsonify({"success": True, "message": "Plan added successfully"})
-
-    except Exception as e:
-        print(f"添加每日计划时出错: {e}")
-        return jsonify({"error": "Internal server error"}), 500
-
-
 @app.route("/api/date_plan/get", methods=["GET"])
 def get_date_plan():
     """获取每日计划"""
@@ -469,7 +466,7 @@ def get_date_plan():
             return jsonify({"error": "Missing required fields: user_id, date"}), 400
 
         db = connect_to_database()
-        info = get_planinfo(db, user_id, date)
+        info = get_dateinfo(db, user_id, date)
         db.close()
 
         return jsonify({"success": True, "info": info})

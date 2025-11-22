@@ -14,7 +14,7 @@ def connect_to_database():
     return db
 
 
-def get_planinfo(db, user_id, date):
+def get_dateinfo(db, user_id, date):
     cursor = db.cursor()
     sql = "SELECT plan,status,remark FROM plans WHERE user_id = %s AND date = %s"
     val = (user_id, date)
@@ -25,20 +25,30 @@ def get_planinfo(db, user_id, date):
     return results
 
 
-def update_plan(db, user_id, plan, date):
+def upsert_plan_field(db, user_id, date, field, value):
+    """根据是否已有记录插入或更新指定字段。
+    仅允许更新 plan / status / remark 三个字段以避免 SQL 注入。
+    """
+    allowed_fields = {"plan", "status", "remark"}
+    if field not in allowed_fields:
+        raise ValueError(f"不支持的字段: {field}")
+
     cursor = db.cursor()
-    if get_planinfo(db, user_id, date):
-        sql = "UPDATE plans SET plan = %s WHERE user_id = %s AND date = %s"
-        val = (plan, user_id, date)
+    exists = get_dateinfo(db, user_id, date)
+    if exists:
+        sql = f"UPDATE plans SET {field} = %s WHERE user_id = %s AND date = %s"
+        val = (value, user_id, date)
     else:
-        sql = "INSERT INTO plans (user_id,date,plan) VALUES (%s, %s, %s)"
-        val = (user_id, date, plan)
+        sql = f"INSERT INTO plans (user_id,date,{field}) VALUES (%s, %s, %s)"
+        val = (user_id, date, value)
     cursor.execute(sql, val)
     db.commit()
-    print("更新成功!")
+    print(f"{field} 字段更新成功！")
+
+    # 如果需要一次性更新多个字段，可在外部多次调用 upsert_plan_field。
 
 
 if __name__ == "__main__":
     db = connect_to_database()
-    update_plan(db, 1, "完成代码编写", "2024-06-15")
+    upsert_plan_field(db, 1, "2024-06-15", "plan", "完成代码编写")
     db.close()
