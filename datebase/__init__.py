@@ -15,7 +15,7 @@ from .redis_client import (
     delete_booking,
 )
 
-from .mysql_client import connect_to_database, insert_plan
+from .mysql_client import connect_to_database, insert_plan, get_planinfo
 
 # 包版本信息
 __version__ = "1.0.0"
@@ -48,4 +48,5 @@ __all__ = [
     "initialize_database",
     "connect_to_database",
     "insert_plan",
+    "get_planinfo",
 ]

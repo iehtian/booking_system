@@ -21,6 +21,7 @@ from datebase import (
     initialize_database,
     connect_to_database,
     insert_plan,
+    get_planinfo,
 )
 
 
@@ -439,18 +440,42 @@ def add_date_plan():
         print(f"接收到的每日计划数据: {data}")
         user_id = data.get("user_id")
         plan = data.get("todayplan")
+        date = data.get("date")
 
-        if not user_id or not plan:
-            return jsonify({"error": "Missing required fields: user_id, plan"}), 400
+        if not user_id or not plan or not date:
+            return jsonify(
+                {"error": "Missing required fields: user_id, plan, date"}
+            ), 400
 
         db = connect_to_database()
-        insert_plan(db, user_id, plan)
+        insert_plan(db, user_id, plan, date)
         db.close()
 
         return jsonify({"success": True, "message": "Plan added successfully"})
 
     except Exception as e:
         print(f"添加每日计划时出错: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@app.route("/api/date_plan/get", methods=["GET"])
+def get_date_plan():
+    """获取每日计划"""
+    try:
+        user_id = request.args.get("user_id")
+        date = request.args.get("date")
+
+        if not user_id or not date:
+            return jsonify({"error": "Missing required fields: user_id, date"}), 400
+
+        db = connect_to_database()
+        info = get_planinfo(db, user_id, date)
+        db.close()
+
+        return jsonify({"success": True, "info": info})
+
+    except Exception as e:
+        print(f"获取每日计划时出错: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 
