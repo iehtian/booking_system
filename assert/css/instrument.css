@@ -1,8 +1,4 @@
-* {
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
-}
+/* 全局重置已移至 background.css */
 
 .container {
   width: 98%;
@@ -106,9 +102,7 @@ label {
   background-color: white;
 }
 
-.hidden {
-  display: none; /* 默认隐藏 */
-}
+/* `.hidden` 已移至 background.css */
 
 /* 美化日期选择框 */
 #appointment-date {

@@ -1,9 +1,4 @@
-* {
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
-  font-family: "Microsoft YaHei", sans-serif;
-}
+/* 全局重置与默认字体已集中到 background.css */
 
 .container {
   display: flex;

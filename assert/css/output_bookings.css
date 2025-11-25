@@ -21,11 +21,7 @@
   background: #c9d2dd;
 }
 
-* {
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
-}
+/* 全局重置已集中到 background.css */
 
 body {
   min-height: 100vh;

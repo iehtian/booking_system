@@ -6,9 +6,22 @@
   --nav-h: 3.5rem;
 }
 
+/* 全局重置与统一盒模型 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  padding: 0;
+  margin: 0;
+}
+
 /* 任何引入 navbar.css 的页面，默认为内容预留与导航相同的高度 */
 body {
   padding-top: var(--nav-h);
+  font-family: "Microsoft YaHei", Arial, sans-serif;
 }
 
 .navbar {
@@ -40,6 +53,11 @@ body {
   color: #2c3e50;
   cursor: pointer;
   user-select: none;
+}
+
+/* 通用隐藏工具类 */
+.hidden {
+  display: none;
 }
 
 /* Keyboard focus style for accessibility */

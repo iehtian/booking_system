@@ -16,9 +16,6 @@
   --border: #e2e8f0;
   --ring: 0 0 0 4px rgb(99 102 241 / 18%);
   --shadow: 0 10px 30px rgb(2 6 23 / 8%);
-
-  /* 与 navbar.css 中的 .navbar 高度保持一致 */
-  --nav-h: 3.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
