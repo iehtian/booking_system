@@ -91,7 +91,11 @@ def random_color():
 @app.route("/hello_world", methods=["GET"])
 def hello_world():
     """用于验证服务是否正常运行"""
-    return jsonify({"message": "Hello, World!"})
+    # return jsonify({"message": "Hello, World!"})
+    # 设置cookie示例
+    response = jsonify({"message": "Hello, World!"})
+    response.set_cookie("test_cookie", "test_value", httponly=True, secure=True)
+    return response
 
 
 @app.route("/api/info_save", methods=["POST"])
@@ -208,7 +212,7 @@ def update_date_plan():
     try:
         data = request.get_json() or {}
         print(f"接收到的每日计划更新数据: {data}")
-        user_id = data.get("user_id")
+        user_id = request.cookies.get("user_ID")
         date = data.get("date")
         if not user_id or not date:
             return jsonify({"error": "Missing required fields: user_id, date"}), 400
@@ -400,8 +404,7 @@ def login():
     )
 
     print(f"用户 {ID} 登录成功，生成JWT token")
-
-    return jsonify(
+    response = jsonify(
         {
             "success": True,
             "message": "登录成功",
@@ -413,6 +416,10 @@ def login():
             },
         }
     )
+    response.set_cookie("user_ID", ID, httponly=True, secure=True)
+    response.set_cookie("user_name", user_data["real_name"], httponly=True, secure=True)
+
+    return response
 
 
 @app.route("/api/logout", methods=["POST"])
@@ -459,7 +466,7 @@ def refresh():
 def get_date_plan():
     """获取每日计划"""
     try:
-        user_id = request.args.get("user_id")
+        user_id = request.cookies.get("user_ID")
         date = request.args.get("date")
 
         if not user_id or not date:

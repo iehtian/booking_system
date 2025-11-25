@@ -37,16 +37,14 @@ document
     init()
   })
 
-async function fetchPlansByDate(user_id, date) {
-  const res = await fetch(
-    `${host}/api/date_plan/get?user_id=${user_id}&date=${date}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  )
+async function fetchPlansByDate(date) {
+  const res = await fetch(`${host}/api/date_plan/get?date=${date}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  })
   const data = await res.json()
   if (data.success) {
     return data.info
@@ -55,15 +53,8 @@ async function fetchPlansByDate(user_id, date) {
   }
 }
 
-async function update_info(
-  user_id,
-  date,
-  plan = null,
-  status = null,
-  remark = null
-) {
+async function update_info(date, plan = null, status = null, remark = null) {
   const postData = {
-    user_id: user_id,
     plan: plan,
     status: status,
     remark: remark,
@@ -74,6 +65,7 @@ async function update_info(
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
     body: JSON.stringify(postData),
   })
   const data = await res.json()
@@ -94,7 +86,7 @@ document.getElementById("updatePlanBtn").addEventListener("click", function () {
   console.log("status", status)
   console.log("plan", remark)
 
-  const res = update_info(1, date, plan, status, remark)
+  const res = update_info(date, plan, status, remark)
   console.log(res)
 })
 
@@ -120,7 +112,7 @@ function clear_plan() {
 async function init() {
   clear_plan()
   const date = document.getElementById("appointment-date").value
-  const info = await fetchPlansByDate(1, date)
+  const info = await fetchPlansByDate(date)
   if (info && info.length === 0) {
     console.log("无计划")
   } else {

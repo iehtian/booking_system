@@ -6,6 +6,7 @@ async function login(ID, password) {
     const res = await fetch(`${host}/api/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include", // 关键：允许浏览器接收/保存 Set-Cookie（跨源或代理场景都安全）
       body: JSON.stringify({ ID, password }),
     })
     const data = await res.json()
