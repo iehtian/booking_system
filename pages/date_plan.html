@@ -16,15 +16,28 @@
         <button id="updatePlanBtn">提交</button>
         <button id="editPlanBtn">修改</button>
       </div>
-      <div class="plan status">
-        <h2>计划完成情况</h2>
-        <textarea name="status" id="status"></textarea>
-        <button id="updateStatusBtn">提交</button>
-        <button id="editStatusBtn">修改</button>
+      <div class="form-status">
+        <label>完成情况</label>
+        <div class="radio-group">
+          <div class="radio-option">
+            <input type="radio" id="complete" name="status" value="complete" />
+            <label for="complete">已完成</label>
+          </div>
+          <div class="radio-option">
+            <input
+              type="radio"
+              id="incomplete"
+              name="status"
+              value="incomplete"
+              checked
+            />
+            <label for="incomplete">未完成</label>
+          </div>
+        </div>
       </div>
-      <div class="plan comment">
+      <div class="plan comment" disabled>
         <h2>备注</h2>
-        <textarea name="comment" id="comment"></textarea>
+        <textarea name="remark" id="remark"></textarea>
         <button id="updateCommentBtn">提交</button>
         <button id="editCommentBtn">修改</button>
       </div>
