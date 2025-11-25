@@ -28,10 +28,23 @@ def get_dateinfo(db, user_id, date):
 def upsert_plan_field(db, user_id, date, field, value):
     """根据是否已有记录插入或更新指定字段。
     仅允许更新 plan / status / remark 三个字段以避免 SQL 注入。
+    若更新字段为 status，则其值只能是 0 或 1。
     """
     allowed_fields = {"plan", "status", "remark"}
     if field not in allowed_fields:
         raise ValueError(f"不支持的字段: {field}")
+
+    # 针对 status 字段的值范围校验，只允许 0 或 1（可接受数字或字符串形式）
+    if field == "status":
+        if isinstance(value, bool):  # 若传入 True/False，转换为 1/0
+            value = 1 if value else 0
+        if isinstance(value, str):
+            value = value.strip()
+        allowed_status_values = {0, 1, "0", "1"}
+        if value not in allowed_status_values:
+            raise ValueError(f"status 只能是 0 或 1，收到: {value}")
+        # 统一转换为整型写入（数据库字段若为 TINYINT/INT 更规范）
+        value = int(value)
 
     cursor = db.cursor()
     exists = get_dateinfo(db, user_id, date)
@@ -50,5 +63,6 @@ def upsert_plan_field(db, user_id, date, field, value):
 
 if __name__ == "__main__":
     db = connect_to_database()
-    upsert_plan_field(db, 1, "2024-06-15", "plan", "完成代码编写")
+    # upsert_plan_field(db, 1, "2024-06-15", "plan", "完成代码编写")
+    upsert_plan_field(db, 1, "2024-06-15", "status", 1)
     db.close()

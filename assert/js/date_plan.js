@@ -59,8 +59,12 @@ async function update_info(
 document.getElementById("updatePlanBtn").addEventListener("click", function () {
   const date = getDateUTC8()
   const todayplan = document.getElementById("plan").value
+  const status = document.getElementById("complete").checked ? 1 : 0
+  const remark = document.getElementById("remark").value
+  console.log(status)
+  console.log(remark)
   console.log(todayplan)
-  const res = update_info(1, date, todayplan, null, null)
+  const res = update_info(1, date, todayplan, status, remark)
   console.log(res)
 })
 
@@ -68,38 +72,6 @@ document.getElementById("editPlanBtn").addEventListener("click", function () {
   document.getElementById("plan").disabled = false
   document.getElementById("updatePlanBtn").disabled = false
 })
-
-document
-  .getElementById("updateStatusBtn")
-  .addEventListener("click", function () {
-    const date = getDateUTC8()
-    const todaystatus = document.getElementById("status").value
-    console.log(todaystatus)
-    const res = update_info(1, date, null, todaystatus, null)
-    console.log(res)
-  })
-
-document.getElementById("editStatusBtn").addEventListener("click", function () {
-  document.getElementById("status").disabled = false
-  document.getElementById("updateStatusBtn").disabled = false
-})
-
-document
-  .getElementById("updateCommentBtn")
-  .addEventListener("click", function () {
-    const date = getDateUTC8()
-    const todayremark = document.getElementById("remark").value
-    console.log(todayremark)
-    const res = update_info(1, date, null, null, todayremark)
-    console.log(res)
-  })
-
-document
-  .getElementById("editCommentBtn")
-  .addEventListener("click", function () {
-    document.getElementById("remark").disabled = false
-    document.getElementById("updateCommentBtn").disabled = false
-  })
 
 async function init() {
   const date = getDateUTC8()
@@ -118,15 +90,17 @@ async function init() {
   }
   const status = info[0][1]
   if (status) {
-    document.getElementById("status").value = status
-    document.getElementById("updateStatusBtn").disabled = true
-    document.getElementById("status").disabled = true
+    if (status === 1) {
+      document.getElementById("complete").checked = true
+      document.getElementById("incomplete").checked = false
+    } else {
+      document.getElementById("incomplete").checked = true
+      document.getElementById("complete").checked = false
+    }
   }
   const remark = info[0][2]
   if (remark) {
     document.getElementById("remark").value = remark
-    document.getElementById("updateCommentBtn").disabled = true
-    document.getElementById("remark").disabled = true
   }
 }
 
