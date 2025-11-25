@@ -1,24 +1,124 @@
 /* 全局重置与默认字体已集中到 background.css */
 
-.container {
+/* 原纵向布局容器已替换为表格形式 */
+
+.plan-table {
+  width: 100%;
+  max-width: 1000px;
+  margin: 10px auto 20px;
+  background: #fff;
+  border: 1px solid #d0d7de;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+  border-collapse: collapse;
+  table-layout: fixed; /* 让列宽更稳定 */
+}
+
+.plan-table thead th {
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: #f6f8fa;
+}
+
+.plan-table th,
+.plan-table td {
+  padding: 10px 12px;
+  border: 1px solid #d0d7de;
+  vertical-align: top;
+}
+
+/* 文本区域与输入控件在单元格内铺满 */
+textarea#plan,
+textarea#remark {
+  width: 100%;
+  min-height: 120px;
+  padding: 8px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  background: #fff;
+  border: 1px solid #c2c8d0;
+  border-radius: 4px;
+  resize: vertical;
+}
+
+textarea#plan:disabled,
+textarea#remark:disabled {
+  color: #555;
+  background: #f3f4f6;
+}
+
+.status-cell .radio-group {
   display: flex;
-  max-width: 800px;
-  padding: 20px;
-  margin: 0 auto;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.status-cell .radio-option {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  gap: 4px;
+}
+
+.action-cell {
+  display: flex;
   flex-direction: column;
+  gap: 8px;
 }
 
-.plan {
-  flex: 1;
-  margin-right: 20px;
+.action-cell button {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  background: #fff;
+  border: 1px solid #c2c8d0;
+  border-radius: 4px;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+  cursor: pointer;
 }
 
-table {
-  border-collapse: collapse; /* 关键属性：合并边框 */
+.action-cell button:hover:not(:disabled) {
+  color: #fff;
+  background: #0366d6;
 }
 
-th,
-td {
-  padding: 8px; /* 添加一些内边距，让内容更美观 */
-  border: 1px solid black; /* 设置边框样式 */
+.action-cell button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 响应式：窄屏时允许横向滚动 */
+.plan-table-wrapper {
+  padding: 0 12px;
+  overflow-x: auto;
+}
+
+/* 日期控制条与表格间距 */
+.date-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px auto 12px;
+  gap: 12px;
+}
+
+.date-controls a {
+  font-size: 0.85rem;
+  text-decoration: none;
+  color: #0366d6;
+}
+
+.date-controls a:hover {
+  text-decoration: underline;
+}
+
+/* 保留页面其它普通表格的基础样式（若存在） */
+table:not(.plan-table) {
+  border-collapse: collapse;
+}
+
+table:not(.plan-table) th,
+table:not(.plan-table) td {
+  padding: 8px;
+  border: 1px solid #333;
 }

@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="../assert/css/background.css" />
     <link rel="stylesheet" href="../assert/css/date-plan.css" />
+    <link rel="stylesheet" href="../assert/css/background.css" />
     <script type="module" src="../assert/js/date_plan.js" defer></script>
     <title>每日计划</title>
     <style></style>
@@ -13,42 +13,61 @@
     <header class="navbar">
       <div class="logo">实验平台</div>
     </header>
+    <div class="date-controls">
+      <a href="#" id="yestoday">前一天</a>
+      <input type="date" name="appointment-date" id="appointment-date" />
+      <a href="#" id="tomorrow">后一天</a>
+    </div>
 
-    <div class="container">
-      <div class="date-controls">
-        <a href="#" id="yestoday">前一天</a>
-        <input type="date" name="appointment-date" id="appointment-date" />
-        <a href="#" id="tomorrow">后一天</a>
-      </div>
-      <div class="plan todayplan">
-        <h2>今日计划</h2>
-        <textarea name="todayplan" id="plan"></textarea>
-      </div>
-      <div class="form-status">
-        <label>完成情况</label>
-        <div class="radio-group">
-          <div class="radio-option">
-            <input type="radio" id="complete" name="status" value="complete" />
-            <label for="complete">已完成</label>
-          </div>
-          <div class="radio-option">
-            <input
-              type="radio"
-              id="incomplete"
-              name="status"
-              value="incomplete"
-              checked
-            />
-            <label for="incomplete">未完成</label>
-          </div>
-        </div>
-      </div>
-      <div class="plan comment" disabled>
-        <h2>备注</h2>
-        <textarea name="remark" id="remark"></textarea>
-      </div>
-      <button id="updatePlanBtn">提交</button>
-      <button id="editPlanBtn">修改</button>
+    <div class="plan-table-wrapper">
+      <table id="plans-table" class="plan-table">
+        <thead>
+          <tr>
+            <th style="width: 35%">今日计划</th>
+            <th style="width: 18%">完成情况</th>
+            <th style="width: 30%">备注</th>
+            <th style="width: 17%">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 初始示例行，可复制此行以扩展多人计划 -->
+          <tr>
+            <td>
+              <textarea name="todayplan" id="plan"></textarea>
+            </td>
+            <td class="status-cell">
+              <div class="radio-group">
+                <div class="radio-option">
+                  <input
+                    type="radio"
+                    id="complete"
+                    name="status"
+                    value="complete"
+                  />
+                  <label for="complete">已完成</label>
+                </div>
+                <div class="radio-option">
+                  <input
+                    type="radio"
+                    id="incomplete"
+                    name="status"
+                    value="incomplete"
+                    checked
+                  />
+                  <label for="incomplete">未完成</label>
+                </div>
+              </div>
+            </td>
+            <td>
+              <textarea name="remark" id="remark"></textarea>
+            </td>
+            <td class="action-cell">
+              <button id="updatePlanBtn">提交</button>
+              <button id="editPlanBtn">修改</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
     <table>
       <tr>
