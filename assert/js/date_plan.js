@@ -102,45 +102,55 @@ document.getElementById("editPlanBtn").addEventListener("click", function () {
 function clear_plan() {
   document.getElementById("plan").value = ""
   document.getElementById("remark").value = ""
-  document.getElementById("plan").disabled = false
-  document.getElementById("complete").disabled = false
-  document.getElementById("incomplete").disabled = false
-  document.getElementById("updatePlanBtn").disabled = false
-  document.getElementById("remark").disabled = false
+  document.getElementById("plan").disabled = true
+  document.getElementById("complete").disabled = true
+  document.getElementById("complete").checked = false
+  document.getElementById("incomplete").disabled = true
+  document.getElementById("incomplete").checked = false
+  document.getElementById("updatePlanBtn").disabled = true
+  document.getElementById("editPlanBtn").disabled = true
+  document.getElementById("remark").disabled = true
 }
 
 async function init() {
   clear_plan()
   const date = document.getElementById("appointment-date").value
   const info = await fetchPlansByDate(date)
-  if (info && info.length === 0) {
-    console.log("无计划")
+  if (!info) {
+    console.error("获取计划失败")
+    return
+  }
+
+  if (info.length === 0) {
+    // 无计划，启用输入
+    document.getElementById("plan").disabled = false
+    document.getElementById("complete").disabled = false
+    document.getElementById("incomplete").disabled = false
+    document.getElementById("updatePlanBtn").disabled = false
+    document.getElementById("remark").disabled = false
   } else {
-    console.log(info)
-  }
-  const plan = info[0][0]
-  console.log(plan)
-  if (plan) {
-    document.getElementById("plan").value = plan
-    document.getElementById("updatePlanBtn").disabled = true
-    document.getElementById("plan").disabled = true
-    document.getElementById("complete").disabled = true
-    document.getElementById("incomplete").disabled = true
-  }
-  const status = info[0][1]
-  if (status) {
-    if (status === 1) {
-      document.getElementById("complete").checked = true
-      document.getElementById("incomplete").checked = false
+    const plan = info[0][0]
+    console.log(plan)
+    if (plan) {
+      document.getElementById("plan").value = plan
+      document.getElementById("editPlanBtn").disabled = false
     } else {
-      document.getElementById("incomplete").checked = true
-      document.getElementById("complete").checked = false
     }
-  }
-  const remark = info[0][2]
-  if (remark) {
-    document.getElementById("remark").value = remark
-    document.getElementById("remark").disabled = true
+    const status = info[0][1]
+    if (status) {
+      if (status === 1) {
+        document.getElementById("complete").checked = true
+        document.getElementById("incomplete").checked = false
+      } else {
+        document.getElementById("complete").checked = false
+        document.getElementById("incomplete").checked = true
+      }
+    }
+    const remark = info[0][2]
+    if (remark) {
+      document.getElementById("remark").value = remark
+      document.getElementById("remark").disabled = true
+    }
   }
 }
 
