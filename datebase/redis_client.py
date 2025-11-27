@@ -84,7 +84,9 @@ def search_user_by_ID(ID):
 
 
 def search_user(query):
-    results = r.execute_command("FT.SEARCH", "user-idx", query)
+    results = r.execute_command(
+        "FT.SEARCH", "user-idx", query, "LIMIT", "0", "50"
+    )
     data = []
     for i in range(1, len(results), 2):
         key = results[i]
@@ -94,7 +96,9 @@ def search_user(query):
 
 
 def search_all_users():
-    results = r.execute_command("FT.SEARCH", "user-idx", "*")
+    results = r.execute_command(
+        "FT.SEARCH", "user-idx", "*", "LIMIT", "0", "50"
+    )
     data = []
     for i in range(1, len(results), 2):
         key = results[i]
@@ -184,7 +188,9 @@ def search_booking(query):
 
 
 def search_all_bookings():
-    results = r.execute_command("FT.SEARCH", "booking-idx", "*")
+    results = r.execute_command(
+        "FT.SEARCH", "booking-idx", "*", "LIMIT", "0", "50"
+    )
     data = []
     for i in range(1, len(results), 2):
         key = results[i]
@@ -213,25 +219,9 @@ def initialize_database():
 # -------- 示例逻辑 --------
 if __name__ == "__main__":
     initialize_database()
-    # 用户示例
-    print("\n📅 users on fea:")
-    for key, data in search_user_by_ID("fea"):
-        print(f"{key}: {data}")
 
-    print("\n🧑 users by Alice:")
-
-    # 预约示例
-    print("\n📅 Bookings on 2025-06-21:")
-    for res in search_booking_by_date("a_device", "2025-06-21"):
-        print(f"{res[0]}: {res[1]}")
-
+    print("---- All Users ----")
     data = search_all_users()
+    print(f"{data}")
     for key, user in data:
-        print(f"Upserting user {user['real_name']}")
-        upsert_user(
-            user_id=key.split(":")[1],
-            ID=user["ID"],
-            password=user["password"],
-            real_name=user["real_name"],
-            color=user["color"],
-        )
+        print(f"user {user['real_name']}")
