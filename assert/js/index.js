@@ -29,7 +29,7 @@ async function initUser() {
   await checkAuthStatus()
   const result = JSON.parse(sessionStorage.getItem("userAuth") || "null")
   const loginHintEl = document.querySelector("#login-hint")
-  if (result.logged_in) {
+  if (result) {
     document.querySelector("#logout").classList.remove("hidden")
     const realName = result.user.name
     document.querySelector(".show-name").textContent = `你好，${realName}`

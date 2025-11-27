@@ -288,13 +288,10 @@ async function init() {
     const all = await fetchAllPlans(date)
     all.forEach((u) => renderOtherUserRow(u, currentUserName))
   } else {
-    // 未登录则不展示计划列表
-    const tr = document.createElement("tr")
-    const td = document.createElement("td")
-    td.colSpan = 5
-    td.textContent = "请先登录后查看与更新每日计划"
-    tr.appendChild(td)
-    tbody.appendChild(tr)
+    // 未登录则仅展示所有用户的计划，隐藏当前用户行
+    const currentUserName = null
+    const all = await fetchAllPlans(date)
+    all.forEach((u) => renderOtherUserRow(u, currentUserName))
   }
 }
 

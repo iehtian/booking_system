@@ -49,6 +49,7 @@ async function logout() {
       // 没 token 直接当已退出
       localStorage.removeItem("access_token")
       localStorage.removeItem("userInfo")
+      sessionStorage.removeItem("userAuth")
       return true
     }
 
