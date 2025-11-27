@@ -37,7 +37,7 @@ textarea#remark,
   width: 100%;
   min-height: 60px;
   padding: 8px;
-  overflow: auto;
+  overflow: auto; /* 默认允许出现滚动条 */
   font-size: 0.9rem;
   line-height: 1.4;
   background: #fff;
@@ -50,15 +50,20 @@ textarea#remark,
 
 textarea#plan:disabled,
 textarea#remark:disabled,
-.plan-table td textarea:disabled {
+.plan-table td textarea:disabled,
+/* 只读态与禁用态统一视觉，便于他人内容滚动但不可编辑 */
+.plan-table td textarea[readonly] {
   color: #555;
   background: #f3f4f6;
 }
 
 /* 非当前用户行尺寸（放在禁用态规则之后，避免层级警告） */
 .plan-table tr:not(.current-user-row) td textarea {
-  min-height: 34px; /* 进一步减小高度 */
-  padding: 5px; /* 再次减小内边距 */
+  /* 使用 rows=2 控制高度，去掉最小高度以精确为两行 */
+  height: auto;
+  min-height: 0;
+  padding: 5px; /* 紧凑显示 */
+  overflow: hidden auto; /* x 隐藏，y 自动滚动 */
   line-height: 1.25;
 }
 
@@ -291,8 +296,11 @@ table:not(.plan-table) td {
     font-size: 1rem;
   }
 
+  /* 他人内容移动端仍保持两行可滚动，覆盖上面的移动端最小高度 */
   .plan-table tr:not(.current-user-row) td textarea {
-    min-height: 56px;
+    height: auto;
+    min-height: 0;
+    overflow: hidden auto;
   }
 
   /* 卡片左右留白略收紧 */

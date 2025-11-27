@@ -276,7 +276,9 @@ function renderOtherUserRow(userObj, currentUserName) {
   const tdPlan = document.createElement("td")
   const taPlan = document.createElement("textarea")
   taPlan.value = planData
-  taPlan.disabled = true
+  // 他人内容两行显示且可滚动，但不可编辑
+  taPlan.rows = 2
+  taPlan.readOnly = true
   tdPlan.appendChild(taPlan)
   tr.appendChild(tdPlan)
 
@@ -306,7 +308,9 @@ function renderOtherUserRow(userObj, currentUserName) {
   const tdRemark = document.createElement("td")
   const taRemark = document.createElement("textarea")
   taRemark.value = remarkData
-  taRemark.disabled = true
+  // 他人内容两行显示且可滚动，但不可编辑
+  taRemark.rows = 2
+  taRemark.readOnly = true
   tdRemark.appendChild(taRemark)
   tr.appendChild(tdRemark)
 
