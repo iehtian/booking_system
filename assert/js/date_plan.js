@@ -178,8 +178,40 @@ function renderCurrentUserRow(username, info) {
     btnEdit.disabled = true
   }
 
+  // 若所选日期已过去，则不允许修改/提交
+  const isPastSelectedDate = () => {
+    const dateStr = document.getElementById("appointment-date").value
+    if (!dateStr) return false
+    const selected = new Date(dateStr)
+    const today = new Date()
+    // 只比较日期部分（本地时区）
+    selected.setHours(0, 0, 0, 0)
+    today.setHours(0, 0, 0, 0)
+    return selected < today
+  }
+
+  if (isPastSelectedDate()) {
+    disableCurrentInputs()
+    btnEdit.disabled = true
+    btnSubmit.disabled = true
+  }
+
   btnEdit.addEventListener("click", () => enableCurrentInputs())
   btnSubmit.addEventListener("click", () => {
+    // 过去日期不可提交
+    const past = (() => {
+      const dateStr = document.getElementById("appointment-date").value
+      if (!dateStr) return false
+      const selected = new Date(dateStr)
+      const today = new Date()
+      selected.setHours(0, 0, 0, 0)
+      today.setHours(0, 0, 0, 0)
+      return selected < today
+    })()
+    if (past) {
+      alert("已过去的日期不允许修改或提交")
+      return
+    }
     const date = document.getElementById("appointment-date").value
     const plan = taPlan.value
     const status = document.getElementById("complete").checked ? 1 : 0
@@ -203,6 +235,22 @@ function disableCurrentInputs() {
 }
 function enableCurrentInputs() {
   const ids = ["plan", "complete", "incomplete", "updatePlanBtn", "remark"]
+  // 若所选日期已过去，则不启用
+  const dateStr = document.getElementById("appointment-date")?.value
+  if (dateStr) {
+    const selected = new Date(dateStr)
+    const today = new Date()
+    selected.setHours(0, 0, 0, 0)
+    today.setHours(0, 0, 0, 0)
+    if (selected < today) {
+      // 保持禁用并直接返回
+      ids.forEach((id) => {
+        const el = document.getElementById(id)
+        if (el) el.disabled = true
+      })
+      return
+    }
+  }
   ids.forEach((id) => {
     const el = document.getElementById(id)
     if (el) el.disabled = false
