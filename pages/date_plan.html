@@ -30,43 +30,8 @@
             <th style="width: 12%">操作</th>
           </tr>
         </thead>
-        <tbody>
-          <!-- 初始示例行，可复制此行以扩展多人计划 -->
-          <tr>
-            <td class="name-cell">this_name</td>
-            <td>
-              <textarea name="todayplan" id="plan"></textarea>
-            </td>
-            <td class="status-cell">
-              <div class="radio-group">
-                <div class="radio-option">
-                  <input
-                    type="radio"
-                    id="complete"
-                    name="status"
-                    value="complete"
-                  />
-                  <label for="complete">已完成</label>
-                </div>
-                <div class="radio-option">
-                  <input
-                    type="radio"
-                    id="incomplete"
-                    name="status"
-                    value="incomplete"
-                  />
-                  <label for="incomplete">未完成</label>
-                </div>
-              </div>
-            </td>
-            <td>
-              <textarea name="remark" id="remark"></textarea>
-            </td>
-            <td class="action-cell">
-              <button id="updatePlanBtn">提交</button>
-              <button id="editPlanBtn">修改</button>
-            </td>
-          </tr>
+        <tbody id="plans-tbody">
+          <!-- 行由 JS 动态渲染。当前用户的可编辑行会包含固定的 id: plan / remark / complete / incomplete / updatePlanBtn / editPlanBtn -->
         </tbody>
       </table>
     </div>

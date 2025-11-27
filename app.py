@@ -20,6 +20,7 @@ from datebase import (
     connect_to_database,
     upsert_plan_field,
     get_dateinfo,
+    search_all_users,
 )
 
 
@@ -480,6 +481,31 @@ def get_date_plan():
 
     except Exception as e:
         print(f"获取每日计划时出错: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@app.route("/api/date_plan/all", methods=["GET"])
+def get_all_date_plans():
+    """获取用户所有每日计划"""
+    try:
+        date = request.args.get("date")
+        if not date:
+            return jsonify({"error": "Date parameter is required"}), 400
+        db = connect_to_database()
+        data = search_all_users()
+        res = []
+        # search_all_users 返回形如 (key, user_dict) 的元组列表
+        for _, user in data:
+            user_id = user.get("ID")
+            real_name = user.get("real_name")
+            info = get_dateinfo(db, user_id, date)
+            print(f"用户 {real_name} 的计划信息: {info}")
+            res.append({"user": real_name, "info": info})
+        db.close()
+        print(f"所有用户的每日计划: {res}")
+        return jsonify({"success": True, "data": res})
+    except Exception as e:
+        print(f"获取所有用户每日计划时出错: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 

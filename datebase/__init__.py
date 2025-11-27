@@ -12,6 +12,7 @@ from .redis_client import (
     search_booking_by_date,
     search_booking_by_date_and_name,
     create_booking_index,
+    search_all_users,
     delete_booking,
 )
 

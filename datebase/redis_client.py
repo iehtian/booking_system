@@ -84,9 +84,7 @@ def search_user_by_ID(ID):
 
 
 def search_user(query):
-    results = r.execute_command(
-        "FT.SEARCH", "user-idx", query, "LIMIT", "0", "50"
-    )
+    results = r.execute_command("FT.SEARCH", "user-idx", query, "LIMIT", "0", "50")
     data = []
     for i in range(1, len(results), 2):
         key = results[i]
@@ -96,9 +94,7 @@ def search_user(query):
 
 
 def search_all_users():
-    results = r.execute_command(
-        "FT.SEARCH", "user-idx", "*", "LIMIT", "0", "50"
-    )
+    results = r.execute_command("FT.SEARCH", "user-idx", "*", "LIMIT", "0", "50")
     data = []
     for i in range(1, len(results), 2):
         key = results[i]
@@ -188,9 +184,7 @@ def search_booking(query):
 
 
 def search_all_bookings():
-    results = r.execute_command(
-        "FT.SEARCH", "booking-idx", "*", "LIMIT", "0", "50"
-    )
+    results = r.execute_command("FT.SEARCH", "booking-idx", "*", "LIMIT", "0", "50")
     data = []
     for i in range(1, len(results), 2):
         key = results[i]

@@ -1,157 +1,281 @@
 import { host } from "./config.js"
 
-document
-  .querySelector("#appointment-date")
-  .addEventListener("click", function (event) {
-    //回调函数，打开日期选择器
-    event.target.showPicker() // 显示日期选择器
-  })
+// 获取当前用户名称（尝试从 /api/check-auth）
+async function getCurrentUserName() {
+  const token = localStorage.getItem("access_token")
+  if (!token) return null
+  try {
+    const res = await fetch(`${host}/api/check-auth`, {
+      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include",
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    // 兼容字段: user / username / name
+    return data.user || data.username || data.name || null
+  } catch (e) {
+    console.warn("获取当前用户失败", e)
+    return null
+  }
+}
 
-document.querySelector("#yestoday").addEventListener("click", (event) => {
-  date_change(event, -1) // 点击昨天按钮，日期减1
+// 日期按钮事件与日期输入
+document.querySelector("#appointment-date").addEventListener("click", (e) => {
+  e.target.showPicker()
 })
-document.querySelector("#tomorrow").addEventListener("click", (event) => {
-  date_change(event, 1) // 点击明天按钮，日期加1
+document.querySelector("#yestoday").addEventListener("click", (e) => {
+  date_change(e, -1)
+})
+document.querySelector("#tomorrow").addEventListener("click", (e) => {
+  date_change(e, 1)
 })
 
 function date_change(event, delta) {
-  event.preventDefault() // 阻止默认行为
+  event.preventDefault()
   const dateInput = document.querySelector("#appointment-date")
   const currentDate = new Date(dateInput.value)
-  currentDate.setDate(currentDate.getDate() + delta) // 修改日期
-  dateInput.value = currentDate.toISOString().split("T")[0] // 更新输入框的值
-  init() // 初始化页面内容
+  currentDate.setDate(currentDate.getDate() + delta)
+  dateInput.value = currentDate.toISOString().split("T")[0]
+  init()
 }
 
-//设置日期默认为今天
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
   const dateInput = document.querySelector("#appointment-date")
-  const today = new Date()
-  dateInput.value = today.toISOString().split("T")[0]
+  dateInput.value = new Date().toISOString().split("T")[0]
 })
-
-//设置日期变化
 document
   .querySelector("#appointment-date")
-  .addEventListener("change", function (event) {
-    init()
-  })
+  .addEventListener("change", () => init())
 
-async function fetchPlansByDate(date) {
+async function fetchCurrentUserPlan(date) {
   const res = await fetch(`${host}/api/date_plan/get?date=${date}`, {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     credentials: "include",
   })
   const data = await res.json()
-  if (data.success) {
-    return data.info
-  } else {
-    return []
-  }
+  if (data.success) return data.info || []
+  return []
 }
 
 async function update_info(date, plan = null, status = null, remark = null) {
-  const postData = {
-    plan: plan,
-    status: status,
-    remark: remark,
-    date: date,
-  }
+  const postData = { plan, status, remark, date }
   const res = await fetch(`${host}/api/date_plan/update`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     credentials: "include",
     body: JSON.stringify(postData),
   })
   const data = await res.json()
-  if (data.success) {
-    // window.location.reload()
-  } else {
-    alert("计划修改失败: " + data.message)
-  }
+  if (!data.success) alert("计划修改失败: " + data.message)
 }
 
-// 增加计划
-document.getElementById("updatePlanBtn").addEventListener("click", function () {
-  const date = document.getElementById("appointment-date").value
-  const plan = document.getElementById("plan").value
-  const status = document.getElementById("complete").checked ? 1 : 0
-  const remark = document.getElementById("remark").value
-  console.log("plan", plan)
-  console.log("status", status)
-  console.log("plan", remark)
+async function fetchAllPlans(date) {
+  const res = await fetch(`${host}/api/date_plan/all?date=${date}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  })
+  const data = await res.json()
+  if (data.success) return data.data || []
+  return []
+}
 
-  const res = update_info(date, plan, status, remark)
-  console.log(res)
-})
+function createRadio(name, value, checked, disabled) {
+  const wrapper = document.createElement("div")
+  wrapper.className = "radio-option"
+  const input = document.createElement("input")
+  input.type = "radio"
+  input.name = name
+  input.value = value
+  input.id = `${name}-${value}-${Math.random().toString(36).slice(2, 7)}`
+  input.checked = checked
+  input.disabled = disabled
+  const label = document.createElement("label")
+  label.htmlFor = input.id
+  label.textContent = value === "complete" ? "已完成" : "未完成"
+  wrapper.appendChild(input)
+  wrapper.appendChild(label)
+  return { wrapper, input }
+}
 
-document.getElementById("editPlanBtn").addEventListener("click", function () {
-  document.getElementById("plan").disabled = false
-  document.getElementById("complete").disabled = false
-  document.getElementById("incomplete").disabled = false
-  document.getElementById("updatePlanBtn").disabled = false
-  document.getElementById("remark").disabled = false
-})
+function renderCurrentUserRow(username, info) {
+  const tbody = document.getElementById("plans-tbody")
+  // 当前用户行
+  const tr = document.createElement("tr")
+  tr.className = "current-user-row"
+  const planData = info.length ? info[0][0] : ""
+  const statusData = info.length ? info[0][1] : null
+  const remarkData = info.length ? info[0][2] : ""
 
-// 清空计划
-function clear_plan() {
-  document.getElementById("plan").value = ""
-  document.getElementById("remark").value = ""
-  document.getElementById("plan").disabled = true
-  document.getElementById("complete").disabled = true
-  document.getElementById("complete").checked = false
-  document.getElementById("incomplete").disabled = true
-  document.getElementById("incomplete").checked = false
-  document.getElementById("updatePlanBtn").disabled = true
-  document.getElementById("editPlanBtn").disabled = true
-  document.getElementById("remark").disabled = true
+  // 姓名
+  const tdName = document.createElement("td")
+  tdName.textContent = username || "当前用户"
+  tdName.className = "name-cell"
+  tr.appendChild(tdName)
+
+  // 计划
+  const tdPlan = document.createElement("td")
+  const taPlan = document.createElement("textarea")
+  taPlan.id = "plan"
+  taPlan.value = planData || ""
+  tdPlan.appendChild(taPlan)
+  tr.appendChild(tdPlan)
+
+  // 状态
+  const tdStatus = document.createElement("td")
+  tdStatus.className = "status-cell"
+  const group = document.createElement("div")
+  group.className = "radio-group"
+  const complete = createRadio(
+    "status-current",
+    "complete",
+    statusData === 1,
+    false
+  )
+  complete.input.id = "complete"
+  const incomplete = createRadio(
+    "status-current",
+    "incomplete",
+    statusData === 0,
+    false
+  )
+  incomplete.input.id = "incomplete"
+  group.appendChild(complete.wrapper)
+  group.appendChild(incomplete.wrapper)
+  tdStatus.appendChild(group)
+  tr.appendChild(tdStatus)
+
+  // 备注
+  const tdRemark = document.createElement("td")
+  const taRemark = document.createElement("textarea")
+  taRemark.id = "remark"
+  taRemark.value = remarkData || ""
+  tdRemark.appendChild(taRemark)
+  tr.appendChild(tdRemark)
+
+  // 操作
+  const tdAction = document.createElement("td")
+  tdAction.className = "action-cell"
+  const btnSubmit = document.createElement("button")
+  btnSubmit.id = "updatePlanBtn"
+  btnSubmit.textContent = "提交"
+  const btnEdit = document.createElement("button")
+  btnEdit.id = "editPlanBtn"
+  btnEdit.textContent = "修改"
+  tdAction.appendChild(btnSubmit)
+  tdAction.appendChild(btnEdit)
+  tr.appendChild(tdAction)
+
+  tbody.appendChild(tr)
+
+  // 初始禁用逻辑: 若已有内容则禁用编辑，点“修改”再启用
+  if (planData || remarkData || statusData !== null) {
+    disableCurrentInputs()
+    btnEdit.disabled = false
+  } else {
+    btnEdit.disabled = true
+  }
+
+  btnEdit.addEventListener("click", () => enableCurrentInputs())
+  btnSubmit.addEventListener("click", () => {
+    const date = document.getElementById("appointment-date").value
+    const plan = taPlan.value
+    const status = document.getElementById("complete").checked ? 1 : 0
+    const remark = taRemark.value
+    update_info(date, plan, status, remark).then(() => {
+      disableCurrentInputs()
+      btnEdit.disabled = false
+    })
+  })
+}
+
+function disableCurrentInputs() {
+  const ids = ["plan", "complete", "incomplete", "updatePlanBtn", "remark"]
+  ids.forEach((id) => {
+    const el = document.getElementById(id)
+    if (el) el.disabled = true
+  })
+}
+function enableCurrentInputs() {
+  const ids = ["plan", "complete", "incomplete", "updatePlanBtn", "remark"]
+  ids.forEach((id) => {
+    const el = document.getElementById(id)
+    if (el) el.disabled = false
+  })
+}
+
+function renderOtherUserRow(userObj, currentUserName) {
+  const { user, info } = userObj
+  if (user === currentUserName) return // 已用当前用户行替代
+  const tbody = document.getElementById("plans-tbody")
+  const tr = document.createElement("tr")
+  const planData = info.length ? info[0][0] : ""
+  const statusData = info.length ? info[0][1] : null
+  const remarkData = info.length ? info[0][2] : ""
+
+  // 姓名
+  const tdName = document.createElement("td")
+  tdName.textContent = user
+  tdName.className = "name-cell"
+  tr.appendChild(tdName)
+
+  // 计划
+  const tdPlan = document.createElement("td")
+  const taPlan = document.createElement("textarea")
+  taPlan.value = planData
+  taPlan.disabled = true
+  tdPlan.appendChild(taPlan)
+  tr.appendChild(tdPlan)
+
+  // 状态
+  const tdStatus = document.createElement("td")
+  tdStatus.className = "status-cell"
+  const group = document.createElement("div")
+  group.className = "radio-group"
+  const complete = createRadio(
+    `status-${user}`,
+    "complete",
+    statusData === 1,
+    true
+  )
+  const incomplete = createRadio(
+    `status-${user}`,
+    "incomplete",
+    statusData === 0,
+    true
+  )
+  group.appendChild(complete.wrapper)
+  group.appendChild(incomplete.wrapper)
+  tdStatus.appendChild(group)
+  tr.appendChild(tdStatus)
+
+  // 备注
+  const tdRemark = document.createElement("td")
+  const taRemark = document.createElement("textarea")
+  taRemark.value = remarkData
+  taRemark.disabled = true
+  tdRemark.appendChild(taRemark)
+  tr.appendChild(tdRemark)
+
+  // 操作（空）
+  const tdAction = document.createElement("td")
+  tdAction.className = "action-cell"
+  tdAction.textContent = "--"
+  tr.appendChild(tdAction)
+
+  tbody.appendChild(tr)
 }
 
 async function init() {
-  clear_plan()
   const date = document.getElementById("appointment-date").value
-  const info = await fetchPlansByDate(date)
-  if (!info) {
-    console.error("获取计划失败")
-    return
-  }
-
-  if (info.length === 0) {
-    // 无计划，启用输入
-    document.getElementById("plan").disabled = false
-    document.getElementById("complete").disabled = false
-    document.getElementById("incomplete").disabled = false
-    document.getElementById("updatePlanBtn").disabled = false
-    document.getElementById("remark").disabled = false
-  } else {
-    const plan = info[0][0]
-    console.log(plan)
-    if (plan) {
-      document.getElementById("plan").value = plan
-      document.getElementById("editPlanBtn").disabled = false
-    } else {
-    }
-    const status = info[0][1]
-    if (status) {
-      if (status === 1) {
-        document.getElementById("complete").checked = true
-        document.getElementById("incomplete").checked = false
-      } else {
-        document.getElementById("complete").checked = false
-        document.getElementById("incomplete").checked = true
-      }
-    }
-    const remark = info[0][2]
-    if (remark) {
-      document.getElementById("remark").value = remark
-      document.getElementById("remark").disabled = true
-    }
-  }
+  const tbody = document.getElementById("plans-tbody")
+  tbody.innerHTML = "" // 清空旧内容
+  const currentUserName = await getCurrentUserName()
+  const currentPlanInfo = await fetchCurrentUserPlan(date)
+  renderCurrentUserRow(currentUserName, currentPlanInfo)
+  const all = await fetchAllPlans(date)
+  all.forEach((u) => renderOtherUserRow(u, currentUserName))
 }
 
 window.onload = init
