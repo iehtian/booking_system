@@ -1,4 +1,5 @@
 import { host } from "./config.js"
+import { checkAuthStatus } from "./user_manager.js"
 
 // 获取当前用户名称（优先 JWT 接口，回退 Cookie）
 function readCookie(key) {
@@ -9,34 +10,6 @@ function readCookie(key) {
       .filter((c) => c.startsWith(key + "="))
       .map((c) => decodeURIComponent(c.split("=")[1]))[0] || null
   )
-}
-
-async function getCurrentUserName() {
-  const token = localStorage.getItem("access_token")
-  // 没 token 尝试 cookie 中的 user_name
-  if (!token) return readCookie("user_name")
-  try {
-    const res = await fetch(`${host}/api/check-auth`, {
-      headers: { Authorization: `Bearer ${token}` },
-      credentials: "include",
-    })
-    if (!res.ok) return readCookie("user_name")
-    const data = await res.json()
-    // data.user 是对象，包含 name(real_name)
-    if (data.user && typeof data.user === "object") {
-      return (
-        data.user.name ||
-        data.user.real_name ||
-        data.user.ID ||
-        readCookie("user_name")
-      )
-    }
-    // 其它兼容字段
-    return data.username || data.name || readCookie("user_name") || null
-  } catch (e) {
-    console.warn("获取当前用户失败", e)
-    return readCookie("user_name")
-  }
 }
 
 // 日期按钮事件与日期输入
@@ -67,19 +40,28 @@ document
   .querySelector("#appointment-date")
   .addEventListener("change", () => init())
 
-async function fetchCurrentUserPlan(date) {
-  const res = await fetch(`${host}/api/date_plan/get?date=${date}`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-  })
+async function fetchCurrentUserPlan(user_id, date) {
+  const res = await fetch(
+    `${host}/api/date_plan/get?date=${date}&&user_id=${user_id}`,
+    {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    }
+  )
   const data = await res.json()
   if (data.success) return data.info || []
   return []
 }
 
-async function update_info(date, plan = null, status = null, remark = null) {
-  const postData = { plan, status, remark, date }
+async function update_info(
+  user_id,
+  date,
+  plan = null,
+  status = null,
+  remark = null
+) {
+  const postData = { user_id, plan, status, remark, date }
   const res = await fetch(`${host}/api/date_plan/update`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -203,7 +185,10 @@ function renderCurrentUserRow(username, info) {
     const plan = taPlan.value
     const status = document.getElementById("complete").checked ? 1 : 0
     const remark = taRemark.value
-    update_info(date, plan, status, remark).then(() => {
+    // 获取当前用户 ID 并传递给接口
+    const userAuth = JSON.parse(sessionStorage.getItem("userAuth") || "null")
+    const user_id = userAuth && userAuth.user ? userAuth.user.ID : null
+    update_info(user_id, date, plan, status, remark).then(() => {
       disableCurrentInputs()
       btnEdit.disabled = false
     })
@@ -288,14 +273,31 @@ function renderOtherUserRow(userObj, currentUserName) {
 }
 
 async function init() {
+  const userAuth = await checkAuthStatus()
+  // 缓存当前登录信息，给提交事件使用
+  sessionStorage.setItem("userAuth", JSON.stringify(userAuth))
+
   const date = document.getElementById("appointment-date").value
   const tbody = document.getElementById("plans-tbody")
   tbody.innerHTML = "" // 清空旧内容
-  const currentUserName = await getCurrentUserName()
-  const currentPlanInfo = await fetchCurrentUserPlan(date)
-  renderCurrentUserRow(currentUserName, currentPlanInfo)
-  const all = await fetchAllPlans(date)
-  all.forEach((u) => renderOtherUserRow(u, currentUserName))
+
+  if (userAuth && userAuth.logged_in) {
+    const currentUserName = userAuth.user.name
+    const user_id = userAuth.user.ID
+    const currentPlanInfo = await fetchCurrentUserPlan(user_id, date)
+    renderCurrentUserRow(currentUserName, currentPlanInfo)
+
+    const all = await fetchAllPlans(date)
+    all.forEach((u) => renderOtherUserRow(u, currentUserName))
+  } else {
+    // 未登录则不展示计划列表
+    const tr = document.createElement("tr")
+    const td = document.createElement("td")
+    td.colSpan = 5
+    td.textContent = "请先登录后查看与更新每日计划"
+    tr.appendChild(td)
+    tbody.appendChild(tr)
+  }
 }
 
 window.onload = init

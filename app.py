@@ -89,13 +89,33 @@ def random_color():
     return random.choice(colors)
 
 
+# 统一的 Cookie 默认配置
+DEFAULT_COOKIE_OPTIONS = {
+    "httponly": True,
+    "secure": True,
+    "samesite": "Lax",  # 若需要跨站携带，改为 "None" 并确保 https
+    "max_age": 30 * 24 * 60 * 60,  # 7 天
+}
+
+
+def set_cookie_with_defaults(response, key, value, **overrides):
+    """在单处集中管理 Cookie 选项，避免到处手写。
+
+    使用方式：set_cookie_with_defaults(response, "name", "value", max_age=3600)
+    overrides 中的键将覆盖默认项。
+    """
+    options = {**DEFAULT_COOKIE_OPTIONS, **overrides}
+    response.set_cookie(key, value, **options)
+    return response
+
+
 @app.route("/hello_world", methods=["GET"])
 def hello_world():
     """用于验证服务是否正常运行"""
     # return jsonify({"message": "Hello, World!"})
     # 设置cookie示例
     response = jsonify({"message": "Hello, World!"})
-    response.set_cookie("test_cookie", "test_value", httponly=True, secure=True)
+    set_cookie_with_defaults(response, "test_cookie", "test_value")
     return response
 
 
@@ -213,7 +233,7 @@ def update_date_plan():
     try:
         data = request.get_json() or {}
         print(f"接收到的每日计划更新数据: {data}")
-        user_id = request.cookies.get("user_ID")
+        user_id = data.get("user_id")
         date = data.get("date")
         if not user_id or not date:
             return jsonify({"error": "Missing required fields: user_id, date"}), 400
@@ -418,7 +438,9 @@ def login():
         }
     )
     response.set_cookie("user_ID", ID, httponly=True, secure=True)
-    response.set_cookie("user_name", user_data["real_name"], httponly=True, secure=True)
+    # 统一使用集中配置；如需覆盖，在此传入额外参数
+    set_cookie_with_defaults(response, "user_ID", ID)
+    set_cookie_with_defaults(response, "user_name", user_data["real_name"])
 
     return response
 
@@ -467,7 +489,7 @@ def refresh():
 def get_date_plan():
     """获取每日计划"""
     try:
-        user_id = request.cookies.get("user_ID")
+        user_id = request.args.get("user_id")
         date = request.args.get("date")
 
         if not user_id or not date:
