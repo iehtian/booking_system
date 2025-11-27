@@ -1,21 +1,41 @@
 import { host } from "./config.js"
 
-// 获取当前用户名称（尝试从 /api/check-auth）
+// 获取当前用户名称（优先 JWT 接口，回退 Cookie）
+function readCookie(key) {
+  return (
+    document.cookie
+      .split(";")
+      .map((c) => c.trim())
+      .filter((c) => c.startsWith(key + "="))
+      .map((c) => decodeURIComponent(c.split("=")[1]))[0] || null
+  )
+}
+
 async function getCurrentUserName() {
   const token = localStorage.getItem("access_token")
-  if (!token) return null
+  // 没 token 尝试 cookie 中的 user_name
+  if (!token) return readCookie("user_name")
   try {
     const res = await fetch(`${host}/api/check-auth`, {
       headers: { Authorization: `Bearer ${token}` },
       credentials: "include",
     })
-    if (!res.ok) return null
+    if (!res.ok) return readCookie("user_name")
     const data = await res.json()
-    // 兼容字段: user / username / name
-    return data.user || data.username || data.name || null
+    // data.user 是对象，包含 name(real_name)
+    if (data.user && typeof data.user === "object") {
+      return (
+        data.user.name ||
+        data.user.real_name ||
+        data.user.ID ||
+        readCookie("user_name")
+      )
+    }
+    // 其它兼容字段
+    return data.username || data.name || readCookie("user_name") || null
   } catch (e) {
     console.warn("获取当前用户失败", e)
-    return null
+    return readCookie("user_name")
   }
 }
 

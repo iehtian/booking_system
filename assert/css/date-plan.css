@@ -27,8 +27,13 @@
 }
 
 /* 文本区域与输入控件在单元格内铺满 */
+
+/* 统一所有计划与备注输入框样式（当前用户与其他用户） */
+
+/* 原来仅针对 #plan 与 #remark，扩展为表格内所有 textarea */
 textarea#plan,
-textarea#remark {
+textarea#remark,
+.plan-table td textarea {
   width: 100%;
   min-height: 60px;
   padding: 8px;
@@ -41,11 +46,30 @@ textarea#remark {
   resize: none;
 }
 
+/* 非当前用户行：减小高度以节省空间 */
+
 textarea#plan:disabled,
-textarea#remark:disabled {
+textarea#remark:disabled,
+.plan-table td textarea:disabled {
   color: #555;
   background: #f3f4f6;
 }
+
+/* 非当前用户行尺寸（放在禁用态规则之后，避免层级警告） */
+.plan-table tr:not(.current-user-row) td textarea {
+  min-height: 34px; /* 进一步减小高度 */
+  padding: 5px; /* 再次减小内边距 */
+  line-height: 1.25;
+}
+
+/* 姓名与完成情况居中显示 */
+.plan-table td.name-cell,
+.plan-table td.status-cell {
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* 完成情况内的单选分组居中对齐 */
 
 .status-cell .radio-group {
   display: flex;
@@ -78,14 +102,14 @@ textarea#remark:disabled {
   cursor: pointer;
 }
 
-.action-cell button:hover:not(:disabled) {
-  color: #fff;
-  background: #0366d6;
-}
-
 .action-cell button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.action-cell button:hover:not(:disabled) {
+  color: #fff;
+  background: #0366d6;
 }
 
 /* 响应式：窄屏时允许横向滚动 */
