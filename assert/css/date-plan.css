@@ -147,3 +147,156 @@ table:not(.plan-table) td {
   padding: 8px;
   border: 1px solid #333;
 }
+
+/* —— 移动端优化（≤640px）：表格卡片化、触控增强、日期栏吸顶 —— */
+@media (width <= 640px) {
+  /* 日期控制条吸顶与更友好的触控区 */
+  .date-controls {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 8px 12px;
+    margin: 0;
+    background: rgb(255 255 255 / 92%);
+    backdrop-filter: saturate(180%) blur(6px);
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .date-controls a {
+    padding: 8px 10px;
+    border: 1px solid #c2c8d0;
+    border-radius: 6px;
+  }
+
+  #appointment-date {
+    padding: 8px 10px;
+    font-size: 1rem;
+  }
+
+  /* 表格转卡片布局 */
+  .plan-table {
+    border: 0;
+    box-shadow: none;
+  }
+
+  .plan-table thead {
+    display: none;
+  }
+
+  .plan-table tr {
+    display: block;
+    max-width: 680px;
+    margin: 10px auto;
+    overflow: hidden;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 6%);
+  }
+
+  .plan-table td {
+    display: grid;
+    align-items: start;
+    padding: 10px 12px;
+    border: 0;
+    border-bottom: 1px solid #e5e7eb;
+    grid-template-columns: 30% 1fr; /* 左侧标题、右侧内容 */
+    gap: 10px;
+  }
+
+  .plan-table td:last-child {
+    border-bottom: 0;
+  }
+
+  /* 通过 nth-child 注入列标题，无需改动 HTML/JS */
+  .plan-table td:nth-child(1)::before {
+    font-weight: 600;
+    color: #475569;
+    content: "姓名";
+  }
+
+  .plan-table td:nth-child(2)::before {
+    font-weight: 600;
+    color: #475569;
+    content: "今日计划";
+  }
+
+  .plan-table td:nth-child(3)::before {
+    font-weight: 600;
+    color: #475569;
+    content: "完成情况";
+  }
+
+  .plan-table td:nth-child(4)::before {
+    font-weight: 600;
+    color: #475569;
+    content: "备注";
+  }
+
+  .plan-table td:nth-child(5)::before {
+    font-weight: 600;
+    color: #475569;
+    content: "操作";
+  }
+
+  /* 名称与状态在卡片内左对齐显示 */
+  .plan-table td.name-cell,
+  .plan-table td.status-cell {
+    text-align: left;
+    vertical-align: top;
+  }
+
+  /* 单选按钮更易点按 */
+  .status-cell .radio-group {
+    justify-content: flex-start;
+    gap: 12px;
+  }
+
+  /* 操作列：使用 flex 取代网格，按钮水平等宽对齐 */
+  .plan-table td.action-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .plan-table td.action-cell::before {
+    flex: 0 0 30%;
+  }
+
+  .plan-table td.action-cell > button {
+    flex: 1 1 0;
+    padding: 10px 12px;
+    font-size: 1rem;
+  }
+
+  .status-cell .radio-option label {
+    font-size: 0.95rem;
+  }
+
+  .status-cell .radio-option input[type="radio"] {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* 操作按钮横排、等宽并增大触控面积 */
+  .action-cell {
+    flex-direction: row;
+    gap: 10px;
+  }
+
+  /* 输入区更易编辑 */
+  textarea#plan,
+  textarea#remark,
+  .plan-table td textarea {
+    min-height: 84px;
+    font-size: 1rem;
+  }
+
+  .plan-table tr:not(.current-user-row) td textarea {
+    min-height: 56px;
+  }
+
+  /* 卡片左右留白略收紧 */
+  .plan-table-wrapper {
+    padding: 0 8px;
+  }
+}

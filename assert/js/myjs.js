@@ -1,4 +1,3 @@
-import { checkAuthStatus } from "./user_manager.js"
 import {
   getBookings,
   submitBookings,
