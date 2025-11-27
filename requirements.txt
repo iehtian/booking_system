@@ -12,6 +12,7 @@ itsdangerous==2.2.0
 Jinja2==3.1.6
 logging==0.4.9.6
 MarkupSafe==3.0.2
+mysql-connector-python==9.5.0
 packaging==25.0
 PyJWT==2.10.1
 redis==6.2.0
