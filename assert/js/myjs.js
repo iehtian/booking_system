@@ -692,7 +692,7 @@ async function initializeApp() {
   })
 
   // 检查认证状态
-  const authStatus = await checkAuthStatus()
+  const authStatus = JSON.parse(sessionStorage.getItem("userAuth") || "null")
   afterAuthCheck(authStatus, config)
   nologin_slot() // 禁止未登录用户点击
 }

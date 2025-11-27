@@ -26,7 +26,8 @@ document.querySelector("#logout").addEventListener("click", function (event) {
 
 async function initUser() {
   // 兼容不同返回结构：true/false 或 { logged_in, user }
-  const result = await checkAuthStatus()
+  await checkAuthStatus()
+  const result = JSON.parse(sessionStorage.getItem("userAuth") || "null")
   const loginHintEl = document.querySelector("#login-hint")
   if (result.logged_in) {
     document.querySelector("#logout").classList.remove("hidden")

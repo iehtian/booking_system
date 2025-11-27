@@ -1,5 +1,4 @@
 import { host } from "./config.js"
-import { checkAuthStatus } from "./user_manager.js"
 
 // 获取当前用户名称（优先 JWT 接口，回退 Cookie）
 function readCookie(key) {
@@ -273,9 +272,8 @@ function renderOtherUserRow(userObj, currentUserName) {
 }
 
 async function init() {
-  const userAuth = await checkAuthStatus()
-  // 缓存当前登录信息，给提交事件使用
-  sessionStorage.setItem("userAuth", JSON.stringify(userAuth))
+  // 直接从 sessionStorage 获取用户认证信息；null 表示未登录
+  const userAuth = JSON.parse(sessionStorage.getItem("userAuth") || "null")
 
   const date = document.getElementById("appointment-date").value
   const tbody = document.getElementById("plans-tbody")

@@ -195,15 +195,13 @@ async function checkAuthStatus() {
     }
 
     const data = await res.json()
-    return data
+    sessionStorage.setItem("userAuth", JSON.stringify(data))
   } catch (error) {
     if (error.name === "AbortError") {
       // 降级为 warning，避免误导；返回一个标记方便上层决定是否重试
       console.warn("检查认证状态请求超时")
-      return { logged_in: false, timeout: true }
     }
     console.error("检查认证状态错误:", error)
-    return { logged_in: false }
   }
 }
 
