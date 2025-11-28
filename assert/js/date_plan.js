@@ -75,6 +75,8 @@ async function update_info(
   })
   const data = await res.json()
   if (!data.success) alert("计划修改失败: " + data.message)
+  // 提交后刷新页面以获取最新数据
+  await init()
 }
 
 async function fetchAllPlans(date) {
