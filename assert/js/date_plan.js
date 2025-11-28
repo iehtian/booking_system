@@ -161,22 +161,12 @@ function renderCurrentUserRow(username, info) {
   const btnSubmit = document.createElement("button")
   btnSubmit.id = "updatePlanBtn"
   btnSubmit.textContent = "提交"
-  const btnEdit = document.createElement("button")
-  btnEdit.id = "editPlanBtn"
-  btnEdit.textContent = "修改"
   tdAction.appendChild(btnSubmit)
-  tdAction.appendChild(btnEdit)
   tr.appendChild(tdAction)
 
   tbody.appendChild(tr)
 
-  // 初始禁用逻辑: 若已有内容则禁用编辑，点“修改”再启用
-  if (planData || remarkData || statusData !== null) {
-    disableCurrentInputs()
-    btnEdit.disabled = false
-  } else {
-    btnEdit.disabled = true
-  }
+  // 加载数据后保持可编辑，除非日期为过去日期
 
   // 若所选日期已过去，则不允许修改/提交
   const isPastSelectedDate = () => {
@@ -192,11 +182,9 @@ function renderCurrentUserRow(username, info) {
 
   if (isPastSelectedDate()) {
     disableCurrentInputs()
-    btnEdit.disabled = true
     btnSubmit.disabled = true
   }
 
-  btnEdit.addEventListener("click", () => enableCurrentInputs())
   btnSubmit.addEventListener("click", () => {
     // 过去日期不可提交
     const past = (() => {
@@ -220,8 +208,8 @@ function renderCurrentUserRow(username, info) {
     const userAuth = JSON.parse(sessionStorage.getItem("userAuth") || "null")
     const user_id = userAuth && userAuth.user ? userAuth.user.ID : null
     update_info(user_id, date, plan, status, remark).then(() => {
-      disableCurrentInputs()
-      btnEdit.disabled = false
+      // 提交后保持可编辑状态，便于随时继续修改
+      enableCurrentInputs()
     })
   })
 }
