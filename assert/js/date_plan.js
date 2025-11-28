@@ -60,7 +60,13 @@ async function update_info(
   status = null,
   remark = null
 ) {
-  const postData = { user_id, plan, status, remark, date }
+  // 构造仅包含有效字段的请求体，避免未选择状态时默认写入未完成
+  const postData = { user_id, date }
+  if (plan !== null) postData.plan = plan
+  if (status !== null) postData.status = status
+  if (remark !== null) postData.remark = remark
+  // 调试：打印提交的载荷
+  console.log("[DatePlan] 提交载荷:", postData)
   const res = await fetch(`${host}/api/date_plan/update`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -131,17 +137,28 @@ function renderCurrentUserRow(username, info) {
   const complete = createRadio(
     "status-current",
     "complete",
-    statusData === 1,
+    statusData === 1 || statusData === "1",
     false
   )
   complete.input.id = "complete"
   const incomplete = createRadio(
     "status-current",
     "incomplete",
-    statusData === 0,
+    statusData === 0 || statusData === "0",
     false
   )
   incomplete.input.id = "incomplete"
+  // 当返回值为空或状态缺失时，不选中任何一个
+  if (
+    !info.length ||
+    statusData === null ||
+    typeof statusData === "undefined" ||
+    statusData === 2 ||
+    statusData === "2"
+  ) {
+    complete.input.checked = false
+    incomplete.input.checked = false
+  }
   group.appendChild(complete.wrapper)
   group.appendChild(incomplete.wrapper)
   tdStatus.appendChild(group)
@@ -202,7 +219,13 @@ function renderCurrentUserRow(username, info) {
     }
     const date = document.getElementById("appointment-date").value
     const plan = taPlan.value
-    const status = document.getElementById("complete").checked ? 1 : 0
+    // 若未选择完成情况，则不提交该字段，避免默认未完成
+    const completeEl = document.getElementById("complete")
+    const incompleteEl = document.getElementById("incomplete")
+    // 状态编码：已完成=1，未完成=0，未选择=2
+    let status = 2
+    if (completeEl?.checked) status = 1
+    else if (incompleteEl?.checked) status = 0
     const remark = taRemark.value
     // 获取当前用户 ID 并传递给接口
     const userAuth = JSON.parse(sessionStorage.getItem("userAuth") || "null")
@@ -278,15 +301,26 @@ function renderOtherUserRow(userObj, currentUserName) {
   const complete = createRadio(
     `status-${user}`,
     "complete",
-    statusData === 1,
+    statusData === 1 || statusData === "1",
     true
   )
   const incomplete = createRadio(
     `status-${user}`,
     "incomplete",
-    statusData === 0,
+    statusData === 0 || statusData === "0",
     true
   )
+  // 他人行在返回为空或状态缺失时也保持未选择（且禁用）
+  if (
+    !info.length ||
+    statusData === null ||
+    typeof statusData === "undefined" ||
+    statusData === 2 ||
+    statusData === "2"
+  ) {
+    complete.input.checked = false
+    incomplete.input.checked = false
+  }
   group.appendChild(complete.wrapper)
   group.appendChild(incomplete.wrapper)
   tdStatus.appendChild(group)
@@ -323,6 +357,10 @@ async function init() {
     const currentUserName = userAuth.user.name
     const user_id = userAuth.user.ID
     const currentPlanInfo = await fetchCurrentUserPlan(user_id, date)
+    // 调试输出当前用户信息与计划数据
+    console.log("[DatePlan] 当前用户认证信息:", userAuth)
+    console.log("[DatePlan] 当前用户ID:", user_id, "日期:", date)
+    console.log("[DatePlan] 当前用户计划信息:", currentPlanInfo)
     renderCurrentUserRow(currentUserName, currentPlanInfo)
 
     const all = await fetchAllPlans(date)

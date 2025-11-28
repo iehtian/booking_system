@@ -40,9 +40,9 @@ def upsert_plan_field(db, user_id, date, field, value):
             value = 1 if value else 0
         if isinstance(value, str):
             value = value.strip()
-        allowed_status_values = {0, 1, "0", "1"}
+        allowed_status_values = {0, 1, 2, "0", "1", "2"}
         if value not in allowed_status_values:
-            raise ValueError(f"status 只能是 0 或 1，收到: {value}")
+            raise ValueError(f"status 只能是 0 或 1 或 2，收到: {value}")
         # 统一转换为整型写入（数据库字段若为 TINYINT/INT 更规范）
         value = int(value)
 
