@@ -48,63 +48,16 @@
   box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
 }
 
-/* 日期控制条 */
+/* 日期控制条（结构间距，具体样式在 background.css） */
 .date-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   margin: 6px auto 16px;
-  gap: 0.75rem;
-}
-
-.date-nav-btn {
-  display: inline-block;
-  padding: 0.55rem 0.95rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-decoration: none;
-  color: #fff;
-  background: linear-gradient(135deg, #4a90e2, #50c9ce);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px -2px rgb(0 0 0 / 18%);
-  transition: all 0.25s ease;
-}
-
-.date-nav-btn:hover {
-  margin: 0 0 0.3rem; /* 更靠上，减少下边距 */
-  font-size: 1.6rem; /* 减小标题高度 */
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  color: #374151;
-  background: linear-gradient(135deg, #f0f8ff, #e0f2fe);
-  background-size: 200% 200%;
-  border: 1px solid #c2c8d0;
-  border-radius: 8px;
-  box-shadow: 0 8px 20px -4px rgb(0 0 0 / 32%);
-  transition:
-    border-color 0.25s ease,
-    box-shadow 0.25s ease;
-  cursor: pointer;
-  transform: translateY(-3px);
-  background-clip: text;
-  animation: title-glow 6s ease-in-out infinite;
-  outline: none;
-}
-
-.date-input:hover {
-  border-color: #4a90e2;
-}
-
-.date-input:focus {
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 3px rgb(74 144 226 / 30%);
 }
 
 /* 表格总体 */
 .plan-table {
   width: 100%;
-  max-width: 1100px;
-  margin: 10px auto 22px;
+  max-width: 1280px;
+  margin: 8px auto 20px;
   overflow: hidden;
   background: #fff;
   border: 1px solid #d0d7de;
@@ -112,6 +65,14 @@
   box-shadow: 0 6px 18px -4px rgb(0 0 0 / 15%);
   border-collapse: collapse;
   table-layout: fixed;
+}
+
+.plan-table th,
+.plan-table td {
+  padding: 6px 8px;
+  border: 1px solid #d0d7de;
+  transition: background 0.18s ease;
+  vertical-align: top;
 }
 
 .plan-table thead th {
@@ -134,14 +95,6 @@
   content: "";
 }
 
-.plan-table th,
-.plan-table td {
-  padding: 6px 8px;
-  border: 1px solid #d0d7de;
-  transition: background 0.18s ease;
-  vertical-align: top;
-}
-
 .plan-table tbody tr:nth-child(even) {
   background: #fafbfc;
 }
@@ -153,17 +106,6 @@
 .plan-table tbody tr:hover {
   background: #eef6ff;
 }
-
-width: 100%;
-max-width: 1280px; /* 适当增加列表宽度 */
-margin: 8px auto 20px; /* 略微收紧上下间距 */
-overflow: hidden;
-background: #fff;
-border: 1px solid #d0d7de;
-border-radius: 14px;
-box-shadow: 0 6px 18px -4px rgb(0 0 0 / 15%);
-border-collapse: collapse;
-table-layout: fixed;
 
 .status-cell .radio-option input[value="complete"]:checked + label::before {
   background: #10b981;

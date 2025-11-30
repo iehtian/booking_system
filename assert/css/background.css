@@ -108,17 +108,20 @@ footer a:hover {
   padding: 0.55rem 0.95rem;
   font-size: 0.85rem;
   font-weight: 600;
+  line-height: 1.2; /* 固定行高，避免悬停字体回流导致高度变化 */
   text-decoration: none;
   color: #fff;
   background: linear-gradient(135deg, #4a90e2, #50c9ce);
   border-radius: 8px;
   box-shadow: 0 4px 12px -2px rgb(0 0 0 / 18%);
-  transition: all 0.25s ease;
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.2s ease; /* 限定过渡属性，避免尺寸相关属性参与动画 */
 }
 
 .date-nav-btn:hover {
-  box-shadow: 0 8px 20px -4px rgb(0 0 0 / 32%);
-  transform: translateY(-3px);
+  box-shadow: 0 6px 16px -4px rgb(0 0 0 / 28%);
+  transform: translateY(-2px); /* 降低位移幅度，减轻“突然变大”的感知 */
 }
 
 .date-nav-btn:active {
