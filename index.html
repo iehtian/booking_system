@@ -18,6 +18,7 @@
         <a href="#" class="hidden" id="login">登录</a>
         <a href="#" class="hidden" id="register">注册</a>
         <a href="#" class="hidden" id="logout">退出登录</a>
+        <a href="#" id="announcementsBtn">公告</a>
       </nav>
     </header>
 
@@ -32,6 +33,35 @@
         <a href="./pages/daily_plan.html" class="page-btn">每日计划</a>
       </div>
     </main>
+    <!-- 公告弹窗 -->
+    <div
+      class="modal-backdrop hidden"
+      id="announcementBackdrop"
+      aria-hidden="true"
+    ></div>
+    <div
+      class="modal hidden"
+      id="announcementModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="announcementTitle"
+    >
+      <div class="modal-header">
+        <h2 id="announcementTitle">公告</h2>
+        <button class="modal-close" id="announcementClose" aria-label="关闭">
+          ×
+        </button>
+      </div>
+      <div class="modal-body" id="announcementContent">
+        <!-- 公告内容由 JS 注入，可在 index.js 中配置 -->
+      </div>
+      <div class="modal-footer">
+        <button class="modal-primary" id="announcementDontRemind">
+          不再提醒
+        </button>
+        <button class="modal-secondary" id="announcementKnow">我知道了</button>
+      </div>
+    </div>
   </body>
   <footer>
     &copy; 2025
