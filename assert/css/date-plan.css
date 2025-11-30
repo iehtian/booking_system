@@ -2,7 +2,7 @@
 
 /* 主容器：与首页/仪器页风格统一的玻璃卡片化 */
 .plan-container {
-  padding: 1.5rem 1.75rem 2.4rem;
+  padding: 0.5rem 1.75rem 2rem;
   background: linear-gradient(
     135deg,
     rgb(255 255 255 / 92%),
@@ -15,8 +15,8 @@
 }
 
 .page-title {
-  margin: 0 0 0.75rem;
-  font-size: 2.1rem;
+  margin: 0 0 0.2rem;
+  font-size: 1.6rem;
   font-weight: 700;
   letter-spacing: 0.5px;
   color: transparent;
@@ -31,6 +31,7 @@
   100% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
@@ -52,7 +53,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 10px auto 18px;
+  margin: 6px auto 16px;
   gap: 0.75rem;
 }
 
@@ -68,31 +69,32 @@
   box-shadow: 0 4px 12px -2px rgb(0 0 0 / 18%);
   transition: all 0.25s ease;
 }
-.date-nav-btn:hover {
-  box-shadow: 0 8px 20px -4px rgb(0 0 0 / 32%);
-  transform: translateY(-3px);
-}
-.date-nav-btn:active {
-  transform: translateY(0);
-}
 
-.date-input {
-  padding: 0.55rem 0.65rem;
-  font-size: 0.85rem;
-  font-weight: 500;
+.date-nav-btn:hover {
+  margin: 0 0 0.3rem; /* 更靠上，减少下边距 */
+  font-size: 1.6rem; /* 减小标题高度 */
+  font-weight: 700;
+  letter-spacing: 0.3px;
   color: #374151;
   background: linear-gradient(135deg, #f0f8ff, #e0f2fe);
+  background-size: 200% 200%;
   border: 1px solid #c2c8d0;
   border-radius: 8px;
+  box-shadow: 0 8px 20px -4px rgb(0 0 0 / 32%);
   transition:
     border-color 0.25s ease,
     box-shadow 0.25s ease;
   cursor: pointer;
+  transform: translateY(-3px);
+  background-clip: text;
+  animation: title-glow 6s ease-in-out infinite;
   outline: none;
 }
+
 .date-input:hover {
   border-color: #4a90e2;
 }
+
 .date-input:focus {
   border-color: #4a90e2;
   box-shadow: 0 0 0 3px rgb(74 144 226 / 30%);
@@ -139,14 +141,36 @@
   transition: background 0.18s ease;
   vertical-align: top;
 }
+
 .plan-table tbody tr:nth-child(even) {
   background: #fafbfc;
 }
+
 .plan-table tbody tr.current-user-row {
   box-shadow: inset 4px 0 0 #4a90e2;
 }
+
 .plan-table tbody tr:hover {
   background: #eef6ff;
+}
+
+width: 100%;
+max-width: 1280px; /* 适当增加列表宽度 */
+margin: 8px auto 20px; /* 略微收紧上下间距 */
+overflow: hidden;
+background: #fff;
+border: 1px solid #d0d7de;
+border-radius: 14px;
+box-shadow: 0 6px 18px -4px rgb(0 0 0 / 15%);
+border-collapse: collapse;
+table-layout: fixed;
+
+.status-cell .radio-option input[value="complete"]:checked + label::before {
+  background: #10b981;
+}
+
+.status-cell .radio-option input[value="incomplete"]:checked + label::before {
+  background: #ef4444;
 }
 
 /* 输入区 */
@@ -167,6 +191,7 @@ textarea#remark,
     box-shadow 0.2s ease;
   resize: none;
 }
+
 textarea#plan:focus,
 textarea#remark:focus,
 .plan-table td textarea:focus {
@@ -174,6 +199,7 @@ textarea#remark:focus,
   box-shadow: 0 0 0 2px rgb(74 144 226 / 25%);
   outline: none;
 }
+
 textarea#plan:disabled,
 textarea#remark:disabled,
 .plan-table td textarea:disabled,
@@ -181,6 +207,7 @@ textarea#remark:disabled,
   color: #555;
   background: #f3f4f6;
 }
+
 .plan-table tr:not(.current-user-row) td textarea {
   height: auto;
   min-height: 0;
@@ -195,11 +222,13 @@ textarea#remark:disabled,
   text-align: center;
   vertical-align: middle;
 }
+
 .status-cell .radio-group {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
 }
+
 .status-cell .radio-option {
   display: flex;
   align-items: center;
@@ -230,16 +259,19 @@ textarea#remark:disabled,
     transform 0.25s ease;
   cursor: pointer;
 }
+
 .action-cell button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
 .action-cell button:hover:not(:disabled) {
   color: #fff;
   background: linear-gradient(135deg, #4a90e2, #50c9ce);
   box-shadow: 0 6px 16px -4px rgb(0 0 0 / 30%);
   transform: translateY(-2px);
 }
+
 .action-cell button:active:not(:disabled) {
   transform: translateY(0);
 }
@@ -254,6 +286,7 @@ textarea#remark:disabled,
 table:not(.plan-table) {
   border-collapse: collapse;
 }
+
 table:not(.plan-table) th,
 table:not(.plan-table) td {
   padding: 8px;
@@ -272,21 +305,26 @@ table:not(.plan-table) td {
     backdrop-filter: saturate(180%) blur(6px);
     border-bottom: 1px solid #e5e7eb;
   }
+
   .date-nav-btn {
     padding: 0.6rem 0.9rem;
     font-size: 0.9rem;
   }
+
   .date-input {
     padding: 0.6rem 0.9rem;
     font-size: 0.95rem;
   }
+
   .plan-table {
     border: 0;
     box-shadow: none;
   }
+
   .plan-table thead {
     display: none;
   }
+
   .plan-table tr {
     display: block;
     max-width: 680px;
@@ -296,6 +334,7 @@ table:not(.plan-table) td {
     border-radius: 12px;
     box-shadow: 0 1px 4px rgb(0 0 0 / 6%);
   }
+
   .plan-table td {
     display: grid;
     align-items: start;
@@ -305,78 +344,95 @@ table:not(.plan-table) td {
     grid-template-columns: 28% 1fr;
     gap: 10px;
   }
+
   .plan-table td:last-child {
     border-bottom: 0;
   }
+
   .plan-table td:nth-child(1)::before {
     font-weight: 600;
     color: #475569;
     content: "姓名";
   }
+
   .plan-table td:nth-child(2)::before {
     font-weight: 600;
     color: #475569;
     content: "今日计划";
   }
+
   .plan-table td:nth-child(3)::before {
     font-weight: 600;
     color: #475569;
     content: "完成情况";
   }
+
   .plan-table td:nth-child(4)::before {
     font-weight: 600;
     color: #475569;
     content: "备注";
   }
+
   .plan-table td:nth-child(5)::before {
     font-weight: 600;
     color: #475569;
     content: "操作";
   }
+
   .plan-table td.name-cell,
   .plan-table td.status-cell {
     text-align: left;
     vertical-align: top;
   }
+
   .status-cell .radio-group {
     justify-content: flex-start;
     gap: 12px;
   }
+
   .plan-table td.action-cell {
     display: flex;
     align-items: center;
     gap: 10px;
   }
+
   .plan-table td.action-cell::before {
     flex: 0 0 28%;
   }
+
   .plan-table td.action-cell > button {
     flex: 1 1 0;
     padding: 10px 12px;
     font-size: 0.95rem;
   }
+
   .status-cell .radio-option label {
     font-size: 0.95rem;
   }
+
   .status-cell .radio-option input[type="radio"] {
     width: 20px;
     height: 20px;
   }
+
   .action-cell {
     flex-direction: row;
     gap: 10px;
   }
+
   textarea#plan,
   textarea#remark,
   .plan-table td textarea {
     min-height: 84px;
     font-size: 1rem;
   }
+
   .plan-table tr:not(.current-user-row) td textarea {
     height: auto;
     min-height: 0;
     overflow: hidden auto;
   }
+
   .plan-table-wrapper {
     padding: 0 8px;
   }
