@@ -3,38 +3,48 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="../assert/css/date-plan.css" />
+    <!-- 统一样式顺序：背景变量 / 通用组件 / 当前页面定制 -->
     <link rel="stylesheet" href="../assert/css/background.css" />
+    <link rel="stylesheet" href="../assert/css/instrument.css" />
+    <link rel="stylesheet" href="../assert/css/date-plan.css" />
     <script type="module" src="../assert/js/date_plan.js" defer></script>
     <title>每日计划</title>
-    <style></style>
   </head>
   <body>
     <header class="navbar">
       <div class="logo">实验平台</div>
     </header>
-    <div class="date-controls">
-      <a href="#" id="yestoday">前一天</a>
-      <input type="date" name="appointment-date" id="appointment-date" />
-      <a href="#" id="tomorrow">后一天</a>
-    </div>
+    <main class="container plan-container">
+      <h1 class="page-title">每日计划</h1>
+      <div class="sub-hint">查看并更新当日个人计划（仅当日及未来可编辑）</div>
+      <div class="date-controls">
+        <a href="#" id="yestoday" class="date-nav-btn">前一天</a>
+        <input
+          type="date"
+          name="appointment-date"
+          id="appointment-date"
+          class="date-input"
+        />
+        <a href="#" id="tomorrow" class="date-nav-btn">后一天</a>
+      </div>
 
-    <div class="plan-table-wrapper">
-      <table id="plans-table" class="plan-table">
-        <thead>
-          <tr>
-            <th style="width: 12%">姓名</th>
-            <th style="width: 35%">今日计划</th>
-            <th style="width: 18%">完成情况</th>
-            <th style="width: 23%">备注</th>
-            <th style="width: 12%">操作</th>
-          </tr>
-        </thead>
-        <tbody id="plans-tbody">
-          <!-- 行由 JS 动态渲染。当前用户的可编辑行会包含固定的 id: plan / remark / complete / incomplete / updatePlanBtn / editPlanBtn -->
-        </tbody>
-      </table>
-    </div>
+      <div class="plan-table-wrapper">
+        <table id="plans-table" class="plan-table">
+          <thead>
+            <tr>
+              <th style="width: 12%">姓名</th>
+              <th style="width: 35%">今日计划</th>
+              <th style="width: 18%">完成情况</th>
+              <th style="width: 23%">备注</th>
+              <th style="width: 12%">操作</th>
+            </tr>
+          </thead>
+          <tbody id="plans-tbody">
+            <!-- 行由 JS 动态渲染。保持原有 id: plan / remark / complete / incomplete / updatePlanBtn -->
+          </tbody>
+        </table>
+      </div>
+    </main>
   </body>
 
   <footer>
