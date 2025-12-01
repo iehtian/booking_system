@@ -225,3 +225,15 @@ label {
 .weekly-text {
   font-size: 17px;
 }
+
+/* 让页面跳转链接外观与按钮一致 */
+.page-btn.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.page-btn {
+  margin: 0.5rem 0; /* 与 .button-box 的上下间距保持一致 */
+}

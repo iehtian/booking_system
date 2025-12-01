@@ -643,6 +643,7 @@ async function afterAuthCheck(result, config) {
     submitButton.classList.remove("hidden")
     const cancelButton = document.querySelector("#cancel-button")
     cancelButton.classList.remove("hidden")
+    document.querySelector("#outputBookingsBtn").classList.remove("hidden")
     const realName = result.user.name
     const color = result.user.color
 
