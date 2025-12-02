@@ -124,6 +124,44 @@ body {
   color: #333;
 }
 
+/* Markdown 样式（仅作用于公告内容区域） */
+.modal-body h1,
+.modal-body h2,
+.modal-body h3,
+.modal-body h4 {
+  margin: 0 0 0.6em;
+  line-height: 1.25;
+}
+
+.modal-body p {
+  margin: 0.5em 0;
+}
+
+.modal-body ul,
+.modal-body ol {
+  /* 全局 reset 清除了 padding，这里为列表恢复缩进 */
+  padding-left: 1.25rem;
+  margin: 0.5em 0;
+}
+
+.modal-body li {
+  margin: 0.25em 0;
+}
+
+.modal-body a {
+  text-decoration: underline;
+  color: #2563eb;
+}
+
+.modal-body code {
+  padding: 0.15em 0.35em;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  background: #f4f6f8;
+  border-radius: 4px;
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
