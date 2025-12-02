@@ -1,4 +1,5 @@
 import { logout, checkAuthStatus } from "./user_manager.js"
+import { marked } from "marked"
 
 document.querySelector("#login").addEventListener("click", function (event) {
   event.preventDefault() // 阻止默认链接行为
@@ -44,50 +45,41 @@ async function initUser() {
 
 document.addEventListener("DOMContentLoaded", () => {
   initUser().catch(console.error)
-  setupAnnouncements()
+  setupAnnouncements().catch(console.error)
 })
 
-// 公告/Changelog 配置与逻辑
-const CHANGELOG = [
-  {
-    version: "2025-11-30",
-    date: "2025-11-30",
-    items: [
-      "新增首页右上角公告入口与弹窗",
-      "弹窗支持不再提醒（按版本号持久化）",
-      "预约打印与每日计划体验优化",
-    ],
-  },
-  // 可在此追加历史记录:
-  // { version: "2025-11-15", date: "2025-11-15", items: ["...", "..."] },
-]
+// 公告/Changelog：从 changelog.md 读取并以 Markdown 展示
+const ANNOUNCEMENT_STORAGE_KEY = "announcementDismissed" // 保存最近已知版本
 
-const LATEST = CHANGELOG[0]
-const ANNOUNCEMENT_VERSION = LATEST.version
-const ANNOUNCEMENT_STORAGE_KEY = "announcementDismissed" // 仅一个键，值为版本号
-
-function renderEntryHTML(entry) {
-  const items = entry.items.map((t) => `<li>${t}</li>`).join("")
-  return `
-    <p><strong>更新日期：</strong>${entry.date}</p>
-    <ul>${items}</ul>
-  `
+async function fetchChangelogText() {
+  const resp = await fetch("/changelog.md", { cache: "no-cache" })
+  if (!resp.ok) throw new Error(`加载 changelog.md 失败：${resp.status}`)
+  return await resp.text()
 }
 
-function renderFullChangelogHTML(entries) {
-  return entries
-    .map(
-      (e) => `
-      <section class="changelog-entry">
-        <h3>版本：${e.version}</h3>
-        ${renderEntryHTML(e)}
-      </section>
-    `
-    )
-    .join("<hr />")
+function splitSectionsByH2(mdText) {
+  const lines = mdText.split(/\r?\n/)
+  const sections = []
+  let current = null
+  for (const line of lines) {
+    const m = line.match(/^##\s+(.+?)\s*$/)
+    if (m) {
+      if (current) sections.push(current)
+      current = { heading: m[1], content: "" }
+    } else if (current) {
+      current.content += line + "\n"
+    }
+  }
+  if (current) sections.push(current)
+  return sections
 }
 
-function setupAnnouncements() {
+function extractVersionFromHeading(heading) {
+  // 直接使用整段作为版本标识，通常形如 "2025-11-30" 或 "2025-11-30 更新"
+  return heading.trim()
+}
+
+async function setupAnnouncements() {
   const btn = document.querySelector("#announcementsBtn")
   const modal = document.querySelector("#announcementModal")
   const backdrop = document.querySelector("#announcementBackdrop")
@@ -97,6 +89,22 @@ function setupAnnouncements() {
   const content = document.querySelector("#announcementContent")
 
   if (!modal || !backdrop || !content) return
+
+  // 拉取并解析 Markdown
+  let changelogText = ""
+  let sections = []
+  try {
+    changelogText = await fetchChangelogText()
+    sections = splitSectionsByH2(changelogText)
+  } catch (err) {
+    console.warn("读取 changelog.md 失败，回退为空：", err)
+  }
+
+  // 计算最新版本（优先第一节标题）
+  const latestSection = sections[0]
+  const ANNOUNCEMENT_VERSION = latestSection
+    ? extractVersionFromHeading(latestSection.heading)
+    : "unknown"
 
   const open = () => {
     modal.classList.remove("hidden")
@@ -112,13 +120,11 @@ function setupAnnouncements() {
     backdrop.setAttribute("aria-hidden", "true")
   }
 
-  // 打开按钮
+  // 打开按钮：显示全文（完整 Markdown）
   if (btn) {
     btn.addEventListener("click", (e) => {
       e.preventDefault()
-      // 点击“公告”显示完整历史
-      content.innerHTML = renderFullChangelogHTML(CHANGELOG)
-      // 在查看历史的场景下，保留两个按钮但不自动写入不再提醒
+      content.innerHTML = marked.parse(changelogText || "")
       open()
     })
   }
@@ -127,7 +133,7 @@ function setupAnnouncements() {
   if (closeBtn) closeBtn.addEventListener("click", close)
   if (knowBtn) knowBtn.addEventListener("click", close)
 
-  // 不再提醒：记录本次版本
+  // 不再提醒：记录本次版本（按 Markdown 第一节标题）
   if (dontRemindBtn) {
     dontRemindBtn.addEventListener("click", () => {
       try {
@@ -142,7 +148,7 @@ function setupAnnouncements() {
   // 点击遮罩关闭
   backdrop.addEventListener("click", close)
 
-  // 首次加载若未被忽略就弹出
+  // 首次加载若未被忽略就弹出（仅展示最新节内容）
   const dismissed = (() => {
     try {
       const storedVersion = localStorage.getItem(ANNOUNCEMENT_STORAGE_KEY)
@@ -153,8 +159,10 @@ function setupAnnouncements() {
     }
   })()
   if (!dismissed) {
-    // 自动弹出：只展示最新版本内容
-    content.innerHTML = renderEntryHTML(LATEST)
+    const latestHtml = latestSection
+      ? marked.parse(`# ${latestSection.heading}\n\n${latestSection.content}`)
+      : marked.parse(changelogText || "")
+    content.innerHTML = latestHtml
     open()
   }
 }
