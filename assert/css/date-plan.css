@@ -50,7 +50,25 @@
 
 /* 日期控制条（结构间距，具体样式在 background.css） */
 .date-controls {
+  display: flex;
+  align-items: center;
   margin: 6px auto 16px;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+/* 防止中文在按钮内断行，保持单行显示 */
+.date-nav-btn {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* 日期输入宽度至少容纳 YYYY-MM-DD */
+.date-input {
+  flex: 1 1 auto;
+  min-width: 11ch;
 }
 
 /* 表格总体 */
@@ -241,21 +259,32 @@ table:not(.plan-table) td {
     position: sticky;
     top: 0;
     z-index: 10;
+    display: flex;
+    align-items: center;
     padding: 8px 12px;
     margin: 0 0 14px;
+    overflow-x: auto;
     background: rgb(255 255 255 / 92%);
     backdrop-filter: saturate(180%) blur(6px);
     border-bottom: 1px solid #e5e7eb;
+    gap: 10px;
+    flex-wrap: nowrap; /* 禁止换行，必要时横向滚动 */
+    -webkit-overflow-scrolling: touch;
   }
 
   .date-nav-btn {
+    flex: 0 0 auto;
     padding: 0.6rem 0.9rem;
     font-size: 0.9rem;
+    white-space: nowrap; /* 防止“前一天/后一天”断行 */
   }
 
   .date-input {
+    flex: 1 1 auto;
+    min-width: 12ch; /* 移动端略放宽 */
     padding: 0.6rem 0.9rem;
     font-size: 0.95rem;
+    white-space: nowrap; /* 个别 WebView 下可避免日期文本断行 */
   }
 
   .plan-table {
