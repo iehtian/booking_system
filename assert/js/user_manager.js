@@ -66,6 +66,7 @@ async function logout() {
       console.warn("登出时 token 无效或已过期")
       localStorage.removeItem("access_token")
       localStorage.removeItem("userInfo")
+      sessionStorage.removeItem("userAuth")
       return true
     }
 
@@ -78,11 +79,13 @@ async function logout() {
 
     localStorage.removeItem("access_token")
     localStorage.removeItem("userInfo")
+    sessionStorage.removeItem("userAuth")
     return true
   } catch (error) {
     console.error("登出错误:", error)
     localStorage.removeItem("access_token")
     localStorage.removeItem("userInfo")
+    sessionStorage.removeItem("userAuth")
     return false
   }
 }
