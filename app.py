@@ -223,8 +223,8 @@ def cancel_booking():
         return jsonify({"error": "Internal server error"}), 500
 
 
-@app.route("/api/date_plan/update", methods=["POST"])
-def update_date_plan():
+@app.route("/api/daily_plan/update", methods=["POST"])
+def update_daily_plan():
     """统一的每日计划字段更新接口。
     请求体可包含 plan / status / remark 中的任意组合；缺失的字段不更新。
     示例 JSON:
@@ -485,8 +485,8 @@ def refresh():
         return jsonify({"success": False, "message": "Token refresh failed"}), 500
 
 
-@app.route("/api/date_plan/get", methods=["GET"])
-def get_date_plan():
+@app.route("/api/daily_plan/get", methods=["GET"])
+def get_daily_plan():
     """获取每日计划"""
     try:
         user_id = request.args.get("user_id")
@@ -506,8 +506,8 @@ def get_date_plan():
         return jsonify({"error": "Internal server error"}), 500
 
 
-@app.route("/api/date_plan/all", methods=["GET"])
-def get_all_date_plans():
+@app.route("/api/daily_plan/all", methods=["GET"])
+def get_all_daily_plans():
     """获取用户所有每日计划"""
     try:
         date = request.args.get("date")
@@ -523,10 +523,8 @@ def get_all_date_plans():
                 continue  # 跳过管理员用户
             real_name = user.get("real_name")
             info = get_dateinfo(db, user_id, date)
-            print(f"用户 {real_name} 的计划信息: {info}")
             res.append({"user": real_name, "info": info})
         db.close()
-        print(f"所有用户的每日计划: {res}")
         return jsonify({"success": True, "data": res})
     except Exception as e:
         print(f"获取所有用户每日计划时出错: {e}")

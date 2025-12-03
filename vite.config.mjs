@@ -36,7 +36,7 @@ export default defineConfig({
         login: resolve(process.cwd(), "pages/login.html"),
         register: resolve(process.cwd(), "pages/register.html"),
         output_bookings: resolve(process.cwd(), "pages/output_bookings.html"),
-        date_plan: resolve(process.cwd(), "pages/date_plan.html"),
+        daily_plan: resolve(process.cwd(), "pages/daily_plan.html"),
       },
     },
   },

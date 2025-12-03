@@ -46,7 +46,7 @@ document
 
 async function fetchCurrentUserPlan(user_id, date) {
   const res = await fetch(
-    `${host}/api/date_plan/get?date=${date}&&user_id=${user_id}`,
+    `${host}/api/daily_plan/get?date=${date}&&user_id=${user_id}`,
     {
       method: "GET",
       headers: { "Content-Type": "application/json" },
@@ -72,7 +72,7 @@ async function update_info(
   if (remark !== null) postData.remark = remark
   // 调试：打印提交的载荷
   console.log("[DatePlan] 提交载荷:", postData)
-  const res = await fetch(`${host}/api/date_plan/update`, {
+  const res = await fetch(`${host}/api/daily_plan/update`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -85,7 +85,7 @@ async function update_info(
 }
 
 async function fetchAllPlans(date) {
-  const res = await fetch(`${host}/api/date_plan/all?date=${date}`, {
+  const res = await fetch(`${host}/api/daily_plan/all?date=${date}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
