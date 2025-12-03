@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import (
     JWTManager,
@@ -529,6 +529,14 @@ def get_all_daily_plans():
     except Exception as e:
         print(f"获取所有用户每日计划时出错: {e}")
         return jsonify({"error": "Internal server error"}), 500
+
+
+@app.route("/changelog.md", methods=["GET"])
+def serve_changelog_md():
+    """在生产环境通过后端路由提供 changelog.md。
+    前端以 `/changelog.md` 访问即可，无需静态服务器额外配置。
+    """
+    return send_from_directory(app.root_path, "changelog.md")
 
 
 if __name__ == "__main__":
