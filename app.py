@@ -531,7 +531,7 @@ def get_all_daily_plans():
         return jsonify({"error": "Internal server error"}), 500
 
 
-@app.route("/changelog.md", methods=["GET"])
+@app.route("/api/changelog", methods=["GET"])
 def serve_changelog_md():
     """在生产环境通过后端路由提供 changelog.md。
     前端以 `/changelog.md` 访问即可，无需静态服务器额外配置。

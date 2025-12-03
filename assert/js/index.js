@@ -1,5 +1,6 @@
 import { logout, checkAuthStatus } from "./user_manager.js"
 import { marked } from "marked"
+import { host } from "./config.js"
 
 document.querySelector("#login").addEventListener("click", function (event) {
   event.preventDefault() // 阻止默认链接行为
@@ -52,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
 const ANNOUNCEMENT_STORAGE_KEY = "announcementDismissed" // 保存最近已知版本
 
 async function fetchChangelogText() {
-  const resp = await fetch("/changelog.md", { cache: "no-cache" })
+  const resp = await fetch(`${host}/api/changelog`, { cache: "no-cache" })
   if (!resp.ok) throw new Error(`加载 changelog.md 失败：${resp.status}`)
   return await resp.text()
 }
