@@ -519,6 +519,8 @@ def get_all_date_plans():
         # search_all_users 返回形如 (key, user_dict) 的元组列表
         for _, user in data:
             user_id = user.get("ID")
+            if user_id == "admin":
+                continue  # 跳过管理员用户
             real_name = user.get("real_name")
             info = get_dateinfo(db, user_id, date)
             print(f"用户 {real_name} 的计划信息: {info}")
