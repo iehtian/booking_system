@@ -185,6 +185,11 @@ label {
   border-bottom: 1px solid #cbd5e0; /* 添加底部边框 */
 }
 
+/* 当页面不显示 date-display-box（例如 `b_instrument.html`）时，取消额外的 1.5rem 顶部偏移 */
+.no-date-display .week-date {
+  top: var(--nav-h, 3.5rem);
+}
+
 .week-time-slot-item {
   position: relative; /* 为 input 的绝对定位提供参照 */
   width: 100%;
