@@ -171,6 +171,13 @@ label {
   border-left: 1px solid #000; /* 第一个元素添加左边线 */
 }
 
+/* 首列（“时间”列）使用不同背景色以便与可点击的 slot 区分 */
+
+.week-range:first-child .week-time-slot-item {
+  color: #374151;
+  background-color: #eef2ff;
+}
+
 .week-date {
   position: sticky;
 
