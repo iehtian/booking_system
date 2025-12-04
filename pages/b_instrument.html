@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>B仪器</title>
+    <title>液相</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="../assert/css/background.css" />
     <link rel="stylesheet" href="../assert/css/instrument.css" />
@@ -13,13 +13,19 @@
     <header class="navbar">
       <div class="logo">实验平台</div>
     </header>
+
     <div class="container">
-      <h1>B仪器预约系统</h1>
+      <h1>细胞房预约</h1>
       <div class="show-name hidden"></div>
       <div class="date-controls">
-        <a href="#" id="yestoday">前一天</a>
-        <input type="date" name="appointment-date" id="appointment-date" />
-        <a href="#" id="tomorrow">后一天</a>
+        <a href="#" id="yestoday" class="date-nav-btn">前一天</a>
+        <input
+          type="date"
+          name="appointment-date"
+          id="appointment-date"
+          class="date-input"
+        />
+        <a href="#" id="tomorrow" class="date-nav-btn">后一天</a>
       </div>
       <div class="date-display-box">
         <input type="button" class="date-display" id="morning" />
@@ -32,6 +38,14 @@
       <div class="button-box hidden" id="cancel-button">
         <input type="button" class="button" value="取消预约" />
       </div>
+    </div>
+    <a
+      href="./output_bookings.html"
+      class="page-btn button hidden"
+      id="outputBookingsBtn"
+      >预约信息打印</a
+    >
+    <div>
       <script type="module" src="../assert/js/myjs.js"></script>
     </div>
   </body>
@@ -42,5 +56,9 @@
       target="_blank"
       >豫ICP备2024069173号</a
     >
+    <br />
+    有任何问题或建议请联系我，这对本网站的服务很重要！
+    <br />
+    <strong><a href="mailto:iehtian@qq.com">联系我：iehtian@qq.com</a></strong>
   </footer>
 </html>
