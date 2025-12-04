@@ -225,7 +225,8 @@ function renderCurrentUserRow(username, info) {
       const today = new Date()
       selected.setHours(0, 0, 0, 0)
       today.setHours(0, 0, 0, 0)
-      return selected < today
+      const yesterday = today.setDate(today.getDate() - 1)
+      return selected < yesterday
     })()
     if (past) {
       alert("已过去的日期不允许修改或提交")
