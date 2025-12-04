@@ -142,7 +142,6 @@ textarea#remark,
   min-height: 60px;
   padding: 8px 9px;
   overflow: auto;
-
   font-family: "Times New Roman", Times, serif;
   font-size: 0.95rem;
   line-height: 1.35;
@@ -360,8 +359,9 @@ table:not(.plan-table) td {
   }
 
   .status-cell .radio-group {
+    align-items: center; /* 垂直居中单选框和文字 */
     justify-content: flex-start;
-    gap: 12px;
+    gap: 8px; /* 缩小选项间距（移动端） */
   }
 
   .plan-table td.action-cell {
@@ -385,8 +385,9 @@ table:not(.plan-table) td {
   }
 
   .status-cell .radio-option input[type="radio"] {
-    width: 20px;
-    height: 20px;
+    /* 缩小移动端单选框以节省垂直空间 */
+    width: 16px;
+    height: 16px;
   }
 
   .action-cell {
@@ -394,10 +395,14 @@ table:not(.plan-table) td {
     gap: 10px;
   }
 
+  .plan-table td:nth-child(3),
+  .plan-table td:nth-child(4) {
+    padding: 8px 10px;
+  }
+
   textarea#plan,
   textarea#remark,
   .plan-table td textarea {
-    min-height: 84px;
     font-family: "Times New Roman", Times, serif;
     font-size: 1rem;
   }
