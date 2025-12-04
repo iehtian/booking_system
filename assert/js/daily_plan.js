@@ -108,6 +108,16 @@ function createRadio(name, value, checked, disabled) {
   const label = document.createElement("label")
   label.htmlFor = input.id
   label.textContent = value === "complete" ? "已完成" : "未完成"
+  // 保证点击文字或前置圆点也能选中对应状态
+  label.addEventListener("click", () => {
+    // 若为禁用项，则不响应
+    if (input.disabled) return
+    // 选中对应的单选框
+    input.checked = true
+    // 触发变更事件，便于后续逻辑监听
+    const evt = new Event("change", { bubbles: true })
+    input.dispatchEvent(evt)
+  })
   wrapper.appendChild(input)
   wrapper.appendChild(label)
   return { wrapper, input }

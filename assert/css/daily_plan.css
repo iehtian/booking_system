@@ -126,12 +126,63 @@
   background: #eef6ff;
 }
 
+/* 基础指示点：在标签前显示一个圆点，便于以颜色呈现状态 */
+.status-cell .radio-option label::before {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  background: #fff;
+  border: 1px solid #c2c8d0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 3px #fff;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+  vertical-align: middle;
+  content: "";
+}
+
 .status-cell .radio-option input[value="complete"]:checked + label::before {
   background: #10b981;
 }
 
 .status-cell .radio-option input[value="incomplete"]:checked + label::before {
   background: #ef4444;
+}
+
+/* 未选但不可编辑：整体更淡，避免与已选混淆（顺序在禁用选中之前） */
+.status-cell .radio-option input:disabled:not(:checked) + label::before {
+  background: #f3f4f6; /* 更浅的灰底 */
+  border-color: #d1d5db; /* 更淡的边框 */
+  opacity: 0.75; /* 稍微降低存在感 */
+}
+
+/* 灰态但清晰的已选状态（他人计划，禁用时保持浅色且更易分辨） */
+.status-cell
+  .radio-option
+  input[value="complete"]:disabled:checked
+  + label::before {
+  background: #d1fae5; /* 浅绿填充，表示已完成 */
+  border-color: #10b981; /* 深一点的边框强调选中 */
+  box-shadow: 0 0 0 2px #ecfdf5 inset; /* 轻微内阴影增强层次 */
+}
+
+.status-cell
+  .radio-option
+  input[value="incomplete"]:disabled:checked
+  + label::before {
+  background: #fee2e2; /* 浅红填充，表示未完成 */
+  border-color: #ef4444; /* 深一点的边框强调选中 */
+  box-shadow: 0 0 0 2px #fef2f2 inset;
+}
+
+/* 禁用标签文本样式与指针（放在 label 基础样式之后） */
+.status-cell .radio-option input:disabled + label {
+  color: #6b7280; /* 灰色文字（与背景协调） */
+  cursor: default;
 }
 
 /* 输入区 */
@@ -196,6 +247,30 @@ textarea#remark:disabled,
   align-items: center;
   font-size: 0.75rem;
   gap: 4px;
+}
+
+/* 扩大可点击区域：文本与前置圆点一并可点击（置于禁用规则之前，避免降序特异性） */
+.status-cell .radio-option label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+/* 扩大可点击区域：文本与前置圆点一并可点击 */
+
+/* 仅隐藏“禁用”的原生单选框，当前用户（可编辑）保留原生样式 */
+.status-cell .radio-option input[type="radio"]:disabled {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 启用状态下标签可点击（保留原生单选交互与外观） */
+.status-cell .radio-option input:not(:disabled) + label {
+  cursor: pointer;
 }
 
 /* 操作按钮 */
