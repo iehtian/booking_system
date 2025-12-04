@@ -8,7 +8,7 @@ from flask_jwt_extended import (
 )
 import bcrypt
 import random
-from config import Config
+from config import Config, SKIP_NAMES
 from datebase import (
     upsert_user,
     search_user_by_ID,
@@ -519,9 +519,9 @@ def get_all_daily_plans():
         # search_all_users 返回形如 (key, user_dict) 的元组列表
         for _, user in data:
             user_id = user.get("ID")
-            if user_id == "admin":
-                continue  # 跳过管理员用户
             real_name = user.get("real_name")
+            if real_name and real_name in SKIP_NAMES:
+                continue  # 跳过名单中的用户
             info = get_dateinfo(db, user_id, date)
             res.append({"user": real_name, "info": info})
         db.close()
