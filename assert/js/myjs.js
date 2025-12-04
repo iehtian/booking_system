@@ -8,8 +8,16 @@ import { instruments_map } from "./instruments.js"
 const width = document.documentElement.clientWidth || document.body.clientWidth
 console.log("当前屏幕宽度:", width)
 const instrumentname = document.querySelector("title").innerText
-const instrument = instruments_map[instrumentname]
-console.log("当前仪器:", instrument)
+// instruments_map 现在可能返回一个对象 {id, slotType} 或者仍然是字符串（兼容性）
+const instrumentEntry = instruments_map[instrumentname]
+let instrument = instrumentEntry
+let slotType = "half" // 默认 30 分钟
+if (instrumentEntry && typeof instrumentEntry === "object") {
+  instrument = instrumentEntry.id || instrument
+  // 支持 slotType 或 slot 字段（向后兼容）
+  slotType = instrumentEntry.slotType || instrumentEntry.slot || slotType
+}
+console.log("当前仪器:", instrument, "slotType:", slotType)
 
 function generateTimeIntervalsSimple() {
   const intervals = []
@@ -31,7 +39,48 @@ function generateTimeIntervalsSimple() {
   }
   return timeSlots
 }
-const time_slots = generateTimeIntervalsSimple()
+
+function generateTimeIntervalsHourly() {
+  const intervals = []
+
+  // 24小时，每小时一个时间点，从 00:00 到 24:00
+  for (let i = 0; i <= 24; i++) {
+    const timeStr = i.toString().padStart(2, "0") + ":00"
+    intervals.push(timeStr)
+  }
+
+  const timeSlots = []
+  for (let i = 0; i < intervals.length - 1; i++) {
+    timeSlots.push(intervals[i] + "-" + intervals[i + 1])
+  }
+
+  return timeSlots
+}
+
+// 根据当前仪器的 slotType 选择时间段生成器
+let time_slots = []
+if (slotType === "hourly" || slotType === "hour") {
+  time_slots = generateTimeIntervalsHourly()
+} else {
+  time_slots = generateTimeIntervalsSimple()
+}
+
+// 获取单个 slot 的时长（分钟），用于基于当前时间计算禁用的 slot
+function getSlotDurationMinutes() {
+  if (!time_slots || time_slots.length === 0) return 30
+  const first = time_slots[0]
+  const parts = first.split("-")
+  if (parts.length !== 2) return 30
+  const [h1, m1] = parts[0].split(":").map(Number)
+  const [h2, m2] = parts[1].split(":").map(Number)
+  let start = h1 * 60 + (m1 || 0)
+  let end = h2 * 60 + (m2 || 0)
+  // 处理 24:00 的情况
+  if (end === 0 && parts[1].startsWith("24")) end = 24 * 60
+  let diff = end - start
+  if (diff <= 0) diff += 24 * 60
+  return diff
+}
 
 function getCurrentDateISO() {
   const date = new Date()
@@ -47,9 +96,10 @@ function getCurrentTimeSlotIndex() {
   const minutes = now.getMinutes() // 0 ~ 59
 
   const totalMinutes = hours * 60 + minutes
-  const slotIndex = Math.floor(totalMinutes / 30) // 每30分钟为1个slot
+  const slotDuration = getSlotDurationMinutes()
+  const slotIndex = Math.floor(totalMinutes / slotDuration)
 
-  return slotIndex // 结果是 0 ~ 47
+  return slotIndex
 }
 
 function disableSlot(slot, time) {
