@@ -123,7 +123,7 @@ function createRadio(name, value, checked, disabled) {
   return { wrapper, input }
 }
 
-function renderCurrentUserRow(username, info) {
+function renderCurrentUserRow(username, info, options = {}) {
   const tbody = document.getElementById("plans-tbody")
   // 当前用户行
   const tr = document.createElement("tr")
@@ -131,6 +131,7 @@ function renderCurrentUserRow(username, info) {
   const planData = info.length ? info[0][0] : ""
   const statusData = info.length ? info[0][1] : null
   const remarkData = info.length ? info[0][2] : ""
+  const { forceDisable = false } = options
 
   // 姓名
   const tdName = document.createElement("td")
@@ -204,8 +205,6 @@ function renderCurrentUserRow(username, info) {
 
   tbody.appendChild(tr)
 
-  // 加载数据后保持可编辑，除非日期为过去日期
-
   // 若所选日期已过去，则不允许修改/提交
   const isPastSelectedDate = () => {
     const dateStr = document.getElementById("appointment-date").value
@@ -222,6 +221,11 @@ function renderCurrentUserRow(username, info) {
   }
 
   if (isPastSelectedDate()) {
+    disableCurrentInputs()
+    btnSubmit.disabled = true
+  }
+  // 若需要强制禁用（例如昨日未提交且非休息日），则禁用当前输入
+  if (forceDisable) {
     disableCurrentInputs()
     btnSubmit.disabled = true
   }
@@ -427,9 +431,6 @@ async function init() {
   tbody.innerHTML = "" // 清空旧内容
   // const _yestoday = date - 1 // 未使用
   const disableToday = await evaluateYesterdayPlan(selectedDate, userAuth)
-  if (disableToday) {
-    setTimeout(() => disableCurrentInputs(), 500)
-  }
 
   if (userAuth && userAuth.logged_in) {
     const currentUserName = userAuth.user.name
@@ -439,7 +440,9 @@ async function init() {
     console.log("[DatePlan] 当前用户认证信息:", userAuth)
     console.log("[DatePlan] 当前用户ID:", user_id, "日期:", dateStr)
     console.log("[DatePlan] 当前用户计划信息:", currentPlanInfo)
-    renderCurrentUserRow(currentUserName, currentPlanInfo)
+    renderCurrentUserRow(currentUserName, currentPlanInfo, {
+      forceDisable: disableToday,
+    })
 
     // 已在前面统一评估昨日计划，这里不再重复
 
