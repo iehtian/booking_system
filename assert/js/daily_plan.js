@@ -133,6 +133,8 @@ function renderCurrentUserRow(username, info) {
   const taPlan = document.createElement("textarea")
   taPlan.id = "plan"
   taPlan.value = planData || ""
+  // 当前用户输入区显示为 3 行高度
+  taPlan.rows = 3
   tdPlan.appendChild(taPlan)
   tr.appendChild(tdPlan)
 
@@ -176,6 +178,8 @@ function renderCurrentUserRow(username, info) {
   const taRemark = document.createElement("textarea")
   taRemark.id = "remark"
   taRemark.value = remarkData || ""
+  // 当前用户备注也设置为 3 行高度，便于查看与编辑
+  taRemark.rows = 3
   tdRemark.appendChild(taRemark)
   tr.appendChild(tdRemark)
 

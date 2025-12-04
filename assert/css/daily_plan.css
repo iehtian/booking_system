@@ -16,7 +16,7 @@
 
 .page-title {
   margin: 0 0 0.2rem;
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   font-weight: 700;
   letter-spacing: 0.5px;
   color: transparent;
@@ -69,12 +69,13 @@
 .date-input {
   flex: 1 1 auto;
   min-width: 11ch;
+  font-size: 1rem;
 }
 
 /* 表格总体 */
 .plan-table {
   width: 100%;
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 8px auto 20px;
   overflow: hidden;
   background: #fff;
@@ -95,7 +96,7 @@
 
 .plan-table thead th {
   position: relative;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.5px;
   color: #475569;
@@ -141,7 +142,7 @@ textarea#remark,
   min-height: 60px;
   padding: 8px 9px;
   overflow: auto;
-  font-size: 0.83rem;
+  font-size: 0.95rem;
   line-height: 1.35;
   color: #333;
   background: linear-gradient(135deg, #fff, #f8fafc);
