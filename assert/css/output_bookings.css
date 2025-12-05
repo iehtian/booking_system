@@ -330,17 +330,6 @@ select.form-control {
   transform: translateY(-2px);
 }
 
-.btn-success {
-  margin-left: 10px;
-  color: white;
-  background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
-}
-
-.btn-success:hover {
-  box-shadow: 0 8px 25px rgb(86 171 47 / 30%);
-  transform: translateY(-2px);
-}
-
 .btn-secondary {
   margin-left: 10px;
   color: white;
