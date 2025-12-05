@@ -179,7 +179,15 @@
   box-shadow: 0 0 0 2px #fef2f2 inset;
 }
 
-/* 禁用标签文本样式与指针（放在 label 基础样式之后） */
+/* 扩大可点击区域：文本与前置圆点一并可点击（置于禁用规则之前，避免降序特异性） */
+.status-cell .radio-option label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+/* 禁用标签文本样式与指针 */
 .status-cell .radio-option input:disabled + label {
   color: #6b7280; /* 灰色文字（与背景协调） */
   cursor: default;
@@ -249,16 +257,6 @@ textarea#remark:disabled,
   gap: 4px;
 }
 
-/* 扩大可点击区域：文本与前置圆点一并可点击（置于禁用规则之前，避免降序特异性） */
-.status-cell .radio-option label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  user-select: none;
-}
-
-/* 扩大可点击区域：文本与前置圆点一并可点击 */
-
 /* 仅隐藏“禁用”的原生单选框，当前用户（可编辑）保留原生样式 */
 .status-cell .radio-option input[type="radio"]:disabled {
   position: absolute;
@@ -319,17 +317,6 @@ textarea#remark:disabled,
   overflow-x: auto;
 }
 
-/* 普通表格备用样式（保持兼容） */
-table:not(.plan-table) {
-  border-collapse: collapse;
-}
-
-table:not(.plan-table) th,
-table:not(.plan-table) td {
-  padding: 8px;
-  border: 1px solid #333;
-}
-
 /* 移动端（≤640px）卡片化与吸顶控制 */
 @media (width <= 640px) {
   .date-controls {
@@ -373,24 +360,28 @@ table:not(.plan-table) td {
     display: none;
   }
 
-  .plan-table tr {
-    display: block;
-    max-width: 680px;
-    margin: 12px auto;
-    overflow: hidden;
-    border: 1px solid #d0d7de;
-    border-radius: 12px;
-    box-shadow: 0 1px 4px rgb(0 0 0 / 6%);
+  /* 移动端：基础 label 样式需在禁用更高特异性规则之前 */
+  .status-cell .radio-option label {
+    font-size: 0.95rem;
   }
 
-  .plan-table td {
+  .plan-table tr {
     display: grid;
     align-items: start;
+    max-width: 680px;
     padding: 10px 12px;
+    margin: 12px auto;
+    overflow: hidden;
     border: 0;
+    border-radius: 12px;
     border-bottom: 1px solid #e5e7eb;
     grid-template-columns: 28% 1fr;
     gap: 10px;
+
+    .status-cell .radio-option input:disabled + label {
+      color: #6b7280; /* 灰色文字（与背景协调） */
+      cursor: default;
+    }
   }
 
   .plan-table td:last-child {
@@ -452,10 +443,6 @@ table:not(.plan-table) td {
   .plan-table td.action-cell > button {
     flex: 1 1 0;
     padding: 10px 12px;
-    font-size: 0.95rem;
-  }
-
-  .status-cell .radio-option label {
     font-size: 0.95rem;
   }
 

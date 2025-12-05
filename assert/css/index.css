@@ -26,13 +26,6 @@ body {
   flex-direction: column;
 }
 
-.title {
-  margin-bottom: 2.5rem;
-  font-size: 2.4rem;
-  color: #fff;
-  text-shadow: 0 2px 6px rgb(0 0 0 / 20%);
-}
-
 /* 登录提示条 */
 .login-hint {
   display: inline-block;
