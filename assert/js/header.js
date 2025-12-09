@@ -50,25 +50,38 @@ function synchronizeNavHeightVar() {
 
 function wireUserMenuHover() {
   const menu = document.querySelector(".user-menu")
+  const trigger = menu?.querySelector(".user-menu-trigger")
   const panel = document.querySelector(".user-menu-panel")
   if (!menu || !panel) return
 
-  const showPanel = () => {
+  let closeTimer
+
+  const open = () => {
+    window.clearTimeout(closeTimer)
     panel.style.opacity = "1"
     panel.style.pointerEvents = "auto"
     panel.style.transform = "translateY(0)"
+    menu.classList.add("is-open")
+    trigger?.setAttribute("aria-expanded", "true")
   }
 
-  const hidePanel = () => {
-    panel.style.opacity = ""
-    panel.style.pointerEvents = ""
-    panel.style.transform = ""
+  const close = () => {
+    window.clearTimeout(closeTimer)
+    closeTimer = window.setTimeout(() => {
+      panel.style.opacity = ""
+      panel.style.pointerEvents = ""
+      panel.style.transform = ""
+      menu.classList.remove("is-open")
+      trigger?.setAttribute("aria-expanded", "false")
+    }, 80)
   }
 
-  menu.addEventListener("mouseenter", showPanel)
-  menu.addEventListener("mouseleave", hidePanel)
-  panel.addEventListener("mouseenter", showPanel)
-  panel.addEventListener("mouseleave", hidePanel)
+  menu.addEventListener("mouseenter", open)
+  menu.addEventListener("mouseleave", close)
+  panel.addEventListener("mouseenter", open)
+  panel.addEventListener("mouseleave", close)
+  trigger?.addEventListener("focus", open)
+  trigger?.addEventListener("blur", close)
 }
 
 document.addEventListener("DOMContentLoaded", () => {

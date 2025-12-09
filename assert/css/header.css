@@ -80,7 +80,8 @@ header.navbar .logo:focus-visible {
 }
 
 .user-menu:hover .user-menu-panel,
-.user-menu:focus-within .user-menu-panel {
+.user-menu:focus-within .user-menu-panel,
+.user-menu.is-open .user-menu-panel {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
