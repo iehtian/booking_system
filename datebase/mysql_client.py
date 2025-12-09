@@ -58,7 +58,23 @@ def upsert_plan_field(db, user_id, date, field, value):
     db.commit()
     print(f"{field} 字段更新成功！")
 
-    # 如果需要一次性更新多个字段，可在外部多次调用 upsert_plan_field。
+
+def update_user_ID(db, old_user_id, new_user_id):
+    cursor = db.cursor()
+    sql = "UPDATE plans SET user_id = %s WHERE user_id = %s"
+    val = (new_user_id, old_user_id)
+    cursor.execute(sql, val)
+    db.commit()
+    print(f"user_id 从 {old_user_id} 更新为 {new_user_id} 成功！")
+
+
+def delete_user_data(db, user_id):
+    cursor = db.cursor()
+    sql = "DELETE FROM plans WHERE user_id = %s"
+    val = (user_id,)
+    cursor.execute(sql, val)
+    db.commit()
+    print(f"user_id 为 {user_id} 的数据已删除！")
 
 
 if __name__ == "__main__":

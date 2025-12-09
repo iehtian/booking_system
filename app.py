@@ -9,19 +9,7 @@ from flask_jwt_extended import (
 import bcrypt
 import random
 from config import Config, SKIP_NAMES
-from datebase import (
-    upsert_user,
-    search_user_by_ID,
-    upsert_booking,
-    search_booking_by_date,
-    search_booking_by_date_and_name,
-    delete_booking,
-    initialize_database,
-    connect_to_database,
-    upsert_plan_field,
-    get_dateinfo,
-    search_all_users,
-)
+import datebase as db_api
 
 
 app = Flask(__name__)
@@ -139,7 +127,7 @@ def save_info():
         if not isinstance(slots, list) or len(slots) == 0:
             return jsonify({"error": "slots must be a non-empty array"}), 400
 
-        search_by_date_result = search_booking_by_date(instrument, date)
+        search_by_date_result = db_api.search_booking_by_date(instrument, date)
         if search_by_date_result:
             tmies = [slot[1]["time"] for slot in search_by_date_result]
             for slot in slots:
@@ -151,7 +139,7 @@ def save_info():
         # 所有时间段都可用，批量保存预约
         successful_slots = []
         for slot in slots:
-            upsert_booking(
+            db_api.upsert_booking(
                 booking_id=f"{instrument}:{date}:{slot}",
                 instrument_id=instrument,
                 date=date,
@@ -192,7 +180,7 @@ def cancel_booking():
         if not isinstance(slots, list) or len(slots) == 0:
             return jsonify({"error": "slots must be a non-empty array"}), 400
 
-        search_by_date_result = search_booking_by_date(instrument, date)
+        search_by_date_result = db_api.search_booking_by_date(instrument, date)
         if not search_by_date_result:
             return jsonify({"error": "No bookings found for the specified date"}), 404
 
@@ -204,7 +192,7 @@ def cancel_booking():
         successful_cancellations = []
         for slot in slots:
             booking_id = f"{instrument}:{date}:{slot}"
-            delete_booking(booking_id)
+            db_api.delete_booking(booking_id)
             successful_cancellations.append(slot)
 
         print(
@@ -245,12 +233,12 @@ def update_daily_plan():
             "remark": "remark",
         }
 
-        db = connect_to_database()
+        db = db_api.connect_to_database()
         updated = []
         for payload_key, db_field in field_key_map.items():
             value = data.get(payload_key)
             if value is not None and value != "":  # 仅在有值时更新
-                upsert_plan_field(db, user_id, date, db_field, value)
+                db_api.upsert_plan_field(db, user_id, date, db_field, value)
                 updated.append(db_field)
         db.close()
 
@@ -274,7 +262,7 @@ def get_bookings():
     if not date:
         return jsonify({"error": "Date parameter is required"}), 400
 
-    search_by_date_result = search_booking_by_date(instrument, date)
+    search_by_date_result = db_api.search_booking_by_date(instrument, date)
     print(f"原始数据库查询结果: {search_by_date_result}")
 
     if not search_by_date_result:
@@ -305,14 +293,16 @@ def get_user_bookings():
             ), 400
 
         current_user_id = get_jwt_identity()
-        user = search_user_by_ID(current_user_id)
+        user = db_api.search_user_by_ID(current_user_id)
 
         if not user:
             return jsonify({"error": "User not found"}), 404
 
         user_name = user[0][1]["real_name"]
         print(f"获取用户 {current_user_id} 的预约信息，用户名: {user_name}")
-        user_bookings = search_booking_by_date_and_name(instrument, date, user_name)
+        user_bookings = db_api.search_booking_by_date_and_name(
+            instrument, date, user_name
+        )
         print(f"用户 {user_name} 在 {date} 的预约记录: {user_bookings}")
         times = [slot[1]["time"] for slot in user_bookings]
         print(f"当前用户在 {date} 的预约时间段: {times}")
@@ -335,7 +325,7 @@ def get_register_info():
     print(f"获取注册信息: ID={ID}, password=[已隐藏], namespace={name}")
 
     if ID and password and name:
-        if search_user_by_ID(ID):
+        if db_api.search_user_by_ID(ID):
             return jsonify({"error": "User already exists"}), 400
 
         user_color = random_color()  # 生成随机颜色
@@ -343,7 +333,7 @@ def get_register_info():
         # 使用bcrypt加密密码
         hashed_password = hash_password(password)
 
-        upsert_user(f"byID:{ID}", ID, hashed_password, name, user_color)
+        db_api.upsert_user(f"byID:{ID}", ID, hashed_password, name, user_color)
 
         # 注册成功后自动生成JWT token
         access_token = create_access_token(
@@ -371,7 +361,7 @@ def check_auth():
         print(f"当前用户: {current_user_id}")
 
         # 验证用户是否仍然存在
-        user = search_user_by_ID(current_user_id)
+        user = db_api.search_user_by_ID(current_user_id)
         if not user:
             print(f"用户 {current_user_id} 不存在")
             return jsonify({"logged_in": False, "message": "User not found"}), 401
@@ -405,7 +395,7 @@ def login():
         return jsonify({"success": False, "message": "用户名和密码不能为空"}), 400
 
     # 验证用户
-    user = search_user_by_ID(ID)
+    user = db_api.search_user_by_ID(ID)
     if not user:
         return jsonify({"success": False, "message": "用户名或密码错误"}), 401
 
@@ -462,7 +452,7 @@ def refresh():
     """刷新JWT token"""
     try:
         current_user_id = get_jwt_identity()
-        user = search_user_by_ID(current_user_id)
+        user = db_api.search_user_by_ID(current_user_id)
 
         if not user:
             return jsonify({"success": False, "message": "User not found"}), 401
@@ -495,8 +485,8 @@ def get_daily_plan():
         if not user_id or not date:
             return jsonify({"error": "Missing required fields: user_id, date"}), 400
 
-        db = connect_to_database()
-        info = get_dateinfo(db, user_id, date)
+        db = db_api.connect_to_database()
+        info = db_api.get_dateinfo(db, user_id, date)
         db.close()
 
         return jsonify({"success": True, "info": info})
@@ -513,8 +503,8 @@ def get_all_daily_plans():
         date = request.args.get("date")
         if not date:
             return jsonify({"error": "Date parameter is required"}), 400
-        db = connect_to_database()
-        data = search_all_users()
+        db = db_api.connect_to_database()
+        data = db_api.search_all_users()
         res = []
         # search_all_users 返回形如 (key, user_dict) 的元组列表
         for _, user in data:
@@ -522,7 +512,7 @@ def get_all_daily_plans():
             real_name = user.get("real_name")
             if real_name and real_name in SKIP_NAMES:
                 continue  # 跳过名单中的用户
-            info = get_dateinfo(db, user_id, date)
+            info = db_api.get_dateinfo(db, user_id, date)
             res.append({"user": real_name, "info": info})
         db.close()
         return jsonify({"success": True, "data": res})
@@ -539,8 +529,87 @@ def serve_changelog_md():
     return send_from_directory(app.root_path, "changelog.md")
 
 
+@app.route("/api/update_password", methods=["POST"])
+@jwt_required()
+def update_password():
+    """允许已登录用户更新密码"""
+    try:
+        current_user_id = get_jwt_identity()
+        data = request.get_json()
+        new_password = data.get("new_password")
+
+        if not new_password:
+            return jsonify({"error": "New password is required"}), 400
+
+        # 使用bcrypt加密新密码
+        hashed_password = hash_password(new_password)
+
+        # 更新用户密码
+        user = db_api.search_user_by_ID(current_user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        user_data = user[0][1]
+        db_api.upsert_user(
+            f"byID:{current_user_id}",
+            current_user_id,
+            hashed_password,
+            user_data["real_name"],
+            user_data.get("color", "#FEE2E2"),
+        )
+
+        return jsonify({"success": True, "message": "Password updated successfully"})
+
+    except Exception as e:
+        print(f"更新密码时出错: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@app.route("/api/update_ID", methods=["POST"])
+@jwt_required()
+def update_ID():
+    """允许已登录用户更新用户名"""
+    try:
+        current_user_id = get_jwt_identity()
+        data = request.get_json()
+        new_ID = data.get("new_ID")
+
+        if not new_ID:
+            return jsonify({"error": "New ID is required"}), 400
+
+        if db_api.search_user_by_ID(new_ID):
+            return jsonify({"error": "User ID already exists"}), 400
+
+        # 获取当前用户数据
+        user = db_api.search_user_by_ID(current_user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        user_data = user[0][1]
+
+        # 创建新用户记录
+        db_api.upsert_user(
+            f"byID:{new_ID}",
+            new_ID,
+            user_data["password"],
+            user_data["real_name"],
+            user_data.get("color", "#FEE2E2"),
+        )
+
+        # 更新计划
+        db = db_api.connect_to_database()
+        db_api.update_user_ID(db, current_user_id, new_ID)
+        db.close()
+
+        return jsonify({"success": True, "message": "User ID updated successfully"})
+
+    except Exception as e:
+        print(f"更新用户ID时出错: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
 if __name__ == "__main__":
-    if initialize_database():
+    if db_api.initialize_database():
         print("数据库初始化完成，系统已准备好运行。")
     else:
         print("数据库初始化失败，请检查错误日志。")

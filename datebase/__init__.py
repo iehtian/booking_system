@@ -12,11 +12,15 @@ from .redis_client import (
     search_booking_by_date,
     search_booking_by_date_and_name,
     create_booking_index,
-    search_all_users,
     delete_booking,
 )
 
-from .mysql_client import connect_to_database, upsert_plan_field, get_dateinfo
+from .mysql_client import (
+    connect_to_database,
+    upsert_plan_field,
+    get_dateinfo,
+    update_user_ID,
+)
 
 # 包版本信息
 __version__ = "1.0.0"
@@ -50,4 +54,5 @@ __all__ = [
     "connect_to_database",
     "upsert_plan_field",
     "get_dateinfo",
+    "update_user_ID",
 ]
