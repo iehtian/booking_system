@@ -47,6 +47,75 @@ body {
   backdrop-filter: blur(6px);
 }
 
+.user-actions {
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+  gap: 0.9rem;
+}
+
+.user-menu {
+  position: relative;
+}
+
+.user-menu-trigger {
+  padding: 0.5rem 0.85rem;
+  font-size: 0.95rem;
+  color: #1f2937;
+  background: #f1f5f9;
+  border: 1px solid #d8dde6;
+  border-radius: 10px;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.user-menu-trigger:hover,
+.user-menu:focus-within .user-menu-trigger {
+  background: #e5ecf6;
+  border-color: #2563eb;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
+}
+
+.user-menu-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 190px;
+  padding: 0.25rem 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 14%);
+  opacity: 0;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+  transform: translateY(-4px);
+  list-style: none;
+  pointer-events: none;
+}
+
+.user-menu:hover .user-menu-panel,
+.user-menu:focus-within .user-menu-panel {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.menu-group {
+  display: flex;
+  padding: 0.5rem 0.75rem;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.menu-group + .menu-group {
+  border-top: 1px solid #eef1f5;
+}
+
 .logo {
   font-size: 1.4rem;
   font-weight: bold;
@@ -92,6 +161,21 @@ footer a {
 
 footer a:hover {
   text-decoration: underline;
+}
+
+header.navbar .user-menu-panel a {
+  padding: 0.38rem 0.5rem;
+  text-decoration: none;
+  color: #111827;
+  border-radius: 8px;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+header.navbar .user-menu-panel a:hover {
+  color: #0f172a;
+  background: #f3f6fb;
 }
 
 /* 通用日期控件样式（供各页面复用） */
