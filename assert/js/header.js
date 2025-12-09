@@ -1,22 +1,3 @@
-function ensureHeader() {
-  let header = document.querySelector("header.navbar")
-  if (!header) {
-    header = document.createElement("header")
-    header.className = "navbar"
-
-    const logo = document.createElement("div")
-    logo.className = "logo"
-    logo.textContent = "实验平台"
-    header.appendChild(logo)
-    const body = document.body
-    if (body.firstChild) {
-      body.insertBefore(header, body.firstChild)
-    } else {
-      body.appendChild(header)
-    }
-  }
-}
-
 function computeHomeUrl() {
   const { pathname } = window.location
   if (pathname.includes("/pages/")) {
@@ -50,72 +31,6 @@ function wireLogoNavigation() {
   })
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  ensureHeader()
-  ensureUserMenu()
-  wireLogoNavigation()
-  synchronizeNavHeightVar()
-})
-
-function ensureUserMenu() {
-  const header = document.querySelector("header.navbar")
-  if (!header || header.querySelector(".user-menu")) return
-
-  const nav =
-    header.querySelector("nav.user-actions") || document.createElement("nav")
-  nav.classList.add("user-actions")
-
-  if (!nav.parentElement) {
-    header.appendChild(nav)
-  }
-
-  let showName = nav.querySelector(".show-name")
-  if (!showName) {
-    showName = document.createElement("span")
-    showName.className = "show-name hidden"
-    showName.id = "showname"
-    showName.textContent = "你好，user"
-    nav.appendChild(showName)
-  }
-
-  const menu = document.createElement("div")
-  menu.className = "user-menu"
-  menu.id = "userMenu"
-  menu.innerHTML = `
-    <button
-      class="user-menu-trigger"
-      id="userMenuTrigger"
-      aria-haspopup="true"
-      aria-expanded="false"
-    >
-      用户管理
-    </button>
-    <ul class="user-menu-panel" id="userMenuPanel" role="menu">
-      <li class="menu-group menu-guest" id="guestMenu" aria-label="未登录操作">
-        <a href="#" id="menu-login" role="menuitem">登录</a>
-        <a href="#" id="menu-register" role="menuitem">注册</a>
-        <a href="#" id="menu-reset-password" role="menuitem">重置密码</a>
-      </li>
-      <li class="menu-group menu-authed hidden" id="authedMenu" aria-label="已登录操作">
-        <a href="#" id="menu-change-id" role="menuitem">修改ID</a>
-        <a href="#" id="menu-change-password" role="menuitem">修改密码</a>
-        <a href="#" id="menu-logout" role="menuitem">退出登录</a>
-        <a href="#" id="menu-delete-account" role="menuitem">注销账号</a>
-      </li>
-    </ul>
-  `
-
-  nav.appendChild(menu)
-
-  if (!nav.querySelector("#announcementsBtn")) {
-    const announcementsLink = document.createElement("a")
-    announcementsLink.href = "#"
-    announcementsLink.id = "announcementsBtn"
-    announcementsLink.textContent = "公告"
-    nav.appendChild(announcementsLink)
-  }
-}
-
 function synchronizeNavHeightVar() {
   const header = document.querySelector("header.navbar")
   if (!header) return
@@ -132,3 +47,38 @@ function synchronizeNavHeightVar() {
   // 窗口尺寸或缩放变化时也更新一次
   window.addEventListener("resize", apply)
 }
+
+function wireUserMenuHover() {
+  const menu = document.querySelector(".user-menu")
+  const panel = document.querySelector(".user-menu-panel")
+  if (!menu || !panel) return
+
+  const showPanel = () => {
+    panel.style.opacity = "1"
+    panel.style.pointerEvents = "auto"
+    panel.style.transform = "translateY(0)"
+  }
+
+  const hidePanel = () => {
+    panel.style.opacity = ""
+    panel.style.pointerEvents = ""
+    panel.style.transform = ""
+  }
+
+  menu.addEventListener("mouseenter", showPanel)
+  menu.addEventListener("mouseleave", hidePanel)
+  panel.addEventListener("mouseenter", showPanel)
+  panel.addEventListener("mouseleave", hidePanel)
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const header = document.querySelector("header.navbar")
+  if (!header) {
+    console.warn("header.navbar not found; header behaviors skipped.")
+    return
+  }
+
+  wireLogoNavigation()
+  wireUserMenuHover()
+  synchronizeNavHeightVar()
+})
