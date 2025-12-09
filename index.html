@@ -15,9 +15,37 @@
       <div class="logo">实验平台</div>
       <nav class="user-actions">
         <span class="show-name hidden" id="showname">你好，user</span>
-        <a href="#" class="hidden" id="login">登录</a>
-        <a href="#" class="hidden" id="register">注册</a>
-        <a href="#" class="hidden" id="logout">退出登录</a>
+        <div class="user-menu" id="userMenu">
+          <button
+            class="user-menu-trigger"
+            id="userMenuTrigger"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            用户管理
+          </button>
+          <ul class="user-menu-panel" id="userMenuPanel" role="menu">
+            <li
+              class="menu-group menu-guest"
+              id="guestMenu"
+              aria-label="未登录操作"
+            >
+              <a href="#" id="menu-login" role="menuitem">登录</a>
+              <a href="#" id="menu-register" role="menuitem">注册</a>
+              <a href="#" id="menu-reset-password" role="menuitem">重置密码</a>
+            </li>
+            <li
+              class="menu-group menu-authed hidden"
+              id="authedMenu"
+              aria-label="已登录操作"
+            >
+              <a href="#" id="menu-change-id" role="menuitem">修改ID</a>
+              <a href="#" id="menu-change-password" role="menuitem">修改密码</a>
+              <a href="#" id="menu-logout" role="menuitem">退出登录</a>
+              <a href="#" id="menu-delete-account" role="menuitem">注销账号</a>
+            </li>
+          </ul>
+        </div>
         <a href="#" id="announcementsBtn">公告</a>
       </nav>
     </header>

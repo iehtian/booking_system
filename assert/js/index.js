@@ -1,29 +1,55 @@
-import { logout, checkAuthStatus } from "./user_manager.js"
+import { logout, checkAuthStatus, updatePassword } from "./user_manager.js"
 import { marked } from "marked"
 import { host } from "./config.js"
 
-document.querySelector("#login").addEventListener("click", function (event) {
-  event.preventDefault() // 阻止默认链接行为
-  const loginUrl = `pages/login.html`
-  window.location.href = loginUrl
+const loginItem = document.querySelector("#menu-login")
+const registerItem = document.querySelector("#menu-register")
+const resetPasswordItem = document.querySelector("#menu-reset-password")
+const logoutItem = document.querySelector("#menu-logout")
+const changeIdItem = document.querySelector("#menu-change-id")
+const changePasswordItem = document.querySelector("#menu-change-password")
+const deleteAccountItem = document.querySelector("#menu-delete-account")
+
+loginItem?.addEventListener("click", (event) => {
+  event.preventDefault()
+  window.location.href = `pages/login.html`
 })
 
-document.querySelector("#register").addEventListener("click", function (event) {
-  event.preventDefault() // 阻止默认链接行为
-  const registerUrl = `pages/register.html`
-  window.location.href = registerUrl
+registerItem?.addEventListener("click", (event) => {
+  event.preventDefault()
+  window.location.href = `pages/register.html`
 })
 
-document.querySelector("#logout").addEventListener("click", function (event) {
-  event.preventDefault() // 阻止默认链接行为
+resetPasswordItem?.addEventListener("click", (event) => {
+  event.preventDefault()
+  alert("重置密码功能即将上线，请联系管理员协助处理。")
+})
+
+logoutItem?.addEventListener("click", (event) => {
+  event.preventDefault()
   logout()
     .then(() => {
       console.log("用户已退出登录")
-      window.location.reload() // 刷新页面
+      window.location.reload()
     })
     .catch((error) => {
       console.error("退出登录失败:", error)
     })
+})
+
+changeIdItem?.addEventListener("click", (event) => {
+  event.preventDefault()
+  alert("修改 ID 功能暂未开放，请联系管理员。")
+})
+
+changePasswordItem?.addEventListener("click", (event) => {
+  event.preventDefault()
+  handleChangePassword().catch(console.error)
+})
+
+deleteAccountItem?.addEventListener("click", (event) => {
+  event.preventDefault()
+  alert("注销账号功能暂未开放，请联系管理员。")
 })
 
 async function initUser() {
@@ -31,23 +57,66 @@ async function initUser() {
   await checkAuthStatus()
   const result = JSON.parse(sessionStorage.getItem("userAuth") || "null")
   const loginHintEl = document.querySelector("#login-hint")
+  const guestMenu = document.querySelector("#guestMenu")
+  const authedMenu = document.querySelector("#authedMenu")
   if (result) {
-    document.querySelector("#logout").classList.remove("hidden")
     const realName = result.user.name
     document.querySelector(".show-name").textContent = `你好，${realName}`
     document.querySelector(".show-name").classList.remove("hidden")
     if (loginHintEl) loginHintEl.classList.add("hidden")
+    guestMenu?.classList.add("hidden")
+    authedMenu?.classList.remove("hidden")
   } else {
-    document.querySelector("#login").classList.remove("hidden")
-    document.querySelector("#register").classList.remove("hidden")
     if (loginHintEl) loginHintEl.classList.remove("hidden")
+    guestMenu?.classList.remove("hidden")
+    authedMenu?.classList.add("hidden")
   }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   initUser().catch(console.error)
   setupAnnouncements().catch(console.error)
+  setupUserMenuAria()
 })
+
+function setupUserMenuAria() {
+  const menu = document.querySelector("#userMenu")
+  const trigger = document.querySelector("#userMenuTrigger")
+  if (!menu || !trigger) return
+
+  const setExpanded = (expanded) =>
+    trigger.setAttribute("aria-expanded", expanded ? "true" : "false")
+
+  menu.addEventListener("mouseenter", () => setExpanded(true))
+  menu.addEventListener("mouseleave", () => setExpanded(false))
+  trigger.addEventListener("focus", () => setExpanded(true))
+  trigger.addEventListener("blur", () => setExpanded(false))
+}
+
+async function handleChangePassword() {
+  const auth = JSON.parse(sessionStorage.getItem("userAuth") || "null")
+  const userId = auth?.user?.ID ?? auth?.user?.id ?? auth?.user?.username
+  if (!userId) {
+    alert("未能获取当前用户 ID，请重新登录后再试。")
+    return
+  }
+
+  const oldPassword = prompt("请输入当前密码：")
+  if (!oldPassword) return
+
+  const newPassword = prompt("请输入新密码：")
+  if (!newPassword) return
+
+  const res = await updatePassword(userId, oldPassword, newPassword)
+  if (res?.success) {
+    alert("密码已更新，请重新登录。")
+    await logout()
+    window.location.reload()
+    return
+  }
+
+  alert(res?.message || "修改密码失败，请稍后再试。")
+}
 
 // 公告/Changelog：从 changelog.md 读取并以 Markdown 展示
 const ANNOUNCEMENT_STORAGE_KEY = "announcementDismissed" // 保存最近已知版本

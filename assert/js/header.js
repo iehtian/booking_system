@@ -1,8 +1,4 @@
-// Reusable header initializer: ensures a standard header exists and
-// makes the logo navigate back to the homepage.
-
 function ensureHeader() {
-  // If a header with class .navbar already exists, don't duplicate.
   let header = document.querySelector("header.navbar")
   if (!header) {
     header = document.createElement("header")
@@ -12,8 +8,6 @@ function ensureHeader() {
     logo.className = "logo"
     logo.textContent = "实验平台"
     header.appendChild(logo)
-
-    // Insert as the very first element inside body
     const body = document.body
     if (body.firstChild) {
       body.insertBefore(header, body.firstChild)
@@ -25,13 +19,10 @@ function ensureHeader() {
 
 function computeHomeUrl() {
   const { pathname } = window.location
-  // If under /pages/, strip /pages/<file> -> /index.html next to /pages
   if (pathname.includes("/pages/")) {
     const base = pathname.split("/pages/")[0]
     return base.endsWith("/") ? base + "index.html" : base + "/index.html"
   }
-  // Else, resolve index.html in the same directory as current path
-  // e.g., /order/foo.html -> /order/index.html, /order/ -> /order/index.html
   const lastSlash = pathname.lastIndexOf("/")
   const dir = lastSlash >= 0 ? pathname.slice(0, lastSlash + 1) : "/"
   return dir + "index.html"
@@ -41,13 +32,11 @@ function wireLogoNavigation() {
   const logo = document.querySelector("header.navbar .logo")
   if (!logo) return
 
-  // Accessibility hints and pointer UX
   logo.setAttribute("role", "link")
   logo.setAttribute("tabindex", "0")
   logo.setAttribute("title", "返回首页")
 
   const goHome = (ev) => {
-    // Allow default behavior of links if ever changed to <a>, but our logo is a div
     ev.preventDefault?.()
     const url = computeHomeUrl()
     window.location.href = url
@@ -55,7 +44,6 @@ function wireLogoNavigation() {
 
   logo.addEventListener("click", goHome)
   logo.addEventListener("keydown", (ev) => {
-    // Support Enter and Space keys
     if (ev.key === "Enter" || ev.key === " ") {
       goHome(ev)
     }
@@ -64,11 +52,70 @@ function wireLogoNavigation() {
 
 document.addEventListener("DOMContentLoaded", () => {
   ensureHeader()
+  ensureUserMenu()
   wireLogoNavigation()
   synchronizeNavHeightVar()
 })
 
-// 同步导航条的实际高度到 CSS 变量 --nav-h，确保所有页面能正确预留空间
+function ensureUserMenu() {
+  const header = document.querySelector("header.navbar")
+  if (!header || header.querySelector(".user-menu")) return
+
+  const nav =
+    header.querySelector("nav.user-actions") || document.createElement("nav")
+  nav.classList.add("user-actions")
+
+  if (!nav.parentElement) {
+    header.appendChild(nav)
+  }
+
+  let showName = nav.querySelector(".show-name")
+  if (!showName) {
+    showName = document.createElement("span")
+    showName.className = "show-name hidden"
+    showName.id = "showname"
+    showName.textContent = "你好，user"
+    nav.appendChild(showName)
+  }
+
+  const menu = document.createElement("div")
+  menu.className = "user-menu"
+  menu.id = "userMenu"
+  menu.innerHTML = `
+    <button
+      class="user-menu-trigger"
+      id="userMenuTrigger"
+      aria-haspopup="true"
+      aria-expanded="false"
+    >
+      用户管理
+    </button>
+    <ul class="user-menu-panel" id="userMenuPanel" role="menu">
+      <li class="menu-group menu-guest" id="guestMenu" aria-label="未登录操作">
+        <a href="#" id="menu-login" role="menuitem">登录</a>
+        <a href="#" id="menu-register" role="menuitem">注册</a>
+        <a href="#" id="menu-reset-password" role="menuitem">重置密码</a>
+      </li>
+      <li class="menu-group menu-authed hidden" id="authedMenu" aria-label="已登录操作">
+        <a href="#" id="menu-change-id" role="menuitem">修改ID</a>
+        <a href="#" id="menu-change-password" role="menuitem">修改密码</a>
+        <a href="#" id="menu-logout" role="menuitem">退出登录</a>
+        <a href="#" id="menu-delete-account" role="menuitem">注销账号</a>
+      </li>
+    </ul>
+  `
+
+  nav.appendChild(menu)
+
+  if (!nav.querySelector("#announcementsBtn")) {
+    const announcementsLink = document.createElement("a")
+    announcementsLink.href = "#"
+    announcementsLink.id = "announcementsBtn"
+    announcementsLink.textContent = "公告"
+    nav.appendChild(announcementsLink)
+  }
+}
+
 function synchronizeNavHeightVar() {
   const header = document.querySelector("header.navbar")
   if (!header) return

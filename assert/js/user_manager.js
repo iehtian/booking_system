@@ -209,4 +209,30 @@ async function checkAuthStatus() {
   }
 }
 
-export { logout, checkAuthStatus }
+async function updatePassword(ID, oldPassword, newPassword) {
+  try {
+    const token = localStorage.getItem("access_token")
+    if (!token) {
+      return { success: false, message: "未登录" }
+    }
+    const res = await fetch(`${host}/api/update_password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        ID: ID,
+        old_password: oldPassword,
+        new_password: newPassword,
+      }),
+    })
+    const data = await res.json()
+    return data
+  } catch (error) {
+    console.error("更新密码错误:", error)
+    return { success: false, message: "网络或服务器错误" }
+  }
+}
+
+export { logout, checkAuthStatus, updatePassword }
