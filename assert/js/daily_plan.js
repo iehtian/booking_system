@@ -301,10 +301,9 @@ function enableCurrentInputs() {
     if (el) el.disabled = false
   })
 }
-// 评估昨日计划状态，决定是否禁用今日输入；返回 boolean
-// 根据需求：昨天不受限制，因此总是返回 false，不禁用今日输入
+// 根据需求：昨天不受限制，不再基于昨日计划状态禁用今日输入
+// 该函数保持签名以兼容现有调用，但始终返回 false（不禁用）
 async function evaluateYesterdayPlan(selectedDate, userAuth) {
-  // 昨天的日期不再受限制，用户可以自由编辑昨天和今天的计划
   return false
 }
 
