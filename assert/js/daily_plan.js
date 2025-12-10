@@ -430,7 +430,20 @@ async function init() {
   const tbody = document.getElementById("plans-tbody")
   tbody.innerHTML = "" // 清空旧内容
   // const _yestoday = date - 1 // 未使用
-  const disableToday = await evaluateYesterdayPlan(selectedDate, userAuth)
+
+  // Normalize to Date and clear time components to compare dates in local time
+  const selDate = new Date(selectedDate)
+  const today = new Date()
+  selDate.setHours(0, 0, 0, 0)
+  today.setHours(0, 0, 0, 0)
+
+  const MS_PER_DAY = 24 * 60 * 60 * 1000
+  const isYesterday = today - selDate === MS_PER_DAY
+
+  // If the selected date is yesterday, skip evaluateYesterdayPlan to avoid unnecessary evaluation
+  const disableToday = isYesterday
+    ? false
+    : await evaluateYesterdayPlan(selectedDate, userAuth)
 
   if (userAuth && userAuth.logged_in) {
     const currentUserName = userAuth.user.name
