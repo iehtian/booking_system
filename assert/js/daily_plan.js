@@ -443,6 +443,7 @@ async function init() {
     today.getMonth(),
     today.getDate() - 1
   )
+  yesterday.setHours(0, 0, 0, 0)
   const isYesterday = selDate.getTime() === yesterday.getTime()
 
   // If the selected date is yesterday, skip evaluateYesterdayPlan to avoid unnecessary evaluation
