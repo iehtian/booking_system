@@ -303,6 +303,15 @@ function enableCurrentInputs() {
 }
 // 评估昨日计划状态，决定是否禁用今日输入；返回 boolean
 async function evaluateYesterdayPlan(selectedDate, userAuth) {
+  // 如果选择的日期是今天（实际日期），不做限制
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const selected = new Date(selectedDate)
+  selected.setHours(0, 0, 0, 0)
+  if (selected.getTime() === today.getTime()) {
+    return false // 今天不受昨天的限制
+  }
+
   const yesterdayDate = new Date(selectedDate)
   yesterdayDate.setDate(yesterdayDate.getDate() - 1)
   const yesterdayStr = formatDateLocal(yesterdayDate)
