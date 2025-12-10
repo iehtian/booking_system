@@ -302,36 +302,10 @@ function enableCurrentInputs() {
   })
 }
 // 评估昨日计划状态，决定是否禁用今日输入；返回 boolean
+// 根据需求：昨天不受限制，因此总是返回 false，不禁用今日输入
 async function evaluateYesterdayPlan(selectedDate, userAuth) {
-  const yesterdayDate = new Date(selectedDate)
-  yesterdayDate.setDate(yesterdayDate.getDate() - 1)
-  const yesterdayStr = formatDateLocal(yesterdayDate)
-  let disableTodayInputs = false
-  if (!isRestDay(yesterdayStr)) {
-    const yesterdayPlans = await fetchAllPlans(yesterdayStr)
-    yesterdayPlans.forEach((u) => {
-      const { user, info } = u
-      if (userAuth && user === userAuth.user.name) {
-        if (info.length) {
-          const statusData = info[0][1]
-          const remarkData = info[0][2]
-          if (
-            statusData === null ||
-            typeof statusData === "undefined" ||
-            statusData === 2 ||
-            statusData === "2" ||
-            ((statusData === 0 || statusData === "0") &&
-              (!remarkData || remarkData.trim() === ""))
-          ) {
-            disableTodayInputs = true
-          }
-        } else {
-          disableTodayInputs = true
-        }
-      }
-    })
-  }
-  return disableTodayInputs
+  // 昨天的日期不再受限制，用户可以自由编辑昨天和今天的计划
+  return false
 }
 
 function renderOtherUserRow(userObj, currentUserName) {
