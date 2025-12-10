@@ -432,13 +432,18 @@ async function init() {
   // const _yestoday = date - 1 // 未使用
 
   // Normalize to Date and clear time components to compare dates in local time
-  const selDate = new Date(selectedDate)
+  const selDate = new Date(selectedDate.getTime())
   const today = new Date()
   selDate.setHours(0, 0, 0, 0)
   today.setHours(0, 0, 0, 0)
 
-  const MS_PER_DAY = 24 * 60 * 60 * 1000
-  const isYesterday = today - selDate === MS_PER_DAY
+  // Calculate yesterday by subtracting one day from today (handles DST transitions)
+  const yesterday = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate() - 1
+  )
+  const isYesterday = selDate.getTime() === yesterday.getTime()
 
   // If the selected date is yesterday, skip evaluateYesterdayPlan to avoid unnecessary evaluation
   const disableToday = isYesterday
