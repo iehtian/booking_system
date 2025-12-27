@@ -15,16 +15,15 @@
     </header>
     <h1>注册</h1>
     <form action="#" method="post">
-      <label for="ID">用户名:</label>
-      <input type="text" id="ID" name="ID" required />
-
+      <label for="user_name">姓名:</label>
+      <input type="text" id="user_name" name="user_name" required />
+      <label for="email">邮箱:</label>
+      <input type="text" id="email" name="email" required />
+      <label for="phone">电话:</label>
+      <input type="text" id="phone" name="phone" required />
       <label for="password">密码:</label>
-      <input type="password" id="password" name="password" required />
-
-      <label for="name">姓名:</label>
-      <input type="name" id="name" name="name" required />
-
-      <input type="submit" id="register" value="注册" />
+      <input type="text" id="password" name="password" required />
+      <button id="register">注册</button>
     </form>
   </body>
   <script type="module" src="../assert/js/user_manager.js"></script>
