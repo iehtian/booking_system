@@ -236,4 +236,34 @@ async function updatePassword(ID, oldPassword, newPassword) {
   }
 }
 
-export { logout, checkAuthStatus, updatePassword }
+// 发送重置验证码
+async function sendResetCode(identifier, method) {
+  try {
+    const res = await fetch(`${host}/api/send_reset_code`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier, method }), // method: 'email' or 'phone'
+    })
+    return await res.json()
+  } catch (error) {
+    console.error("发送验证码错误:", error)
+    return { success: false, message: "网络或服务器错误" }
+  }
+}
+
+// 重置密码
+async function resetPassword(identifier, code, newPassword) {
+  try {
+    const res = await fetch(`${host}/api/reset_password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier, code, new_password: newPassword }),
+    })
+    return await res.json()
+  } catch (error) {
+    console.error("重置密码错误:", error)
+    return { success: false, message: "网络或服务器错误" }
+  }
+}
+
+export { logout, checkAuthStatus, updatePassword, sendResetCode, resetPassword }

@@ -6,7 +6,6 @@ const loginItem = document.querySelector("#menu-login")
 const registerItem = document.querySelector("#menu-register")
 const resetPasswordItem = document.querySelector("#menu-reset-password")
 const logoutItem = document.querySelector("#menu-logout")
-const changeIdItem = document.querySelector("#menu-change-id")
 const changePasswordItem = document.querySelector("#menu-change-password")
 const deleteAccountItem = document.querySelector("#menu-delete-account")
 
@@ -22,7 +21,7 @@ registerItem?.addEventListener("click", (event) => {
 
 resetPasswordItem?.addEventListener("click", (event) => {
   event.preventDefault()
-  alert("重置密码功能即将上线，请联系管理员协助处理。")
+  window.location.href = `pages/reset_password.html`
 })
 
 logoutItem?.addEventListener("click", (event) => {
@@ -35,11 +34,6 @@ logoutItem?.addEventListener("click", (event) => {
     .catch((error) => {
       console.error("退出登录失败:", error)
     })
-})
-
-changeIdItem?.addEventListener("click", (event) => {
-  event.preventDefault()
-  alert("修改 ID 功能暂未开放，请联系管理员。")
 })
 
 changePasswordItem?.addEventListener("click", (event) => {
