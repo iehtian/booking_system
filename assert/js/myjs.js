@@ -694,7 +694,7 @@ async function afterAuthCheck(result, config) {
     const cancelButton = document.querySelector("#cancel-button")
     cancelButton.classList.remove("hidden")
     document.querySelector("#outputBookingsBtn").classList.remove("hidden")
-    const realName = result.user.name
+    const realName = result.user.user_name
     const color = result.user.color
 
     // 设置特定设备的提交处理器

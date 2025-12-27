@@ -118,11 +118,13 @@ def save_info():
         )  # 默认为A仪器系统
         date = data.get("date")
         slots = data.get("slots")  # 现在接收时间段数组
-        name = data.get("name")
+        user_name = data.get("user_name")
         color = data.get("color")  # 如果没有提供颜色，则生成随机颜色
 
-        if not date or not slots or not name:
-            return jsonify({"error": "Missing required fields: date, slots, name"}), 400
+        if not date or not slots or not user_name:
+            return jsonify(
+                {"error": "Missing required fields: date, slots, user_name"}
+            ), 400
 
         if not isinstance(slots, list) or len(slots) == 0:
             return jsonify({"error": "slots must be a non-empty array"}), 400
@@ -144,18 +146,20 @@ def save_info():
                 instrument_id=instrument,
                 date=date,
                 time=slot,
-                name=name,
+                user_name=user_name,
                 color=color,
             )
             successful_slots.append(slot)
 
-        print(f"批量预约成功: {name} 在 {date} 预约了 {len(successful_slots)} 个时间段")
+        print(
+            f"批量预约成功: {user_name} 在 {date} 预约了 {len(successful_slots)} 个时间段"
+        )
         print(f"预约的时间段: {successful_slots}")
 
         return jsonify(
             {
                 "success": True,
-                "message": f"Successfully booked {len(successful_slots)} time slots for {name} on {date}",
+                "message": f"Successfully booked {len(successful_slots)} time slots for {user_name} on {date}",
                 "booked_slots": successful_slots,
             }
         )
@@ -216,15 +220,15 @@ def update_daily_plan():
     """统一的每日计划字段更新接口。
     请求体可包含 plan / status / remark 中的任意组合；缺失的字段不更新。
     示例 JSON:
-    {"real_name":"张三","date":"2025-11-22","plan":"学习","status":"进行中","remark":"加油"}
+    {"user_name":"张三","date":"2025-11-22","plan":"学习","status":"进行中","remark":"加油"}
     """
     try:
         data = request.get_json() or {}
         print(f"接收到的每日计划更新数据: {data}")
-        real_name = data.get("real_name")
+        user_name = data.get("user_name")
         date = data.get("date")
-        if not real_name or not date:
-            return jsonify({"error": "Missing required fields: real_name, date"}), 400
+        if not user_name or not date:
+            return jsonify({"error": "Missing required fields: user_name, date"}), 400
 
         # 前端字段与数据库字段的映射
         field_key_map = {
@@ -238,7 +242,7 @@ def update_daily_plan():
         for payload_key, db_field in field_key_map.items():
             value = data.get(payload_key)
             if value is not None and value != "":  # 仅在有值时更新
-                db_api.upsert_plan_field(db, real_name, date, db_field, value)
+                db_api.upsert_plan_field(db, user_name, date, db_field, value)
                 updated.append(db_field)
         db.close()
 
@@ -271,9 +275,9 @@ def get_bookings():
     bookings_dict = {}
     for slot in search_by_date_result:
         time_slot = slot[1]["time"]
-        name = slot[1]["name"]
+        user_name = slot[1]["user_name"]
         color = slot[1].get("color", "#ffffff")
-        bookings_dict[time_slot] = {"name": name, "color": color}
+        bookings_dict[time_slot] = {"user_name": user_name, "color": color}
 
     print(f"时间段和预约人 (字典格式): {bookings_dict}")
     return jsonify({"bookings": bookings_dict})
@@ -318,15 +322,15 @@ def get_register_info():
     if not data:
         return jsonify({"error": "No registration data provided"}), 400
 
-    name = data.get("name")
+    user_name = data.get("user_name")
     password = data.get("password")
-    print(f"获取注册信息: 姓名={name}, password=[已隐藏]")
+    print(f"获取注册信息: 姓名={user_name}, password=[已隐藏]")
 
-    if not name or not password:
-        return jsonify({"error": "Missing required fields: name, password"}), 400
+    if not user_name or not password:
+        return jsonify({"error": "Missing required fields: user_name, password"}), 400
 
     # 检查用户名是否已存在
-    if db_api.search_user_by_name(name):
+    if db_api.search_user_by_name(user_name):
         return jsonify({"error": "User name already exists"}), 400
 
     user_color = random_color()  # 生成随机颜色
@@ -335,17 +339,19 @@ def get_register_info():
     hashed_password = hash_password(password)
 
     # 使用姓名作为主键和标识
-    db_api.upsert_user(f"byName:{name}", name, hashed_password, name, user_color)
+    db_api.upsert_user(
+        f"byName:{user_name}", user_name, hashed_password, user_name, user_color
+    )
 
     # 注册成功后自动生成JWT token，使用姓名作为identity
     access_token = create_access_token(
-        identity=name, additional_claims={"color": user_color}
+        identity=user_name, additional_claims={"color": user_color}
     )
-    print(f"用户 {name} 注册成功，生成JWT token")
+    print(f"用户 {user_name} 注册成功，生成JWT token")
     return jsonify(
         {
             "success": True,
-            "user": {"name": name, "color": user_color},
+            "user": {"user_name": user_name, "color": user_color},
             "access_token": access_token,
         }
     )
@@ -373,7 +379,7 @@ def check_auth():
             {
                 "logged_in": True,
                 "user": {
-                    "name": user_data["real_name"],
+                    "user_name": user_data["user_name"],
                     "color": user_data.get("color", "#FEE2E2"),
                 },
             }
@@ -387,14 +393,14 @@ def check_auth():
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.get_json()
-    name = data.get("name")
+    user_name = data.get("user_name")
     password = data.get("password")
 
-    if not name or not password:
+    if not user_name or not password:
         return jsonify({"success": False, "message": "姓名和密码不能为空"}), 400
 
     # 验证用户
-    user = db_api.search_user_by_name(name)
+    user = db_api.search_user_by_name(user_name)
     if not user:
         return jsonify({"success": False, "message": "姓名或密码错误"}), 401
 
@@ -406,26 +412,26 @@ def login():
 
     # 创建JWT token，使用姓名作为identity
     access_token = create_access_token(
-        identity=name,
+        identity=user_name,
         additional_claims={
             "color": user_data.get("color", "#FEE2E2"),
         },
     )
 
-    print(f"用户 {name} 登录成功，生成JWT token")
+    print(f"用户 {user_name} 登录成功，生成JWT token")
     response = jsonify(
         {
             "success": True,
             "message": "登录成功",
             "access_token": access_token,
             "user": {
-                "name": user_data["real_name"],
+                "user_name": user_data["user_name"],
                 "color": user_data.get("color", "#FEE2E2"),
             },
         }
     )
     # 统一使用集中配置；设置用户真实姓名
-    set_cookie_with_defaults(response, "user_name", user_data["real_name"])
+    set_cookie_with_defaults(response, "user_name", user_data["user_name"])
 
     return response
 
@@ -473,14 +479,14 @@ def refresh():
 def get_daily_plan():
     """获取每日计划"""
     try:
-        real_name = request.args.get("real_name")
+        user_name = request.args.get("user_name")
         date = request.args.get("date")
 
-        if not real_name or not date:
-            return jsonify({"error": "Missing required fields: real_name, date"}), 400
+        if not user_name or not date:
+            return jsonify({"error": "Missing required fields: user_name, date"}), 400
 
         db = db_api.connect_to_database()
-        info = db_api.get_dateinfo(db, real_name, date)
+        info = db_api.get_dateinfo(db, user_name, date)
         db.close()
 
         return jsonify({"success": True, "info": info})
@@ -502,11 +508,11 @@ def get_all_daily_plans():
         res = []
         # search_all_users 返回形如 (key, user_dict) 的元组列表
         for _, user in data:
-            real_name = user.get("real_name")
-            if real_name and real_name in SKIP_NAMES:
+            user_name = user.get("user_name")
+            if user_name and user_name in SKIP_NAMES:
                 continue  # 跳过名单中的用户
-            info = db_api.get_dateinfo(db, real_name, date)
-            res.append({"user": real_name, "info": info})
+            info = db_api.get_dateinfo(db, user_name, date)
+            res.append({"user": user_name, "info": info})
         db.close()
         return jsonify({"success": True, "data": res})
     except Exception as e:
@@ -547,7 +553,7 @@ def update_password():
             f"byName:{current_user_name}",
             current_user_name,
             hashed_password,
-            user_data["real_name"],
+            user_data["user_name"],
             user_data.get("color", "#FEE2E2"),
         )
 

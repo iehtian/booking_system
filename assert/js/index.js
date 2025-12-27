@@ -60,7 +60,7 @@ async function initUser() {
   const guestMenu = document.querySelector("#guestMenu")
   const authedMenu = document.querySelector("#authedMenu")
   if (result) {
-    const realName = result.user.name
+    const realName = result.user.user_name
     document.querySelector(".show-name").textContent = `你好，${realName}`
     document.querySelector(".show-name").classList.remove("hidden")
     if (loginHintEl) loginHintEl.classList.add("hidden")

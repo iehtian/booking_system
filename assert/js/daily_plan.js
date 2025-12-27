@@ -46,7 +46,7 @@ document
 
 async function fetchCurrentUserPlan(username, date) {
   const res = await fetch(
-    `${host}/api/daily_plan/get?date=${date}&&real_name=${username}`,
+    `${host}/api/daily_plan/get?date=${date}&&user_name=${username}`,
     {
       method: "GET",
       headers: { "Content-Type": "application/json" },
@@ -59,14 +59,14 @@ async function fetchCurrentUserPlan(username, date) {
 }
 
 async function update_info(
-  real_name,
+  user_name,
   date,
   plan = null,
   status = null,
   remark = null
 ) {
   // 构造仅包含有效字段的请求体，避免未选择状态时默认写入未完成
-  const postData = { real_name, date }
+  const postData = { user_name, date }
   if (plan !== null) postData.plan = plan
   if (status !== null) postData.status = status
   if (remark !== null) postData.remark = remark
@@ -258,10 +258,10 @@ function renderCurrentUserRow(username, info, options = {}) {
     if (completeEl?.checked) status = 1
     else if (incompleteEl?.checked) status = 0
     const remark = taRemark.value
-    // 获取当前用户 real_name 并传递给接口
+    // 获取当前用户 user_name 并传递给接口
     const userAuth = JSON.parse(sessionStorage.getItem("userAuth") || "null")
-    const real_name = userAuth && userAuth.user ? userAuth.user.name : null
-    update_info(real_name, date, plan, status, remark).then(() => {
+    const user_name = userAuth && userAuth.user ? userAuth.user.user_name : null
+    update_info(user_name, date, plan, status, remark).then(() => {
       // 提交后保持可编辑状态，便于随时继续修改
       enableCurrentInputs()
     })
@@ -311,7 +311,7 @@ async function evaluateYesterdayPlan(selectedDate, userAuth) {
     const yesterdayPlans = await fetchAllPlans(yesterdayStr)
     yesterdayPlans.forEach((u) => {
       const { user, info } = u
-      if (userAuth && user === userAuth.user.name) {
+      if (userAuth && user === userAuth.user.user_name) {
         if (info.length) {
           const statusData = info[0][1]
           const remarkData = info[0][2]
@@ -452,7 +452,7 @@ async function init() {
     : await evaluateYesterdayPlan(selectedDate, userAuth)
 
   if (userAuth && userAuth.logged_in) {
-    const currentUserName = userAuth.user.name
+    const currentUserName = userAuth.user.user_name
     const currentPlanInfo = await fetchCurrentUserPlan(currentUserName, dateStr)
     // 调试输出当前用户信息与计划数据
     console.log("[DatePlan] 当前用户认证信息:", userAuth)

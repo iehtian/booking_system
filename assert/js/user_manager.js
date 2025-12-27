@@ -24,9 +24,9 @@ async function login(user_name, password) {
 }
 
 // 注册功能
-async function register(name, email, phone, password) {
+async function register(user_name, email, phone, password) {
   try {
-    const requestBody = { name, email, phone, password }
+    const requestBody = { user_name, email, phone, password }
     console.log("发送的注册请求体:", requestBody) // 调试日志
 
     const res = await fetch(`${host}/api/register`, {
@@ -98,17 +98,17 @@ document.addEventListener("DOMContentLoaded", () => {
   if (loginBtn) {
     loginBtn.addEventListener("click", function (event) {
       event.preventDefault()
-      const ID = document.querySelector("#ID").value
+      const user_name = document.querySelector("#user_name").value
       const password = document.querySelector("#password").value
 
-      if (ID === "" || password === "") {
+      if (user_name === "" || password === "") {
         alert("Please fill in all fields.")
         return
       }
 
-      console.log("Logging in user:", ID, password)
+      console.log("Logging in user:", user_name, password)
       // 调用登录函数
-      login(ID, password)
+      login(user_name, password)
         .then((res) => {
           if (!res.success) {
             alert(

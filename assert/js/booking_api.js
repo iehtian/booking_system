@@ -15,20 +15,20 @@ function mergeBookings(bookings) {
 
   sorted.forEach(([timeRange, value]) => {
     const [start, end] = timeRange.split("-")
-    const { name, color } = value
+    const { user_name, color } = value
 
-    if (lastEnd === start && lastName === name) {
+    if (lastEnd === start && lastName === user_name) {
       // 连续且同名 → 合并到当前 group
-      currentGroup.push({ timeRange, name, color })
+      currentGroup.push({ timeRange, user_name, color })
     } else {
       // 不连续 或 name 不同 → 开新组
       if (currentGroup.length > 0) {
         groups.push(currentGroup)
       }
-      currentGroup = [{ timeRange, name, color }]
+      currentGroup = [{ timeRange, user_name, color }]
     }
     lastEnd = end
-    lastName = name
+    lastName = user_name
   })
 
   if (currentGroup.length > 0) {
@@ -52,9 +52,9 @@ function desktop_booking_display(bookings, date) {
   console.log("Merged Bookings:", mergedBookings)
   // 遍历mergedBookings，显示合并后的预约信息
   mergedBookings.forEach((group, i) => {
-    const name = group[0].name || "未知用户" // 使用组内第一个元素的name
+    const user_name = group[0].user_name || "未知用户" // 使用组内第一个元素的name
     const color = group[0].color || "#ffffff" // 使用组内第一个元素的color
-    console.log(`Group ${i}: Name=${name}, Color=${color}`)
+    console.log(`Group ${i}: Name=${user_name}, Color=${color}`)
     const totalRange = groupRanges[i]
     group.forEach((item, j) => {
       const checkbox = document.getElementById(
@@ -73,7 +73,7 @@ function desktop_booking_display(bookings, date) {
           const span = document.createElement("span")
           span.style.whiteSpace = "pre"
           span.classList.add("weekly-text") // 添加类名以应用样式
-          span.textContent = `${name}  (${totalRange})`
+          span.textContent = `${user_name}  (${totalRange})`
           slotLabel.appendChild(span)
         }
       }
@@ -83,7 +83,7 @@ function desktop_booking_display(bookings, date) {
 
 function mobile_booking_display(bookings, date) {
   Object.entries(bookings).forEach(([key, value]) => {
-    const name = value.name || "未知用户" // 如果没有name字段，使用默认值
+    const user_name = value.user_name || "未知用户" // 如果没有name字段，使用默认值
     const color = value.color || "#ffffff" // 如果没有color字段，使用默认值
     const checkbox = document.getElementById(`time-slot-${date}-${key}`)
     if (checkbox) {
@@ -95,7 +95,7 @@ function mobile_booking_display(bookings, date) {
       if (slotLabel) {
         // slotLabel中使用span来显示已预约信息
         const span = document.createElement("span")
-        span.textContent = `${name}`
+        span.textContent = `${user_name}`
         slotLabel.appendChild(span)
       }
     }
@@ -131,7 +131,7 @@ async function getBookings(instrument, date) {
   }
 }
 
-async function submitBookings(instrument, realName, color, submitData) {
+async function submitBookings(instrument, user_name, color, submitData) {
   const selectedDate = submitData.date
   const slots = submitData.slots
   if (!selectedDate || slots.length === 0) {
@@ -145,7 +145,7 @@ async function submitBookings(instrument, realName, color, submitData) {
       instrument: instrument,
       date: selectedDate,
       slots: slots, // 发送所有选中的时间段
-      name: realName,
+      user_name: user_name, // 发送用户名称
       color: color, // 发送用户颜色
     }
 
