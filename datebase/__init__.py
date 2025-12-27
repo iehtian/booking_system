@@ -6,6 +6,7 @@ This package contains Redis operations for users and bookings.
 from .redis_client import (
     upsert_user,
     search_user_by_ID,
+    search_user_by_name,
     search_all_users,
     create_user_index,
     upsert_booking,
@@ -19,7 +20,6 @@ from .mysql_client import (
     connect_to_database,
     upsert_plan_field,
     get_dateinfo,
-    update_user_ID,
 )
 
 # 包版本信息
@@ -54,5 +54,5 @@ __all__ = [
     "connect_to_database",
     "upsert_plan_field",
     "get_dateinfo",
-    "update_user_ID",
+    search_user_by_name,
 ]

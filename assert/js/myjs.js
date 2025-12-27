@@ -202,7 +202,7 @@ function createTimeSlotElement(slot, date = null, isMobile = false) {
   // 添加选中事件监听器,只有移动端在这里添加，桌面端在更新时添加
   if (isMobile) {
     option.addEventListener("change", (event) => {
-      const targetDate = document.getElementById("appointment-date").value
+      const targetDate = document.querySelector("#appointment-date").value
       checked_option(event, targetDate, event.target.value)
     })
   }
@@ -256,7 +256,7 @@ function createTimeHeaderRow() {
 
 function date_change(event, changer) {
   event.preventDefault() // 阻止默认链接行为
-  const appointmentDate = document.getElementById("appointment-date")
+  const appointmentDate = document.querySelector("#appointment-date")
   const currentDate = new Date(appointmentDate.value)
   currentDate.setDate(currentDate.getDate() + changer)
   appointmentDate.value = currentDate.toISOString().split("T")[0]
@@ -337,15 +337,15 @@ const instrumentConfig = {
     },
     addslot() {
       const initTime = getCurrentDateISO()
-      document.getElementById("appointment-date").value = initTime
-      let timeSlots = document.getElementById("time-slot")
+      document.querySelector("#appointment-date").value = initTime
+      let timeSlots = document.querySelector("#time-slot")
       time_slots.forEach((slot) => {
         const timeSlotElement = createTimeSlotElement(slot, initTime, true)
         timeSlots.appendChild(timeSlotElement)
       })
     },
     async setupcacel() {
-      const date = document.getElementById("appointment-date").value
+      const date = document.querySelector("#appointment-date").value
       const canceltime = await getBookings_by_ID(instrument, date)
       console.log("取消预约时间段:", canceltime)
       if (
@@ -372,7 +372,7 @@ const instrumentConfig = {
       this.buttonhide.weekdates = [getCurrentDateISO()] // 设置当前日期为本周日期
 
       document
-        .getElementById("appointment-date")
+        .querySelector("#appointment-date")
         .addEventListener("change", (event) => {
           // 日期变化事件处理
           const oldDate = Object.keys(datas)[0] // 获取之前的日期
@@ -412,7 +412,7 @@ const instrumentConfig = {
           this.setupcacel()
         })
       document
-        .getElementById("appointment-date")
+        .querySelector("#appointment-date")
         .dispatchEvent(new Event("change")) // 触发日期变化事件
     },
     setupSubmitHandler: (realName, color) => {
@@ -471,7 +471,7 @@ const instrumentConfig = {
     },
     HighlightCheckedSlots() {
       // 高亮日期框中日期对应的复选框
-      const today = document.getElementById("appointment-date").value
+      const today = document.querySelector("#appointment-date").value
       const dateElements = document.querySelectorAll(".week-date") // 获取所有日期元素
       console.log("今天的日期:", today)
       dateElements.forEach((el) => {
@@ -494,7 +494,7 @@ const instrumentConfig = {
       })
     },
     addslot(weekRange) {
-      let timeSlots = document.getElementById("time-slot")
+      let timeSlots = document.querySelector("#time-slot")
       // 添加时间标题行
       timeSlots.appendChild(createTimeHeaderRow())
       // 为每个日期创建时间段
@@ -568,7 +568,7 @@ const instrumentConfig = {
       })
       this.buttonhide.weekdates = weekRange
 
-      const appointmentDate = document.getElementById("appointment-date")
+      const appointmentDate = document.querySelector("#appointment-date")
       appointmentDate.value = getCurrentDateISO()
       let oldDate = appointmentDate.value
       const weekRanges = document.querySelectorAll(".week-range")

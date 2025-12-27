@@ -83,6 +83,12 @@ def search_user_by_ID(ID):
     return search_user(query)
 
 
+def search_user_by_name(real_name):
+    escaped_name = escape_redis_search_value(real_name)
+    query = f"@real_name:{{{escaped_name}}}"
+    return search_user(query)
+
+
 def search_user(query):
     results = r.execute_command("FT.SEARCH", "user-idx", query, "LIMIT", "0", "50")
     data = []

@@ -82,7 +82,7 @@ DEFAULT_COOKIE_OPTIONS = {
     "httponly": True,
     "secure": True,
     "samesite": "Lax",  # 若需要跨站携带，改为 "None" 并确保 https
-    "max_age": 30 * 24 * 60 * 60,  # 7 天
+    "max_age": 30 * 24 * 60 * 60,  # 30 天
 }
 
 
@@ -216,15 +216,15 @@ def update_daily_plan():
     """统一的每日计划字段更新接口。
     请求体可包含 plan / status / remark 中的任意组合；缺失的字段不更新。
     示例 JSON:
-    {"user_id":1,"date":"2025-11-22","plan":"学习","status":"进行中","remark":"加油"}
+    {"real_name":"张三","date":"2025-11-22","plan":"学习","status":"进行中","remark":"加油"}
     """
     try:
         data = request.get_json() or {}
         print(f"接收到的每日计划更新数据: {data}")
-        user_id = data.get("user_id")
+        real_name = data.get("real_name")
         date = data.get("date")
-        if not user_id or not date:
-            return jsonify({"error": "Missing required fields: user_id, date"}), 400
+        if not real_name or not date:
+            return jsonify({"error": "Missing required fields: real_name, date"}), 400
 
         # 前端字段与数据库字段的映射
         field_key_map = {
@@ -238,7 +238,7 @@ def update_daily_plan():
         for payload_key, db_field in field_key_map.items():
             value = data.get(payload_key)
             if value is not None and value != "":  # 仅在有值时更新
-                db_api.upsert_plan_field(db, user_id, date, db_field, value)
+                db_api.upsert_plan_field(db, real_name, date, db_field, value)
                 updated.append(db_field)
         db.close()
 
@@ -292,18 +292,17 @@ def get_user_bookings():
                 {"error": "Date and instrument parameters are required"}
             ), 400
 
-        current_user_id = get_jwt_identity()
-        user = db_api.search_user_by_ID(current_user_id)
+        current_user_name = get_jwt_identity()
+        user = db_api.search_user_by_name(current_user_name)
 
         if not user:
             return jsonify({"error": "User not found"}), 404
 
-        user_name = user[0][1]["real_name"]
-        print(f"获取用户 {current_user_id} 的预约信息，用户名: {user_name}")
+        print(f"获取用户 {current_user_name} 的预约信息")
         user_bookings = db_api.search_booking_by_date_and_name(
-            instrument, date, user_name
+            instrument, date, current_user_name
         )
-        print(f"用户 {user_name} 在 {date} 的预约记录: {user_bookings}")
+        print(f"用户 {current_user_name} 在 {date} 的预约记录: {user_bookings}")
         times = [slot[1]["time"] for slot in user_bookings]
         print(f"当前用户在 {date} 的预约时间段: {times}")
         return jsonify(times)
@@ -319,36 +318,37 @@ def get_register_info():
     if not data:
         return jsonify({"error": "No registration data provided"}), 400
 
-    ID = data.get("ID", "default_user")
-    password = data.get("password", "default_password")
-    name = data.get("name", "default_name")
-    print(f"获取注册信息: ID={ID}, password=[已隐藏], namespace={name}")
+    name = data.get("name")
+    password = data.get("password")
+    print(f"获取注册信息: 姓名={name}, password=[已隐藏]")
 
-    if ID and password and name:
-        if db_api.search_user_by_ID(ID):
-            return jsonify({"error": "User already exists"}), 400
+    if not name or not password:
+        return jsonify({"error": "Missing required fields: name, password"}), 400
 
-        user_color = random_color()  # 生成随机颜色
+    # 检查用户名是否已存在
+    if db_api.search_user_by_name(name):
+        return jsonify({"error": "User name already exists"}), 400
 
-        # 使用bcrypt加密密码
-        hashed_password = hash_password(password)
+    user_color = random_color()  # 生成随机颜色
 
-        db_api.upsert_user(f"byID:{ID}", ID, hashed_password, name, user_color)
+    # 使用bcrypt加密密码
+    hashed_password = hash_password(password)
 
-        # 注册成功后自动生成JWT token
-        access_token = create_access_token(
-            identity=ID, additional_claims={"name": name, "color": user_color}
-        )
-        print(f"用户 {ID} 注册成功，生成JWT token")
-        return jsonify(
-            {
-                "success": True,
-                "user": {"ID": ID, "name": name, "color": user_color},
-                "access_token": access_token,
-            }
-        )
+    # 使用姓名作为主键和标识
+    db_api.upsert_user(f"byName:{name}", name, hashed_password, name, user_color)
 
-    return jsonify({"error": "Missing required fields"}), 400
+    # 注册成功后自动生成JWT token，使用姓名作为identity
+    access_token = create_access_token(
+        identity=name, additional_claims={"color": user_color}
+    )
+    print(f"用户 {name} 注册成功，生成JWT token")
+    return jsonify(
+        {
+            "success": True,
+            "user": {"name": name, "color": user_color},
+            "access_token": access_token,
+        }
+    )
 
 
 @app.route("/api/check-auth", methods=["GET"])
@@ -356,24 +356,23 @@ def get_register_info():
 def check_auth():
     """检查登录状态"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_name = get_jwt_identity()
 
-        print(f"当前用户: {current_user_id}")
+        print(f"当前用户: {current_user_name}")
 
         # 验证用户是否仍然存在
-        user = db_api.search_user_by_ID(current_user_id)
+        user = db_api.search_user_by_name(current_user_name)
         if not user:
-            print(f"用户 {current_user_id} 不存在")
+            print(f"用户 {current_user_name} 不存在")
             return jsonify({"logged_in": False, "message": "User not found"}), 401
 
         user_data = user[0][1]
-        print(f"用户 {current_user_id} 已登录")
+        print(f"用户 {current_user_name} 已登录")
 
         return jsonify(
             {
                 "logged_in": True,
                 "user": {
-                    "ID": current_user_id,
                     "name": user_data["real_name"],
                     "color": user_data.get("color", "#FEE2E2"),
                 },
@@ -388,48 +387,44 @@ def check_auth():
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.get_json()
-    ID = data.get("ID")
+    name = data.get("name")
     password = data.get("password")
 
-    if not ID or not password:
-        return jsonify({"success": False, "message": "用户名和密码不能为空"}), 400
+    if not name or not password:
+        return jsonify({"success": False, "message": "姓名和密码不能为空"}), 400
 
     # 验证用户
-    user = db_api.search_user_by_ID(ID)
+    user = db_api.search_user_by_name(name)
     if not user:
-        return jsonify({"success": False, "message": "用户名或密码错误"}), 401
+        return jsonify({"success": False, "message": "姓名或密码错误"}), 401
 
     user_data = user[0][1]
 
     # 使用bcrypt验证密码
     if not verify_password(password, user_data["password"]):
-        return jsonify({"success": False, "message": "用户名或密码错误"}), 401
+        return jsonify({"success": False, "message": "姓名或密码错误"}), 401
 
-    # 创建JWT token
+    # 创建JWT token，使用姓名作为identity
     access_token = create_access_token(
-        identity=ID,
+        identity=name,
         additional_claims={
-            "name": user_data["real_name"],
             "color": user_data.get("color", "#FEE2E2"),
         },
     )
 
-    print(f"用户 {ID} 登录成功，生成JWT token")
+    print(f"用户 {name} 登录成功，生成JWT token")
     response = jsonify(
         {
             "success": True,
             "message": "登录成功",
             "access_token": access_token,
             "user": {
-                "ID": ID,
                 "name": user_data["real_name"],
                 "color": user_data.get("color", "#FEE2E2"),
             },
         }
     )
-    response.set_cookie("user_ID", ID, httponly=True, secure=True)
-    # 统一使用集中配置；如需覆盖，在此传入额外参数
-    set_cookie_with_defaults(response, "user_ID", ID)
+    # 统一使用集中配置；设置用户真实姓名
     set_cookie_with_defaults(response, "user_name", user_data["real_name"])
 
     return response
@@ -451,8 +446,8 @@ def logout():
 def refresh():
     """刷新JWT token"""
     try:
-        current_user_id = get_jwt_identity()
-        user = db_api.search_user_by_ID(current_user_id)
+        current_user_name = get_jwt_identity()
+        user = db_api.search_user_by_name(current_user_name)
 
         if not user:
             return jsonify({"success": False, "message": "User not found"}), 401
@@ -461,9 +456,8 @@ def refresh():
 
         # 创建新的token
         new_token = create_access_token(
-            identity=current_user_id,
+            identity=current_user_name,
             additional_claims={
-                "name": user_data["real_name"],
                 "color": user_data.get("color", "#FEE2E2"),
             },
         )
@@ -479,14 +473,14 @@ def refresh():
 def get_daily_plan():
     """获取每日计划"""
     try:
-        user_id = request.args.get("user_id")
+        real_name = request.args.get("real_name")
         date = request.args.get("date")
 
-        if not user_id or not date:
-            return jsonify({"error": "Missing required fields: user_id, date"}), 400
+        if not real_name or not date:
+            return jsonify({"error": "Missing required fields: real_name, date"}), 400
 
         db = db_api.connect_to_database()
-        info = db_api.get_dateinfo(db, user_id, date)
+        info = db_api.get_dateinfo(db, real_name, date)
         db.close()
 
         return jsonify({"success": True, "info": info})
@@ -508,11 +502,10 @@ def get_all_daily_plans():
         res = []
         # search_all_users 返回形如 (key, user_dict) 的元组列表
         for _, user in data:
-            user_id = user.get("ID")
             real_name = user.get("real_name")
             if real_name and real_name in SKIP_NAMES:
                 continue  # 跳过名单中的用户
-            info = db_api.get_dateinfo(db, user_id, date)
+            info = db_api.get_dateinfo(db, real_name, date)
             res.append({"user": real_name, "info": info})
         db.close()
         return jsonify({"success": True, "data": res})
@@ -534,7 +527,7 @@ def serve_changelog_md():
 def update_password():
     """允许已登录用户更新密码"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_name = get_jwt_identity()
         data = request.get_json()
         new_password = data.get("new_password")
 
@@ -545,14 +538,14 @@ def update_password():
         hashed_password = hash_password(new_password)
 
         # 更新用户密码
-        user = db_api.search_user_by_ID(current_user_id)
+        user = db_api.search_user_by_name(current_user_name)
         if not user:
             return jsonify({"error": "User not found"}), 404
 
         user_data = user[0][1]
         db_api.upsert_user(
-            f"byID:{current_user_id}",
-            current_user_id,
+            f"byName:{current_user_name}",
+            current_user_name,
             hashed_password,
             user_data["real_name"],
             user_data.get("color", "#FEE2E2"),
@@ -562,49 +555,6 @@ def update_password():
 
     except Exception as e:
         print(f"更新密码时出错: {e}")
-        return jsonify({"error": "Internal server error"}), 500
-
-
-@app.route("/api/update_ID", methods=["POST"])
-@jwt_required()
-def update_ID():
-    """允许已登录用户更新用户名"""
-    try:
-        current_user_id = get_jwt_identity()
-        data = request.get_json()
-        new_ID = data.get("new_ID")
-
-        if not new_ID:
-            return jsonify({"error": "New ID is required"}), 400
-
-        if db_api.search_user_by_ID(new_ID):
-            return jsonify({"error": "User ID already exists"}), 400
-
-        # 获取当前用户数据
-        user = db_api.search_user_by_ID(current_user_id)
-        if not user:
-            return jsonify({"error": "User not found"}), 404
-
-        user_data = user[0][1]
-
-        # 创建新用户记录
-        db_api.upsert_user(
-            f"byID:{new_ID}",
-            new_ID,
-            user_data["password"],
-            user_data["real_name"],
-            user_data.get("color", "#FEE2E2"),
-        )
-
-        # 更新计划
-        db = db_api.connect_to_database()
-        db_api.update_user_ID(db, current_user_id, new_ID)
-        db.close()
-
-        return jsonify({"success": True, "message": "User ID updated successfully"})
-
-    except Exception as e:
-        print(f"更新用户ID时出错: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 

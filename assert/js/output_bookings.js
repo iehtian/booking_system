@@ -10,27 +10,27 @@ function getSelectedDateRange() {
 }
 
 function clearFilters() {
-  const instSel = document.getElementById("instrumentSelect")
+  const instSel = document.querySelector("#instrumentSelect")
   if (instSel) {
     // 清空多选/单选的选择状态
     Array.from(instSel.options).forEach((opt) => (opt.selected = false))
     instSel.options[0].selected = true // 默认选中“所有仪器”
   }
-  document.getElementById("dateRangeDisplay").value = ""
+  document.querySelector("#dateRangeDisplay").value = ""
 
   // 清空日期选择
   window.selectedStartDate = null
   window.selectedEndDate = null
   window.isSelectingEnd = false
 
-  document.getElementById("resultsContainer").innerHTML = `
+  document.querySelector("#resultsContainer").innerHTML = `
                 <div class="no-results">
                     <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">📅</div>
                     <h3>请选择筛选条件并点击查询</h3>
                 </div>
             `
-  document.getElementById("statsCards").style.display = "none"
-  document.getElementById("printButtons").style.display = "none"
+  document.querySelector("#statsCards").style.display = "none"
+  document.querySelector("#printButtons").style.display = "none"
 }
 
 // 已移除打印功能
@@ -47,12 +47,12 @@ document.addEventListener("DOMContentLoaded", function () {
 })
 
 function initDatePicker() {
-  const dateRangeDisplay = document.getElementById("dateRangeDisplay")
-  const datePickerPopup = document.getElementById("datePickerPopup")
-  const prevMonth = document.getElementById("prevMonth")
-  const nextMonth = document.getElementById("nextMonth")
-  const clearDates = document.getElementById("clearDates")
-  const confirmDates = document.getElementById("confirmDates")
+  const dateRangeDisplay = document.querySelector("#dateRangeDisplay")
+  const datePickerPopup = document.querySelector("#datePickerPopup")
+  const prevMonth = document.querySelector("#prevMonth")
+  const nextMonth = document.querySelector("#nextMonth")
+  const clearDates = document.querySelector("#clearDates")
+  const confirmDates = document.querySelector("#confirmDates")
 
   // 点击输入框显示日期选择器
   dateRangeDisplay.addEventListener("click", function () {
@@ -65,7 +65,7 @@ function initDatePicker() {
   // 点击外部关闭日期选择器（但不在选择过程中关闭）
   document.addEventListener("click", function (e) {
     if (
-      !document.getElementById("dateRangePicker").contains(e.target) &&
+      !document.querySelector("#dateRangePicker").contains(e.target) &&
       !isSelectingEnd
     ) {
       datePickerPopup.classList.remove("show")
@@ -106,8 +106,8 @@ function initDatePicker() {
 }
 
 function renderCalendar() {
-  const monthYear = document.getElementById("monthYear")
-  const daysGrid = document.getElementById("daysGrid")
+  const monthYear = document.querySelector("#monthYear")
+  const daysGrid = document.querySelector("#daysGrid")
 
   // 更新月份年份显示
   const months = [
@@ -212,7 +212,7 @@ function selectDate(dateStr) {
 
     // 选择完成后短暂延迟关闭日历
     setTimeout(() => {
-      document.getElementById("datePickerPopup").classList.remove("show")
+      document.querySelector("#datePickerPopup").classList.remove("show")
     }, 500)
   }
 
@@ -224,7 +224,7 @@ function selectDate(dateStr) {
 }
 
 function updateSelectionStatus() {
-  const statusElement = document.getElementById("selectionStatus")
+  const statusElement = document.querySelector("#selectionStatus")
   if (!selectedStartDate) {
     statusElement.textContent = "请选择开始日期"
     statusElement.style.color = "#667eea"
@@ -260,7 +260,7 @@ function parseDateLocal(dateStr) {
 }
 
 function updateDisplayValue() {
-  const dateRangeDisplay = document.getElementById("dateRangeDisplay")
+  const dateRangeDisplay = document.querySelector("#dateRangeDisplay")
   if (selectedStartDate && selectedEndDate) {
     const startFormatted = formatDateForDisplay(
       parseDateLocal(selectedStartDate)
@@ -295,7 +295,7 @@ function add_instrument_filter() {
 add_instrument_filter()
 
 function getSelectedInstrument() {
-  const sel = document.getElementById("instrumentSelect")
+  const sel = document.querySelector("#instrumentSelect")
   if (sel.value === "allinstrument") {
     let arr = []
     for (const [key, value] of Object.entries(instruments_map)) {
@@ -408,7 +408,7 @@ function renderResults(groupedResults) {
   // 保存最近渲染的数据供复制使用
   window.__lastRenderedResults = { groupedResults }
   prebuildAllResultsCSVAsync() // 预生成 CSV，提升后续下载速度
-  const container = document.getElementById("resultsContainer")
+  const container = document.querySelector("#resultsContainer")
   if (!container) return
   container.innerHTML = ""
 
@@ -621,7 +621,7 @@ function downloadAllResultsAsFile() {
 }
 
 function showCopyTip(msg) {
-  let tip = document.getElementById("copyToast")
+  let tip = document.querySelector("#copyToast")
   if (!tip) {
     tip = document.createElement("div")
     tip.id = "copyToast"
@@ -718,7 +718,7 @@ async function searchReservations() {
 
   renderResults(groupedResults)
   // 展示复制按钮容器
-  const btnBox = document.getElementById("printButtons")
+  const btnBox = document.querySelector("#printButtons")
   if (btnBox) btnBox.style.display = "flex"
 }
 document
@@ -731,11 +731,11 @@ document
 
 // 绑定“复制全部”按钮（不使用全局 onclick，避免 ESM 下 window 作用域问题）
 document.addEventListener("DOMContentLoaded", () => {
-  const copyAllBtn = document.getElementById("copyAllBtn")
+  const copyAllBtn = document.querySelector("#copyAllBtn")
   if (copyAllBtn) {
     copyAllBtn.addEventListener("click", copyAllResults)
   }
-  const printAllBtn = document.getElementById("printAllBtn")
+  const printAllBtn = document.querySelector("#printAllBtn")
   if (printAllBtn) {
     printAllBtn.addEventListener("click", downloadAllResultsAsFile)
   }

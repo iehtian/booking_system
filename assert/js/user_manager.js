@@ -1,13 +1,13 @@
 import { host } from "./config.js"
 
 // 登录功能
-async function login(ID, password) {
+async function login(user_name, password) {
   try {
     const res = await fetch(`${host}/api/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include", // 关键：允许浏览器接收/保存 Set-Cookie（跨源或代理场景都安全）
-      body: JSON.stringify({ ID, password }),
+      body: JSON.stringify({ user_name, password }),
     })
     const data = await res.json()
     console.log("登录响应:", data)
@@ -24,12 +24,15 @@ async function login(ID, password) {
 }
 
 // 注册功能
-async function register(ID, password, name) {
+async function register(name, email, phone, password) {
   try {
+    const requestBody = { name, email, phone, password }
+    console.log("发送的注册请求体:", requestBody) // 调试日志
+
     const res = await fetch(`${host}/api/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ID, name, password }),
+      body: JSON.stringify(requestBody),
     })
     const data = await res.json()
     if (data.access_token) {
@@ -126,18 +129,16 @@ document.addEventListener("DOMContentLoaded", () => {
   if (registerBtn) {
     registerBtn.addEventListener("click", function (event) {
       event.preventDefault()
-      const ID = document.querySelector("#ID").value
       const password = document.querySelector("#password").value
-      const name = document.querySelector("#name").value
+      const name = document.querySelector("#user_name").value
 
-      if (ID === "" || password === "" || name === "") {
+      if (password === "" || name === "") {
         alert("Please fill in all fields.")
         return
       }
 
-      console.log("Registering user:", ID, password, name)
       // 调用注册函数
-      register(ID, password, name)
+      register(name, null, null, password)
         .then((data) => {
           console.log("注册响应:", data)
           if (!data.success) {
