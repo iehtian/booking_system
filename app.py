@@ -119,7 +119,6 @@ def save_info():
         date = data.get("date")
         slots = data.get("slots")  # 现在接收时间段数组
         user_name = data.get("user_name")
-        color = data.get("color")  # 如果没有提供颜色，则生成随机颜色
 
         if not date or not slots or not user_name:
             return jsonify(
@@ -128,10 +127,13 @@ def save_info():
 
         if not isinstance(slots, list) or len(slots) == 0:
             return jsonify({"error": "slots must be a non-empty array"}), 400
-
+        print(
+            f"准备保存预约: user_name={user_name}, instrument={instrument}, date={date}, slots={slots}"
+        )
         search_by_date_result = db_api.search_booking_by_date(instrument, date)
+        print(f"数据库中已有的预约记录: {search_by_date_result}")
         if search_by_date_result:
-            tmies = [slot[1]["time"] for slot in search_by_date_result]
+            tmies = [slot["time"] for slot in search_by_date_result]
             for slot in slots:
                 if slot in tmies:
                     return jsonify(
@@ -141,13 +143,9 @@ def save_info():
         # 所有时间段都可用，批量保存预约
         successful_slots = []
         for slot in slots:
+            print(f"保存预约时间段: {slot}")
             db_api.upsert_booking(
-                booking_id=f"{instrument}:{date}:{slot}",
-                instrument_id=instrument,
-                date=date,
-                time=slot,
-                user_name=user_name,
-                color=color,
+                user_name, instrument, date, slot.split("-")[0], slot.split("-")[1]
             )
             successful_slots.append(slot)
 
@@ -188,7 +186,7 @@ def cancel_booking():
         if not search_by_date_result:
             return jsonify({"error": "No bookings found for the specified date"}), 404
 
-        times = [slot[1]["time"] for slot in search_by_date_result]
+        times = [slot["time"] for slot in search_by_date_result]
         for slot in slots:
             if slot not in times:
                 return jsonify({"error": f"Time slot {slot} is not booked"}), 404
@@ -274,9 +272,9 @@ def get_bookings():
 
     bookings_dict = {}
     for slot in search_by_date_result:
-        time_slot = slot[1]["time"]
-        user_name = slot[1]["user_name"]
-        color = slot[1].get("color", "#ffffff")
+        time_slot = slot["time"]
+        user_name = slot["user_name"]
+        color = slot.get("color", "#ffffff")
         bookings_dict[time_slot] = {"user_name": user_name, "color": color}
 
     print(f"时间段和预约人 (字典格式): {bookings_dict}")
@@ -303,11 +301,9 @@ def get_user_bookings():
             return jsonify({"error": "User not found"}), 404
 
         print(f"获取用户 {current_user_name} 的预约信息")
-        user_bookings = db_api.search_booking_by_date_and_name(
-            instrument, date, current_user_name
-        )
+        user_bookings = db_api.search_booking_by_user_and_date(user[0][1]["id"], date)
         print(f"用户 {current_user_name} 在 {date} 的预约记录: {user_bookings}")
-        times = [slot[1]["time"] for slot in user_bookings]
+        times = [slot["time"] for slot in user_bookings]
         print(f"当前用户在 {date} 的预约时间段: {times}")
         return jsonify(times)
 
@@ -339,9 +335,7 @@ def get_register_info():
     hashed_password = hash_password(password)
 
     # 使用姓名作为主键和标识
-    db_api.upsert_user(
-        f"byName:{user_name}", user_name, hashed_password, user_name, user_color
-    )
+    db_api.upsert_user(user_name, hashed_password, user_color)
 
     # 注册成功后自动生成JWT token，使用姓名作为identity
     access_token = create_access_token(
@@ -548,13 +542,10 @@ def update_password():
         if not user:
             return jsonify({"error": "User not found"}), 404
 
-        user_data = user[0][1]
         db_api.upsert_user(
-            f"byName:{current_user_name}",
             current_user_name,
             hashed_password,
-            user_data["user_name"],
-            user_data.get("color", "#FEE2E2"),
+            user.get("color", None),
         )
 
         return jsonify({"success": True, "message": "Password updated successfully"})
