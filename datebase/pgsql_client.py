@@ -114,41 +114,40 @@ def upsert_user(user_name, password=None, color=None, email=None, phone=None):
 
 
 def _row_to_user(row):
-    """将数据库行转换为用户字典"""
-    # 与查询列顺序保持一致: SELECT id, user_name, password, color
-    return (
-        f"user:{row[1]}",  # user_name 作为键
-        {
-            "id": row[0],
-            "password": row[2],
-            "user_name": row[1],
-            "color": row[3],
-        },
-    )
+    """将数据库行转换为用户字典，字段顺序与 SELECT 对齐"""
+    return {
+        "id": row[0],
+        "user_name": row[1],
+        "password": row[2],
+        "color": row[3],
+        "email": row[4],
+        "phone": row[5],
+        "created_at": row[6].isoformat() if row[6] else None,
+    }
 
 
 def search_user_by_name(user_name):
     """根据用户名查询用户"""
     sql = f"""
-        SELECT id, user_name, password, color 
-        FROM {USER_TABLE} 
+        SELECT id, user_name, password, color, email, phone, created_at
+        FROM {USER_TABLE}
         WHERE user_name = %s
     """
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(sql, (user_name,))
-            rows = cur.fetchall()
+            row = cur.fetchone()
             logging.debug(
-                f"search_user_by_name('{user_name}') returned {len(rows)} rows"
+                f"search_user_by_name('{user_name}') returned {'1 row' if row else '0 rows'}"
             )
-    return [_row_to_user(row) for row in rows]
+    return _row_to_user(row) if row else None
 
 
 def search_all_users():
     """查询所有用户"""
     sql = f"""
-        SELECT id, user_name, password, color 
-        FROM {USER_TABLE} 
+        SELECT id, user_name, password, color, email, phone, created_at
+        FROM {USER_TABLE}
         ORDER BY user_name
     """
     with get_connection() as conn:
