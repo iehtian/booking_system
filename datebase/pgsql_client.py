@@ -60,26 +60,54 @@ def create_user_index():
     print(f"Table '{USER_TABLE}' ensured.")
 
 
-def upsert_user(user_name, password, color):
-    """插入或更新用户，基于 user_name 判断冲突"""
+def upsert_user(user_name, password=None, color=None, email=None, phone=None):
+    """插入或更新用户信息"""
+    # 构建字段列表
+    insert_fields = ["user_name"]
+    insert_values = [user_name]
+    update_clauses = []
+
+    # 动态添加字段
+    if password:
+        insert_fields.append("password")
+        insert_values.append(password)
+        update_clauses.append("password = EXCLUDED.password")
+
+    if color:
+        insert_fields.append("color")
+        insert_values.append(color)
+        update_clauses.append("color = EXCLUDED.color")
+
+    if email:
+        insert_fields.append("email")
+        insert_values.append(email)
+        update_clauses.append("email = EXCLUDED.email")
+
+    if phone:
+        insert_fields.append("phone")
+        insert_values.append(phone)
+        update_clauses.append("phone = EXCLUDED.phone")
+
+    if not update_clauses:
+        raise ValueError("没有提供要更新的字段")
+
+    # 构建 SQL
+    placeholders = ", ".join(["%s"] * len(insert_fields))
     sql = f"""
-        INSERT INTO {USER_TABLE} (user_name, password, color)
-        VALUES (%s, %s, %s)
+        INSERT INTO {USER_TABLE} ({", ".join(insert_fields)})
+        VALUES ({placeholders})
         ON CONFLICT (user_name) DO UPDATE
-        SET password = EXCLUDED.password,
-            user_name = EXCLUDED.user_name,
-            color = EXCLUDED.color
+        SET {", ".join(update_clauses)}
         RETURNING id
     """
+
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute(sql, (user_name, password, color))
+            cur.execute(sql, tuple(insert_values))
             user_id = cur.fetchone()[0]
             conn.commit()
-    print(
-        f"Upserted user: {user_name} (id={user_id}) -> "
-        f"{{'password': {password}, 'user_name': {user_name}, 'color': {color}}}"
-    )
+
+    print(f"Upserted user '{user_name}' (id={user_id})")
     return user_id
 
 
