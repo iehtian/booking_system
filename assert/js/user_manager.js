@@ -243,11 +243,11 @@ async function sendResetCode(identifier, method) {
     const res = await fetch(`${host}/api/send_reset_code`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ identifier, method }), // method: 'email' or 'phone'
+      body: JSON.stringify({ user_name: identifier, method }), // method: 'email' or 'phone'
     })
     return await res.json()
   } catch (error) {
-    console.error("发送验证码错误:", error)
+    console.error("发送验证码错误:", error, res.error)
     return { success: false, message: "网络或服务器错误" }
   }
 }

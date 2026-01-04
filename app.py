@@ -8,8 +8,9 @@ from flask_jwt_extended import (
 )
 import bcrypt
 import random
-from config import Config, SKIP_NAMES
+from config import Config, SKIP_NAMES, spug_key
 import datebase as db_api
+import requests
 
 
 app = Flask(__name__)
@@ -301,7 +302,7 @@ def get_user_bookings():
             return jsonify({"error": "User not found"}), 404
 
         print(f"获取用户 {current_user_name} 的预约信息")
-        user_bookings = db_api.search_booking_by_user_and_date(user[0][1]["id"], date)
+        user_bookings = db_api.search_booking_by_user_and_date(user["id"], date)
         print(f"用户 {current_user_name} 在 {date} 的预约记录: {user_bookings}")
         times = [slot["time"] for slot in user_bookings]
         print(f"当前用户在 {date} 的预约时间段: {times}")
@@ -366,7 +367,7 @@ def check_auth():
             print(f"用户 {current_user_name} 不存在")
             return jsonify({"logged_in": False, "message": "User not found"}), 401
 
-        user_data = user[0][1]
+        user_data = user
         print(f"用户 {current_user_name} 已登录")
 
         return jsonify(
@@ -399,7 +400,7 @@ def login():
     if not user:
         return jsonify({"success": False, "message": "姓名或密码错误"}), 401
 
-    user_data = user[0][1]
+    user_data = user
 
     # 使用bcrypt验证密码
     if not verify_password(password, user_data["password"]):
@@ -453,7 +454,7 @@ def refresh():
         if not user:
             return jsonify({"success": False, "message": "User not found"}), 401
 
-        user_data = user[0][1]
+        user_data = user
 
         # 创建新的token
         new_token = create_access_token(
@@ -501,8 +502,8 @@ def get_all_daily_plans():
         db = db_api.connect_to_database()
         data = db_api.search_all_users()
         res = []
-        # search_all_users 返回形如 (key, user_dict) 的元组列表
-        for _, user in data:
+        # search_all_users 返回用户字典列表
+        for user in data:
             user_name = user.get("user_name")
             if user_name and user_name in SKIP_NAMES:
                 continue  # 跳过名单中的用户
@@ -543,20 +544,64 @@ def update_password():
         if new_password:
             hashed_password = hash_password(new_password)
         else:
-            hashed_password = user[0][1].get("password")  # 假设密码在这个位置
+            hashed_password = user.get("password")
 
         db_api.upsert_user(
             current_user_name,
             hashed_password,
-            user[0][1].get("color", None),
-            new_email if new_email else user[0][1].get("email"),  # 邮箱也可能为空
-            new_phone if new_phone else user[0][1].get("phone"),  # 手机号也可能为空
+            user.get("color", None),
+            new_email if new_email else user.get("email"),
+            new_phone if new_phone else user.get("phone"),
         )
 
         return jsonify({"success": True, "message": "Profile updated successfully"})
 
     except Exception as e:
         print(f"更新个人信息时出错: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+def send_reset(phone=None, email=None):
+    """发送密码重置验证码的辅助函数"""
+    reset_code = f"{random.randint(100000, 999999)}"
+    if phone:
+        print(f"发送短信验证码 {reset_code} 到手机号 {phone}")
+        body = {"name": "cpulab", "code": reset_code, "targets": phone}
+        requests.post(f"https://push.spug.cc/send/{spug_key}", json=body)
+
+    pass  # 实现发送验证码的逻辑
+
+
+@app.route("/api/send_reset_code", methods=["POST"])
+def send_reset_code():
+    """发送密码重置验证码"""
+    try:
+        data = request.get_json()
+        user_name = data.get("user_name")
+        method = data.get("method", "sms")  # 未来可扩展邮件等方式
+        print(f"发送重置验证码请求: user_name={user_name}, method={method}")
+
+        if not user_name:
+            return jsonify({"error": "User name is required"}), 400
+
+        user = db_api.search_user_by_name(user_name)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        print(f"method: {method}")
+        if method == "phone":
+            phone = user.get("phone")
+            if not phone:
+                print(f"用户 {user_name} 未设置手机号")
+                return jsonify({"error": "User has no phone number on record"}), 400
+            print(f"用户 {user_name} 的手机号: {phone}")
+            send_reset(phone=phone)
+        else:
+            return jsonify({"error": "Unsupported method"}), 400
+
+        return jsonify({"success": True, "message": "Reset code sent"})
+
+    except Exception as e:
+        print(f"发送重置验证码时出错: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 

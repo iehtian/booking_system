@@ -97,29 +97,117 @@ async function openResetPasswordModal() {
   const result = await Swal.fire({
     title: "重置密码",
     html: `
-      <input id="sw-identifier" class="swal2-input" placeholder="账号 (用户名/邮箱/手机)" />
-      <div style="text-align: left; margin: 0 1.5em 10px;">
-        <div style="font-size: 14px; color: #666; margin-bottom: 6px;">验证码接收方式</div>
-        <div style="display: flex; gap: 16px; align-items: center;">
-          <label style="display: flex; align-items: center; gap: 6px;">
-            <input type="radio" name="sw-method" value="email" checked /> 邮箱
-          </label>
-          <label style="display: flex; align-items: center; gap: 6px;">
-            <input type="radio" name="sw-method" value="phone" /> 手机
-          </label>
+      <style>
+        .reset-container {
+          padding: 0 20px;
+        }
+        .reset-form-group {
+          margin-bottom: 12px;
+          text-align: center;
+        }
+        .reset-radio-group {
+          display: flex;
+          gap: 32px;
+          justify-content: center;
+          align-items: center;
+        }
+        .reset-radio-label {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          color: #666;
+        }
+        .reset-radio-label input[type="radio"] {
+          width: 16px;
+          height: 16px;
+          cursor: pointer;
+        }
+        .reset-code-group {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+          max-width: 100%;
+        }
+        .reset-code-input {
+          flex: 1;
+          margin: 0 !important;
+          height: 42px !important;
+          box-sizing: border-box !important;
+        }
+        .reset-send-btn {
+          padding: 0 20px !important;
+          margin: 0 !important;
+          font-size: 14px !important;
+          white-space: nowrap;
+          height: 42px !important;
+          border-radius: 6px !important;
+          flex-shrink: 0;
+          line-height: 1 !important;
+        }
+        .reset-status {
+          margin: 6px 0 0;
+          font-size: 13px;
+          min-height: 16px;
+          text-align: center;
+        }
+        .swal2-input {
+          border: 1px solid #ddd !important;
+          border-radius: 6px !important;
+          padding: 10px 14px !important;
+          font-size: 14px !important;
+          transition: border-color 0.3s ease !important;
+          height: 42px !important;
+          box-sizing: border-box !important;
+          width: 100% !important;
+          margin: 0 !important;
+        }
+        .swal2-input:focus {
+          border-color: #3085d6 !important;
+          box-shadow: 0 0 0 3px rgba(48, 133, 214, 0.1) !important;
+        }
+        .swal2-html-container {
+          margin: 0 !important;
+          padding: 15px 0 !important;
+        }
+      </style>
+      <div class="reset-container">
+        <div class="reset-form-group">
+          <input id="sw-identifier" class="swal2-input" placeholder="账号 (用户名/邮箱/手机)" />
+        </div>
+        <div class="reset-form-group">
+          <div class="reset-radio-group">
+            <label class="reset-radio-label">
+              <input type="radio" name="sw-method" value="email" checked /> 邮箱
+            </label>
+            <label class="reset-radio-label">
+              <input type="radio" name="sw-method" value="phone" /> 手机
+            </label>
+          </div>
+        </div>
+        <div class="reset-form-group">
+          <div class="reset-code-group">
+            <input id="sw-code" class="swal2-input reset-code-input" placeholder="验证码" />
+            <button type="button" id="sw-send-code" class="swal2-confirm swal2-styled reset-send-btn">发送验证码</button>
+          </div>
+          <div id="sw-code-status" class="reset-status"></div>
+        </div>
+        <div class="reset-form-group">
+          <input id="sw-new-password" type="password" class="swal2-input" placeholder="新密码" />
         </div>
       </div>
-      <div style="display: flex; gap: 8px; align-items: center; padding: 0 1.5em;">
-        <input id="sw-code" class="swal2-input" placeholder="验证码" style="flex: 1; margin: 0;" />
-        <button type="button" id="sw-send-code" class="swal2-confirm swal2-styled" style="margin: 0;">发送验证码</button>
-      </div>
-      <p id="sw-code-status" style="margin: 6px 1.5em 0; font-size: 13px; color: #666;"></p>
-      <input id="sw-new-password" type="password" class="swal2-input" placeholder="新密码" />
     `,
     focusConfirm: false,
     showCancelButton: true,
     confirmButtonText: "提交",
     cancelButtonText: "取消",
+    width: "480px",
+    customClass: {
+      popup: "reset-password-popup",
+      confirmButton: "reset-confirm-btn",
+      cancelButton: "reset-cancel-btn",
+    },
     preConfirm: () => {
       const identifier = document.getElementById("sw-identifier").value.trim()
       const code = document.getElementById("sw-code").value.trim()
@@ -169,13 +257,27 @@ async function openResetPasswordModal() {
           if (res.success) {
             showStatus("验证码已发送，请查收")
             codeInput.focus()
+
+            // 倒计时功能
+            let countdown = 60
+            const timer = setInterval(() => {
+              countdown--
+              if (countdown > 0) {
+                sendBtn.textContent = `${countdown}秒后重发`
+              } else {
+                clearInterval(timer)
+                sendBtn.disabled = false
+                sendBtn.textContent = originalText
+              }
+            }, 1000)
           } else {
             showStatus(res.message || "发送失败，请稍后再试", true)
+            sendBtn.disabled = false
+            sendBtn.textContent = originalText
           }
         } catch (error) {
           console.error("发送重置验证码错误:", error)
           showStatus("发送请求出错", true)
-        } finally {
           sendBtn.disabled = false
           sendBtn.textContent = originalText
         }
@@ -195,6 +297,7 @@ async function openResetPasswordModal() {
         icon: "success",
         title: "密码重置成功",
         text: "请使用新密码重新登录。",
+        confirmButtonText: "确定",
       })
       window.location.href = "pages/login.html"
     } else {
@@ -202,6 +305,7 @@ async function openResetPasswordModal() {
         icon: "error",
         title: "重置失败",
         text: res.message || "请检查验证码是否正确",
+        confirmButtonText: "确定",
       })
     }
   } catch (error) {
@@ -210,6 +314,7 @@ async function openResetPasswordModal() {
       icon: "error",
       title: "重置失败",
       text: "提交请求出错，请稍后再试。",
+      confirmButtonText: "确定",
     })
   }
 }
