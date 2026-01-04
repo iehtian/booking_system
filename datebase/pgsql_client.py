@@ -48,6 +48,8 @@ def create_user_index():
                     password TEXT NOT NULL,
                     user_name TEXT UNIQUE NOT NULL,
                     color TEXT NOT NULL,
+                    email TEXT,
+                    phone TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
                 """

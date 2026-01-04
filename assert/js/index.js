@@ -1,4 +1,4 @@
-import { logout, checkAuthStatus, updatePassword } from "./user_manager.js"
+import { logout, checkAuthStatus, updateProfile } from "./user_manager.js"
 import { marked } from "marked"
 import { host } from "./config.js"
 
@@ -6,7 +6,7 @@ const loginItem = document.querySelector("#menu-login")
 const registerItem = document.querySelector("#menu-register")
 const resetPasswordItem = document.querySelector("#menu-reset-password")
 const logoutItem = document.querySelector("#menu-logout")
-const changePasswordItem = document.querySelector("#menu-change-password")
+const UpdateProfileItem = document.querySelector("#menu-update-profile")
 const deleteAccountItem = document.querySelector("#menu-delete-account")
 
 loginItem?.addEventListener("click", (event) => {
@@ -36,9 +36,9 @@ logoutItem?.addEventListener("click", (event) => {
     })
 })
 
-changePasswordItem?.addEventListener("click", (event) => {
+UpdateProfileItem?.addEventListener("click", (event) => {
   event.preventDefault()
-  handleChangePassword().catch(console.error)
+  handleUpdateProfile().catch(console.error)
 })
 
 deleteAccountItem?.addEventListener("click", (event) => {
@@ -87,7 +87,7 @@ function setupUserMenuAria() {
   trigger.addEventListener("blur", () => setExpanded(false))
 }
 
-async function handleChangePassword() {
+async function handleUpdateProfile() {
   const auth = JSON.parse(sessionStorage.getItem("userAuth") || "null")
   const userId = auth?.user?.ID ?? auth?.user?.id ?? auth?.user?.username
   if (!userId) {
@@ -95,21 +95,46 @@ async function handleChangePassword() {
     return
   }
 
-  const oldPassword = prompt("请输入当前密码：")
-  if (!oldPassword) return
+  // 使用
+  Swal.fire({
+    title: "更新个人信息",
+    html: `
+    <div style="font-size: 18px; color: #888; margin-bottom: 10px;">无需更新的项可以留空</div>
+    <input id="newpassword" type="password" class="swal2-input" placeholder="新密码">
+    <input id="newemail" type="password" class="swal2-input" placeholder="新邮箱">
+    <input id="newphone" type="text" class="swal2-input" placeholder="新手机号">
+  `,
+    confirmButtonText: "确认",
+    showCancelButton: true,
+    cancelButtonText: "取消",
+    preConfirm: () => ({
+      newPassword: document.getElementById("newpassword").value,
+      newEmail: document.getElementById("newemail").value,
+      newPhone: document.getElementById("newphone").value,
+    }),
+  }).then(async (result) => {
+    console.log(result.value)
+    if (result.isConfirmed) {
+      const { newPassword, newEmail, newPhone } = result.value
 
-  const newPassword = prompt("请输入新密码：")
-  if (!newPassword) return
-
-  const res = await updatePassword(userId, oldPassword, newPassword)
-  if (res?.success) {
-    alert("密码已更新，请重新登录。")
-    await logout()
-    window.location.reload()
-    return
-  }
-
-  alert(res?.message || "修改密码失败，请稍后再试。")
+      try {
+        const res = await updateProfile(
+          userId,
+          newPassword || null,
+          newEmail || null,
+          newPhone || null
+        )
+        if (!res.success) {
+          alert(res.message || "更新失败，请稍后再试。")
+          return
+        }
+        alert("个人信息更新成功！")
+      } catch (error) {
+        console.error("更新个人信息错误:", error)
+        alert("更新过程中出现错误，请稍后再试。")
+      }
+    }
+  })
 }
 
 // 公告/Changelog：从 changelog.md 读取并以 Markdown 展示

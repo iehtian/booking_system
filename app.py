@@ -374,6 +374,7 @@ def check_auth():
                 "logged_in": True,
                 "user": {
                     "user_name": user_data["user_name"],
+                    "id": user_data["id"],
                     "color": user_data.get("color", "#FEE2E2"),
                 },
             }
@@ -525,19 +526,18 @@ def serve_changelog_md():
 @app.route("/api/update_password", methods=["POST"])
 @jwt_required()
 def update_password():
-    """允许已登录用户更新密码"""
+    """允许已登录用户更新个人信息"""
     try:
         current_user_name = get_jwt_identity()
         data = request.get_json()
         new_password = data.get("new_password")
+        new_email = data.get("new_email")
+        new_phone = data.get("new_phone")
+        hashed_password = None
+        if new_password:
+            hashed_password = hash_password(new_password)
 
-        if not new_password:
-            return jsonify({"error": "New password is required"}), 400
-
-        # 使用bcrypt加密新密码
-        hashed_password = hash_password(new_password)
-
-        # 更新用户密码
+        # 更新用户信息
         user = db_api.search_user_by_name(current_user_name)
         if not user:
             return jsonify({"error": "User not found"}), 404
@@ -545,7 +545,9 @@ def update_password():
         db_api.upsert_user(
             current_user_name,
             hashed_password,
-            user.get("color", None),
+            user[0][1].get("color", None),
+            new_email,
+            new_phone,
         )
 
         return jsonify({"success": True, "message": "Password updated successfully"})

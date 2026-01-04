@@ -210,7 +210,7 @@ async function checkAuthStatus() {
   }
 }
 
-async function updatePassword(ID, oldPassword, newPassword) {
+async function updateProfile(ID, newPassword, newEmail, newPhone) {
   try {
     const token = localStorage.getItem("access_token")
     if (!token) {
@@ -224,8 +224,9 @@ async function updatePassword(ID, oldPassword, newPassword) {
       },
       body: JSON.stringify({
         ID: ID,
-        old_password: oldPassword,
         new_password: newPassword,
+        new_email: newEmail,
+        new_phone: newPhone,
       }),
     })
     const data = await res.json()
@@ -266,4 +267,4 @@ async function resetPassword(identifier, code, newPassword) {
   }
 }
 
-export { logout, checkAuthStatus, updatePassword, sendResetCode, resetPassword }
+export { logout, checkAuthStatus, updateProfile, sendResetCode, resetPassword }
