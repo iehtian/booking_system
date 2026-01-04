@@ -533,27 +533,30 @@ def update_password():
         new_password = data.get("new_password")
         new_email = data.get("new_email")
         new_phone = data.get("new_phone")
-        hashed_password = None
-        if new_password:
-            hashed_password = hash_password(new_password)
 
         # 更新用户信息
         user = db_api.search_user_by_name(current_user_name)
         if not user:
             return jsonify({"error": "User not found"}), 404
 
+        # 只在提供新密码时才更新密码，否则保持原密码
+        if new_password:
+            hashed_password = hash_password(new_password)
+        else:
+            hashed_password = user[0][1].get("password")  # 假设密码在这个位置
+
         db_api.upsert_user(
             current_user_name,
             hashed_password,
             user[0][1].get("color", None),
-            new_email,
-            new_phone,
+            new_email if new_email else user[0][1].get("email"),  # 邮箱也可能为空
+            new_phone if new_phone else user[0][1].get("phone"),  # 手机号也可能为空
         )
 
-        return jsonify({"success": True, "message": "Password updated successfully"})
+        return jsonify({"success": True, "message": "Profile updated successfully"})
 
     except Exception as e:
-        print(f"更新密码时出错: {e}")
+        print(f"更新个人信息时出错: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 
