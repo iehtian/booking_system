@@ -1,4 +1,10 @@
-import { logout, checkAuthStatus, updateProfile } from "./user_manager.js"
+import {
+  logout,
+  checkAuthStatus,
+  updateProfile,
+  sendResetCode,
+  resetPassword,
+} from "./user_manager.js"
 import { marked } from "marked"
 import { host } from "./config.js"
 
@@ -21,7 +27,7 @@ registerItem?.addEventListener("click", (event) => {
 
 resetPasswordItem?.addEventListener("click", (event) => {
   event.preventDefault()
-  window.location.href = `pages/reset_password.html`
+  openResetPasswordModal().catch(console.error)
 })
 
 logoutItem?.addEventListener("click", (event) => {
@@ -85,6 +91,127 @@ function setupUserMenuAria() {
   menu.addEventListener("mouseleave", () => setExpanded(false))
   trigger.addEventListener("focus", () => setExpanded(true))
   trigger.addEventListener("blur", () => setExpanded(false))
+}
+
+async function openResetPasswordModal() {
+  const result = await Swal.fire({
+    title: "重置密码",
+    html: `
+      <input id="sw-identifier" class="swal2-input" placeholder="账号 (用户名/邮箱/手机)" />
+      <div style="text-align: left; margin: 0 1.5em 10px;">
+        <div style="font-size: 14px; color: #666; margin-bottom: 6px;">验证码接收方式</div>
+        <div style="display: flex; gap: 16px; align-items: center;">
+          <label style="display: flex; align-items: center; gap: 6px;">
+            <input type="radio" name="sw-method" value="email" checked /> 邮箱
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px;">
+            <input type="radio" name="sw-method" value="phone" /> 手机
+          </label>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center; padding: 0 1.5em;">
+        <input id="sw-code" class="swal2-input" placeholder="验证码" style="flex: 1; margin: 0;" />
+        <button type="button" id="sw-send-code" class="swal2-confirm swal2-styled" style="margin: 0;">发送验证码</button>
+      </div>
+      <p id="sw-code-status" style="margin: 6px 1.5em 0; font-size: 13px; color: #666;"></p>
+      <input id="sw-new-password" type="password" class="swal2-input" placeholder="新密码" />
+    `,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: "提交",
+    cancelButtonText: "取消",
+    preConfirm: () => {
+      const identifier = document.getElementById("sw-identifier").value.trim()
+      const code = document.getElementById("sw-code").value.trim()
+      const newPassword = document
+        .getElementById("sw-new-password")
+        .value.trim()
+
+      if (!identifier || !code || !newPassword) {
+        Swal.showValidationMessage("请填写完整信息")
+        return false
+      }
+
+      return { identifier, code, newPassword }
+    },
+    didOpen: () => {
+      const sendBtn = document.getElementById("sw-send-code")
+      const identifierInput = document.getElementById("sw-identifier")
+      const methodInputs = document.querySelectorAll("input[name='sw-method']")
+      const statusEl = document.getElementById("sw-code-status")
+      const codeInput = document.getElementById("sw-code")
+
+      const getMethod = () => {
+        const checked = Array.from(methodInputs).find((el) => el.checked)
+        return checked ? checked.value : "email"
+      }
+
+      const showStatus = (text, isError = false) => {
+        if (statusEl) {
+          statusEl.textContent = text
+          statusEl.style.color = isError ? "#d33" : "#3085d6"
+        }
+      }
+
+      const sendCode = async () => {
+        const identifier = identifierInput.value.trim()
+        if (!identifier) {
+          showStatus("请先输入账号再发送验证码", true)
+          identifierInput.focus()
+          return
+        }
+
+        sendBtn.disabled = true
+        const originalText = sendBtn.textContent
+        sendBtn.textContent = "发送中..."
+        try {
+          const res = await sendResetCode(identifier, getMethod())
+          if (res.success) {
+            showStatus("验证码已发送，请查收")
+            codeInput.focus()
+          } else {
+            showStatus(res.message || "发送失败，请稍后再试", true)
+          }
+        } catch (error) {
+          console.error("发送重置验证码错误:", error)
+          showStatus("发送请求出错", true)
+        } finally {
+          sendBtn.disabled = false
+          sendBtn.textContent = originalText
+        }
+      }
+
+      sendBtn?.addEventListener("click", sendCode)
+    },
+  })
+
+  if (!result.isConfirmed) return
+
+  const { identifier, code, newPassword } = result.value
+  try {
+    const res = await resetPassword(identifier, code, newPassword)
+    if (res.success) {
+      await Swal.fire({
+        icon: "success",
+        title: "密码重置成功",
+        text: "请使用新密码重新登录。",
+      })
+      window.location.href = "pages/login.html"
+    } else {
+      await Swal.fire({
+        icon: "error",
+        title: "重置失败",
+        text: res.message || "请检查验证码是否正确",
+      })
+    }
+  } catch (error) {
+    console.error("重置密码错误:", error)
+    await Swal.fire({
+      icon: "error",
+      title: "重置失败",
+      text: "提交请求出错，请稍后再试。",
+    })
+  }
 }
 
 async function handleUpdateProfile() {
