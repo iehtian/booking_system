@@ -174,7 +174,7 @@ async function openResetPasswordModal() {
       </style>
       <div class="reset-container">
         <div class="reset-form-group">
-          <input id="sw-identifier" class="swal2-input" placeholder="账号 (用户名/邮箱/手机)" />
+          <input id="sw-user_name" class="swal2-input" placeholder="姓名" />
         </div>
         <div class="reset-form-group">
           <div class="reset-radio-group">
@@ -209,22 +209,22 @@ async function openResetPasswordModal() {
       cancelButton: "reset-cancel-btn",
     },
     preConfirm: () => {
-      const identifier = document.getElementById("sw-identifier").value.trim()
+      const user_name = document.getElementById("sw-user_name").value.trim()
       const code = document.getElementById("sw-code").value.trim()
       const newPassword = document
         .getElementById("sw-new-password")
         .value.trim()
 
-      if (!identifier || !code || !newPassword) {
+      if (!user_name || !code || !newPassword) {
         Swal.showValidationMessage("请填写完整信息")
         return false
       }
 
-      return { identifier, code, newPassword }
+      return { user_name, code, newPassword }
     },
     didOpen: () => {
       const sendBtn = document.getElementById("sw-send-code")
-      const identifierInput = document.getElementById("sw-identifier")
+      const user_nameInput = document.getElementById("sw-user_name")
       const methodInputs = document.querySelectorAll("input[name='sw-method']")
       const statusEl = document.getElementById("sw-code-status")
       const codeInput = document.getElementById("sw-code")
@@ -242,10 +242,10 @@ async function openResetPasswordModal() {
       }
 
       const sendCode = async () => {
-        const identifier = identifierInput.value.trim()
-        if (!identifier) {
+        const user_name = user_nameInput.value.trim()
+        if (!user_name) {
           showStatus("请先输入账号再发送验证码", true)
-          identifierInput.focus()
+          user_nameInput.focus()
           return
         }
 
@@ -253,7 +253,7 @@ async function openResetPasswordModal() {
         const originalText = sendBtn.textContent
         sendBtn.textContent = "发送中..."
         try {
-          const res = await sendResetCode(identifier, getMethod())
+          const res = await sendResetCode(user_name, getMethod())
           if (res.success) {
             showStatus("验证码已发送，请查收")
             codeInput.focus()
@@ -289,9 +289,9 @@ async function openResetPasswordModal() {
 
   if (!result.isConfirmed) return
 
-  const { identifier, code, newPassword } = result.value
+  const { user_name, code, newPassword } = result.value
   try {
-    const res = await resetPassword(identifier, code, newPassword)
+    const res = await resetPassword(user_name, code, newPassword)
     if (res.success) {
       await Swal.fire({
         icon: "success",
@@ -333,7 +333,7 @@ async function handleUpdateProfile() {
     html: `
     <div style="font-size: 18px; color: #888; margin-bottom: 10px;">无需更新的项可以留空</div>
     <input id="newpassword" type="password" class="swal2-input" placeholder="新密码">
-    <input id="newemail" type="password" class="swal2-input" placeholder="新邮箱">
+    <input id="newemail" type="text" class="swal2-input" placeholder="新邮箱">
     <input id="newphone" type="text" class="swal2-input" placeholder="新手机号">
   `,
     confirmButtonText: "确认",

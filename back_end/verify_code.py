@@ -78,6 +78,7 @@ def send_email(email, code):
 def send_reset(user_name=None, phone=None, email=None):
     """发送密码重置验证码的辅助函数"""
     reset_code = f"{random.randint(100000, 999999)}"
+    print(f"生成的重置验证码: {reset_code}")
     if phone:
         send_sms(phone, reset_code)
     elif email:

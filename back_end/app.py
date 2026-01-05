@@ -584,6 +584,13 @@ def send_reset_code():
                 return jsonify({"error": "User has no phone number on record"}), 400
             print(f"用户 {user_name} 的手机号: {phone}")
             verify_code.send_reset(user_name=user_name, phone=phone)
+        elif method == "email":
+            email = user.get("email")
+            if not email:
+                print(f"用户 {user_name} 未设置邮箱")
+                return jsonify({"error": "User has no email on record"}), 400
+            print(f"用户 {user_name} 的邮箱: {email}")
+            verify_code.send_reset(user_name=user_name, email=email)
         else:
             return jsonify({"error": "Unsupported method"}), 400
 
@@ -591,6 +598,47 @@ def send_reset_code():
 
     except Exception as e:
         print(f"发送重置验证码时出错: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@app.route("/api/reset_password", methods=["POST"])
+def reset_password():
+    """使用验证码重置密码"""
+    try:
+        data = request.get_json()
+        user_name = data.get("user_name")
+        code = data.get("code")
+        new_password = data.get("new_password")
+        print(
+            f"重置密码请求: user_name={user_name}, code={code}, new_password=[已隐藏]"
+        )
+
+        if not user_name or not code or not new_password:
+            return jsonify({"error": "Missing required fields"}), 400
+
+        if not verify_code.verify_reset_code(user_name, code):
+            print(f"用户 {user_name} 提供的验证码无效")
+            return jsonify({"error": "Invalid or expired reset code"}), 400
+
+        # 验证通过，更新密码
+        hashed_password = hash_password(new_password)
+        user = db_api.search_user_by_name(user_name)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        db_api.upsert_user(
+            user_name,
+            hashed_password,
+            user.get("color", None),
+            user.get("email"),
+            user.get("phone"),
+        )
+
+        print(f"用户 {user_name} 的密码已成功重置")
+        return jsonify({"success": True, "message": "Password has been reset"})
+
+    except Exception as e:
+        print(f"重置密码时出错: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 

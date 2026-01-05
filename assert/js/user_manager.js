@@ -238,12 +238,12 @@ async function updateProfile(ID, newPassword, newEmail, newPhone) {
 }
 
 // 发送重置验证码
-async function sendResetCode(identifier, method) {
+async function sendResetCode(user_name, method) {
   try {
     const res = await fetch(`${host}/api/send_reset_code`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_name: identifier, method }), // method: 'email' or 'phone'
+      body: JSON.stringify({ user_name: user_name, method }), // method: 'email' or 'phone'
     })
     return await res.json()
   } catch (error) {
@@ -253,12 +253,12 @@ async function sendResetCode(identifier, method) {
 }
 
 // 重置密码
-async function resetPassword(identifier, code, newPassword) {
+async function resetPassword(user_name, code, newPassword) {
   try {
     const res = await fetch(`${host}/api/reset_password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ identifier, code, new_password: newPassword }),
+      body: JSON.stringify({ user_name, code, new_password: newPassword }),
     })
     return await res.json()
   } catch (error) {
