@@ -146,8 +146,8 @@ async function openRegisterModal() {
     title: "注册",
     html: `
       <input id="sw-register-username" class="swal2-input" placeholder="姓名" />
-      <input id="sw-register-email" class="swal2-input" placeholder="邮箱（可选）" />
-      <input id="sw-register-phone" class="swal2-input" placeholder="电话（可选）" />
+      <input id="sw-register-email" class="swal2-input" placeholder="邮箱" />
+      <input id="sw-register-phone" class="swal2-input" placeholder="电话" />
       <input id="sw-register-password" type="password" class="swal2-input" placeholder="密码" />
     `,
     focusConfirm: false,
@@ -283,11 +283,12 @@ async function openResetPasswordModal() {
         <div class="reset-form-group">
           <div class="reset-radio-group">
             <label class="reset-radio-label">
-              <input type="radio" name="sw-method" value="email" checked /> 邮箱
+              <input type="radio" name="sw-method" value="phone" checked/> 手机
             </label>
             <label class="reset-radio-label">
-              <input type="radio" name="sw-method" value="phone" /> 手机
+              <input type="radio" name="sw-method" value="email"  /> 邮箱
             </label>
+
           </div>
         </div>
         <div class="reset-form-group">
@@ -307,24 +308,56 @@ async function openResetPasswordModal() {
     confirmButtonText: "提交",
     cancelButtonText: "取消",
     width: "480px",
+    showLoaderOnConfirm: true, // ✅ 启用加载状态
+    allowOutsideClick: () => !Swal.isLoading(), // ✅ 加载时禁止点击外部
     customClass: {
       popup: "reset-password-popup",
       confirmButton: "reset-confirm-btn",
       cancelButton: "reset-cancel-btn",
     },
-    preConfirm: () => {
+    preConfirm: async () => {
       const user_name = document.getElementById("sw-user_name").value.trim()
       const code = document.getElementById("sw-code").value.trim()
       const newPassword = document
         .getElementById("sw-new-password")
         .value.trim()
+      const showTempValidationMessage = (message) => {
+        Swal.showValidationMessage(message)
+        setTimeout(() => {
+          Swal.resetValidationMessage()
+        }, 3000)
+      }
 
-      if (!user_name || !code || !newPassword) {
-        Swal.showValidationMessage("请填写完整信息")
+      // 验证输入
+      if (!user_name) {
+        showTempValidationMessage("请填写姓名")
         return false
       }
 
-      return { user_name, code, newPassword }
+      if (!code) {
+        showTempValidationMessage("请填写验证码")
+        return false
+      }
+
+      if (!newPassword) {
+        showTempValidationMessage("请填写新密码")
+        return false
+      }
+
+      try {
+        const res = await resetPassword(user_name, code, newPassword)
+
+        if (!res.success) {
+          showTempValidationMessage(res.message || "请检查验证码是否正确")
+          return false
+        }
+
+        return { success: true } // 成功后才关闭对话框
+      } catch (error) {
+        console.error("重置密码错误:", error)
+        showTempValidationMessage("提交请求出错，请稍后再试")
+        return false
+      }
     },
     didOpen: () => {
       const sendBtn = document.getElementById("sw-send-code")
@@ -356,6 +389,7 @@ async function openResetPasswordModal() {
         sendBtn.disabled = true
         const originalText = sendBtn.textContent
         sendBtn.textContent = "发送中..."
+
         try {
           const res = await sendResetCode(user_name, getMethod())
           if (res.success) {
@@ -391,67 +425,69 @@ async function openResetPasswordModal() {
     },
   })
 
-  if (!result.isConfirmed) return
-
-  const { user_name, code, newPassword } = result.value
-  try {
-    const res = await resetPassword(user_name, code, newPassword)
-    if (res.success) {
-      await Swal.fire({
-        icon: "success",
-        title: "密码重置成功",
-        text: "请使用新密码重新登录。",
-        confirmButtonText: "确定",
-      })
-      await openLoginModal()
-    } else {
-      await Swal.fire({
-        icon: "error",
-        title: "重置失败",
-        text: res.message || "请检查验证码是否正确",
-        confirmButtonText: "确定",
-      })
-    }
-  } catch (error) {
-    console.error("重置密码错误:", error)
+  if (result.isConfirmed) {
     await Swal.fire({
-      icon: "error",
-      title: "重置失败",
-      text: "提交请求出错，请稍后再试。",
+      icon: "success",
+      title: "密码重置成功",
+      text: "请使用新密码重新登录。",
       confirmButtonText: "确定",
+      timer: 2000,
+      timerProgressBar: true,
     })
+    await openLoginModal()
   }
 }
 
 async function handleUpdateProfile() {
-  const auth = JSON.parse(sessionStorage.getItem("userAuth") || "null")
-  const userId = auth?.user?.ID ?? auth?.user?.id ?? auth?.user?.username
-  if (!userId) {
-    alert("未能获取当前用户 ID，请重新登录后再试。")
-    return
-  }
-
-  // 使用
-  Swal.fire({
+  const result = await Swal.fire({
     title: "更新个人信息",
     html: `
-    <div style="font-size: 18px; color: #888; margin-bottom: 10px;">无需更新的项可以留空</div>
-    <input id="newpassword" type="password" class="swal2-input" placeholder="新密码">
-    <input id="newemail" type="text" class="swal2-input" placeholder="新邮箱">
-    <input id="newphone" type="text" class="swal2-input" placeholder="新手机号">
-  `,
-    confirmButtonText: "确认",
+      <div style="font-size: 14px; color: #888; margin-bottom: 15px;">
+        无需更新的项可以留空
+      </div>
+      <input id="newpassword" type="password" class="swal2-input" placeholder="新密码">
+      <input id="newemail" type="email" class="swal2-input" placeholder="新邮箱">
+      <input id="newphone" type="tel" class="swal2-input" placeholder="新手机号">
+    `,
+    confirmButtonText: "确认更新",
     showCancelButton: true,
     cancelButtonText: "取消",
-    preConfirm: () => ({
-      newPassword: document.getElementById("newpassword").value,
-      newEmail: document.getElementById("newemail").value,
-      newPhone: document.getElementById("newphone").value,
-    }),
-  }).then(async (result) => {
-    console.log(result.value)
-    if (result.isConfirmed) {
-      const { newPassword, newEmail, newPhone } = result.value
+    showLoaderOnConfirm: true,
+    allowOutsideClick: () => !Swal.isLoading(),
+    preConfirm: async () => {
+      const showTempValidationMessage = (message) => {
+        Swal.showValidationMessage(message)
+        setTimeout(() => {
+          Swal.resetValidationMessage()
+        }, 3000)
+      }
+
+      const auth = JSON.parse(sessionStorage.getItem("userAuth") || "null")
+      const userId = auth?.user?.ID ?? auth?.user?.id ?? auth?.user?.username
+
+      if (!userId) {
+        showTempValidationMessage("未能获取当前用户 ID，请重新登录后再试")
+        return false
+      }
+
+      const newPassword = document.getElementById("newpassword").value.trim()
+      const newEmail = document.getElementById("newemail").value.trim()
+      const newPhone = document.getElementById("newphone").value.trim()
+
+      if (!newPassword && !newEmail && !newPhone) {
+        showTempValidationMessage("请至少填写一项需要更新的信息")
+        return false
+      }
+
+      if (newEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+        showTempValidationMessage("请输入有效的邮箱地址")
+        return false
+      }
+
+      if (newPhone && !/^1[3-9]\d{9}$/.test(newPhone)) {
+        showTempValidationMessage("请输入有效的手机号码")
+        return false
+      }
 
       try {
         const res = await updateProfile(
@@ -460,17 +496,31 @@ async function handleUpdateProfile() {
           newEmail || null,
           newPhone || null
         )
+
         if (!res.success) {
-          alert(res.message || "更新失败，请稍后再试。")
-          return
+          showTempValidationMessage(res.message || "更新失败，请稍后再试")
+          return false
         }
-        alert("个人信息更新成功！")
+
+        return { success: true } // 成功后才关闭对话框
       } catch (error) {
         console.error("更新个人信息错误:", error)
-        alert("更新过程中出现错误，请稍后再试。")
+        showTempValidationMessage("更新过程中出现错误，请稍后再试")
+        return false
       }
-    }
+    },
   })
+
+  if (result.isConfirmed) {
+    await Swal.fire({
+      icon: "success",
+      title: "更新成功",
+      text: "个人信息更新成功！",
+      timer: 1500,
+      timerProgressBar: true,
+      showConfirmButton: false,
+    })
+  }
 }
 
 // 公告/Changelog：从 changelog.md 读取并以 Markdown 展示

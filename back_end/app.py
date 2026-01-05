@@ -321,6 +321,8 @@ def get_register_info():
 
     user_name = data.get("user_name")
     password = data.get("password")
+    email = data.get("email")
+    phone = data.get("phone")
     print(f"获取注册信息: 姓名={user_name}, password=[已隐藏]")
 
     if not user_name or not password:
@@ -336,7 +338,7 @@ def get_register_info():
     hashed_password = hash_password(password)
 
     # 使用姓名作为主键和标识
-    db_api.upsert_user(user_name, hashed_password, user_color)
+    db_api.upsert_user(user_name, hashed_password, user_color, email, phone)
 
     # 注册成功后自动生成JWT token，使用姓名作为identity
     access_token = create_access_token(
