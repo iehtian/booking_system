@@ -151,7 +151,7 @@ header.navbar .user-menu-panel a:hover {
 
 /* 公告按钮 */
 /* stylelint-disable selector-id-pattern */
-#announcementsBtn {
+#announcements-btn {
   display: flex;
   align-items: center;
   padding: 0.5rem 1.1rem;
@@ -172,9 +172,68 @@ header.navbar .user-menu-panel a:hover {
   gap: 0.3rem;
 }
 
-#announcementsBtn:hover {
+#announcements-btn:hover {
   background: linear-gradient(90deg, #2563eb 0%, #50c9ce 100%);
   box-shadow: 0 4px 16px rgb(74 144 226 / 18%);
   transform: translateY(-1px) scale(1.04);
 }
 /* stylelint-enable selector-id-pattern */
+
+@media (width <= 768px) {
+  .navbar {
+    padding: 0 1rem;
+  }
+
+  .logo {
+    font-size: 1.2rem;
+  }
+
+  .user-actions {
+    gap: 0.6rem;
+  }
+
+  .show-name {
+    max-width: 9rem;
+    overflow: hidden;
+    font-size: 0.95rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .user-menu-trigger {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  #announcements-btn {
+    padding: 0.45rem 0.85rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (width <= 520px) {
+  .navbar {
+    padding: 0 0.75rem;
+  }
+
+  .user-actions {
+    justify-content: flex-end;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+  }
+
+  .show-name {
+    max-width: 7rem;
+    font-size: 0.9rem;
+  }
+
+  .user-menu-trigger {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.88rem;
+  }
+
+  #announcements-btn {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.9rem;
+  }
+}

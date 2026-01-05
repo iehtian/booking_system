@@ -555,7 +555,7 @@ function extractVersionFromHeading(heading) {
 }
 
 async function setupAnnouncements() {
-  const btn = document.querySelector("#announcementsBtn")
+  const btn = document.querySelector("#announcements-btn")
   const modal = document.querySelector("#announcementModal")
   const backdrop = document.querySelector("#announcementBackdrop")
   const closeBtn = document.querySelector("#announcementClose")
