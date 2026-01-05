@@ -8,12 +8,15 @@ from flask_jwt_extended import (
 )
 import bcrypt
 import random
+from pathlib import Path
 from config import Config, SKIP_NAMES, spug_key
 import datebase as db_api
 import verify_code
 
 
 app = Flask(__name__)
+# 工程根目录，便于定位 changelog.md
+BASE_DIR = Path(__file__).resolve().parent.parent
 # 允许本地 http 与 https 的前端来源；开发推荐使用 Vite 代理后可不依赖 CORS
 CORS(
     app,
@@ -523,7 +526,10 @@ def serve_changelog_md():
     """在生产环境通过后端路由提供 changelog.md。
     前端以 `/changelog.md` 访问即可，无需静态服务器额外配置。
     """
-    return send_from_directory(app.root_path, "changelog.md")
+    changelog_path = BASE_DIR / "changelog.md"
+    if not changelog_path.exists():
+        return jsonify({"error": "changelog.md not found"}), 404
+    return send_from_directory(changelog_path.parent, changelog_path.name)
 
 
 @app.route("/api/update_password", methods=["POST"])
