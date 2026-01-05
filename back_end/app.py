@@ -10,7 +10,7 @@ import bcrypt
 import random
 from config import Config, SKIP_NAMES, spug_key
 import datebase as db_api
-import requests
+import verify_code
 
 
 app = Flask(__name__)
@@ -561,17 +561,6 @@ def update_password():
         return jsonify({"error": "Internal server error"}), 500
 
 
-def send_reset(phone=None, email=None):
-    """发送密码重置验证码的辅助函数"""
-    reset_code = f"{random.randint(100000, 999999)}"
-    if phone:
-        print(f"发送短信验证码 {reset_code} 到手机号 {phone}")
-        body = {"name": "cpulab", "code": reset_code, "targets": phone}
-        requests.post(f"https://push.spug.cc/send/{spug_key}", json=body)
-
-    pass  # 实现发送验证码的逻辑
-
-
 @app.route("/api/send_reset_code", methods=["POST"])
 def send_reset_code():
     """发送密码重置验证码"""
@@ -594,7 +583,7 @@ def send_reset_code():
                 print(f"用户 {user_name} 未设置手机号")
                 return jsonify({"error": "User has no phone number on record"}), 400
             print(f"用户 {user_name} 的手机号: {phone}")
-            send_reset(phone=phone)
+            verify_code.send_reset(user_name=user_name, phone=phone)
         else:
             return jsonify({"error": "Unsupported method"}), 400
 
