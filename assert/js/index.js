@@ -1,4 +1,6 @@
 import {
+  login,
+  register,
   logout,
   checkAuthStatus,
   updateProfile,
@@ -17,12 +19,12 @@ const deleteAccountItem = document.querySelector("#menu-delete-account")
 
 loginItem?.addEventListener("click", (event) => {
   event.preventDefault()
-  window.location.href = `pages/login.html`
+  openLoginModal().catch(console.error)
 })
 
 registerItem?.addEventListener("click", (event) => {
   event.preventDefault()
-  window.location.href = `pages/register.html`
+  openRegisterModal().catch(console.error)
 })
 
 resetPasswordItem?.addEventListener("click", (event) => {
@@ -91,6 +93,108 @@ function setupUserMenuAria() {
   menu.addEventListener("mouseleave", () => setExpanded(false))
   trigger.addEventListener("focus", () => setExpanded(true))
   trigger.addEventListener("blur", () => setExpanded(false))
+}
+
+async function openLoginModal() {
+  const result = await Swal.fire({
+    title: "登录",
+    html: `
+      <input id="sw-login-username" class="swal2-input" placeholder="姓名" autocomplete="username" />
+      <input id="sw-login-password" type="password" class="swal2-input" placeholder="密码" autocomplete="current-password" />
+    `,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: "登录",
+    cancelButtonText: "取消",
+    showLoaderOnConfirm: true,
+    allowOutsideClick: () => !Swal.isLoading(),
+    preConfirm: async () => {
+      const user_name = document
+        .getElementById("sw-login-username")
+        .value.trim()
+      const password = document.getElementById("sw-login-password").value
+
+      if (!user_name || !password) {
+        Swal.showValidationMessage("请填写账号和密码")
+        return false
+      }
+
+      const res = await login(user_name, password)
+      const isOk = res.success ?? !!res.access_token
+      if (!isOk) {
+        Swal.showValidationMessage(res.message || "登录失败，请重试")
+        return false
+      }
+      return { user_name }
+    },
+  })
+
+  if (!result.isConfirmed) return
+
+  await checkAuthStatus()
+  await Swal.fire({
+    icon: "success",
+    title: "登录成功",
+    timer: 1200,
+    showConfirmButton: false,
+  })
+  window.location.reload()
+}
+
+async function openRegisterModal() {
+  const result = await Swal.fire({
+    title: "注册",
+    html: `
+      <input id="sw-register-username" class="swal2-input" placeholder="姓名" />
+      <input id="sw-register-email" class="swal2-input" placeholder="邮箱（可选）" />
+      <input id="sw-register-phone" class="swal2-input" placeholder="电话（可选）" />
+      <input id="sw-register-password" type="password" class="swal2-input" placeholder="密码" />
+    `,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: "注册",
+    cancelButtonText: "取消",
+    showLoaderOnConfirm: true,
+    allowOutsideClick: () => !Swal.isLoading(),
+    preConfirm: async () => {
+      const user_name = document
+        .getElementById("sw-register-username")
+        .value.trim()
+      const email = document.getElementById("sw-register-email").value.trim()
+      const phone = document.getElementById("sw-register-phone").value.trim()
+      const password = document.getElementById("sw-register-password").value
+
+      if (!user_name || !password) {
+        Swal.showValidationMessage("姓名和密码为必填项")
+        return false
+      }
+
+      const res = await register(
+        user_name,
+        email || null,
+        phone || null,
+        password
+      )
+      const isOk = res.success ?? !!res.access_token
+      if (!isOk) {
+        Swal.showValidationMessage(res.message || "注册失败，请稍后再试")
+        return false
+      }
+      return { user_name }
+    },
+  })
+
+  if (!result.isConfirmed) return
+
+  await checkAuthStatus()
+  await Swal.fire({
+    icon: "success",
+    title: "注册成功",
+    text: "已自动登录，如未登录请再试一次。",
+    timer: 1500,
+    showConfirmButton: false,
+  })
+  window.location.reload()
 }
 
 async function openResetPasswordModal() {
@@ -299,7 +403,7 @@ async function openResetPasswordModal() {
         text: "请使用新密码重新登录。",
         confirmButtonText: "确定",
       })
-      window.location.href = "pages/login.html"
+      await openLoginModal()
     } else {
       await Swal.fire({
         icon: "error",

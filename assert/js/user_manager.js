@@ -267,4 +267,12 @@ async function resetPassword(user_name, code, newPassword) {
   }
 }
 
-export { logout, checkAuthStatus, updateProfile, sendResetCode, resetPassword }
+export {
+  login,
+  register,
+  logout,
+  checkAuthStatus,
+  updateProfile,
+  sendResetCode,
+  resetPassword,
+}
