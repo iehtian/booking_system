@@ -1,6 +1,7 @@
 import psycopg2
 from contextlib import contextmanager
 import logging
+from datetime import datetime
 
 
 DB_CONFIG = {
@@ -302,7 +303,7 @@ def search_booking_by_user_and_date(user_id, date):
     return [_row_to_booking(row) for row in rows]
 
 
-def delete_booking(booking_id):
+def delete_booking_by_id(booking_id):
     """删除预约"""
     sql = f"DELETE FROM {BOOKING_TABLE} WHERE id = %s"
     with get_connection() as conn:
@@ -310,6 +311,56 @@ def delete_booking(booking_id):
             cur.execute(sql, (booking_id,))
             conn.commit()
     print(f"Deleted booking id={booking_id}")
+
+
+def delete_bookings_by_dates(instrument_id, date_list):
+    """删除某仪器在指定日期列表的所有预约"""
+    sql = f"DELETE FROM {BOOKING_TABLE} WHERE instrument_id = %s AND booking_date = ANY(%s)"
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, (instrument_id, date_list))
+            conn.commit()
+    print(f"Deleted bookings for instrument_id={instrument_id} on dates={date_list}")
+
+
+def delete_bookings_by_slots(instrument_id, date, slots):
+    """删除某仪器在指定日期的指定时间段预约"""
+    if not slots:
+        return 0
+
+    time_pairs = []
+    for slot in slots:
+        try:
+            start_str, end_str = slot.split("-")
+            start_time = datetime.strptime(start_str, "%H:%M").time()
+            end_time = datetime.strptime(end_str, "%H:%M").time()
+            time_pairs.append((start_time, end_time))
+        except ValueError as exc:
+            raise ValueError(f"Invalid slot format: {slot}") from exc
+
+    # Psycopg2 无法直接绑定 row-valued IN，需要使用 mogrify 构造 VALUES 列表
+    values_clause = ",".join(["(%s, %s)"] * len(time_pairs))
+    sql = f"""
+        DELETE FROM {BOOKING_TABLE}
+        WHERE instrument_id = %s
+          AND booking_date = %s
+          AND (start_time, end_time) IN ({values_clause})
+    """
+
+    params = [instrument_id, date]
+    for start_time, end_time in time_pairs:
+        params.extend([start_time, end_time])
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, params)
+            deleted = cur.rowcount
+            conn.commit()
+
+    print(
+        f"Deleted {deleted} bookings for instrument_id={instrument_id} on date={date} slots={slots}"
+    )
+    return deleted
 
 
 # -------- 初始化 --------

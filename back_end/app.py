@@ -195,20 +195,15 @@ def cancel_booking():
             if slot not in times:
                 return jsonify({"error": f"Time slot {slot} is not booked"}), 404
 
-        successful_cancellations = []
-        for slot in slots:
-            booking_id = f"{instrument}:{date}:{slot}"
-            db_api.delete_booking(booking_id)
-            successful_cancellations.append(slot)
+        deleted_count = db_api.delete_bookings_by_slots(instrument, date, slots)
+        successful_cancellations = list(slots)
 
-        print(
-            f"批量取消预约成功: {date} 取消了 {len(successful_cancellations)} 个时间段"
-        )
+        print(f"批量取消预约成功: {date} 取消了 {deleted_count} 个时间段")
         print(f"取消的时间段: {successful_cancellations}")
         return jsonify(
             {
                 "success": True,
-                "message": f"Successfully cancelled {len(successful_cancellations)} time slots on {date}",
+                "message": f"Successfully cancelled {deleted_count} time slots on {date}",
                 "cancelled_slots": successful_cancellations,
             }
         )

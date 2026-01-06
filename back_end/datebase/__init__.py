@@ -12,7 +12,8 @@ from .pgsql_client import (
     search_booking_by_date,
     search_booking_by_user_and_date,
     create_booking_index,
-    delete_booking,
+    delete_bookings_by_dates,
+    delete_bookings_by_slots,
 )
 
 from .mysql_client import (
@@ -49,6 +50,8 @@ __all__ = [
     "search_booking_by_date",
     "search_booking_by_user_and_date",
     "delete_booking",
+    "delete_bookings_by_dates",
+    "delete_bookings_by_slots",
     "initialize_database",
     "connect_to_database",
     "upsert_plan_field",
