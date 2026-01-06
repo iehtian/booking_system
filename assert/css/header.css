@@ -53,8 +53,7 @@ header.navbar .logo:focus-visible {
   cursor: pointer;
 }
 
-.user-menu-trigger:hover,
-.user-menu:focus-within .user-menu-trigger {
+.user-menu-trigger:hover {
   background: #e5ecf6;
   border-color: #2563eb;
   box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
@@ -80,7 +79,6 @@ header.navbar .logo:focus-visible {
 }
 
 .user-menu:hover .user-menu-panel,
-.user-menu:focus-within .user-menu-panel,
 .user-menu.is-open .user-menu-panel {
   opacity: 1;
   pointer-events: auto;

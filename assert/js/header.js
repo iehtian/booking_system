@@ -80,8 +80,6 @@ function wireUserMenuHover() {
   menu.addEventListener("mouseleave", close)
   panel.addEventListener("mouseenter", open)
   panel.addEventListener("mouseleave", close)
-  trigger?.addEventListener("focus", open)
-  trigger?.addEventListener("blur", close)
 }
 
 document.addEventListener("DOMContentLoaded", () => {

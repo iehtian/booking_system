@@ -91,8 +91,6 @@ function setupUserMenuAria() {
 
   menu.addEventListener("mouseenter", () => setExpanded(true))
   menu.addEventListener("mouseleave", () => setExpanded(false))
-  trigger.addEventListener("focus", () => setExpanded(true))
-  trigger.addEventListener("blur", () => setExpanded(false))
 }
 
 async function openLoginModal() {
@@ -147,7 +145,6 @@ async function openRegisterModal() {
     html: `
       <input id="sw-register-username" class="swal2-input" placeholder="姓名" />
       <input id="sw-register-email" class="swal2-input" placeholder="邮箱" />
-      <input id="sw-register-phone" class="swal2-input" placeholder="电话" />
       <input id="sw-register-password" type="password" class="swal2-input" placeholder="密码" />
     `,
     focusConfirm: false,
@@ -161,7 +158,7 @@ async function openRegisterModal() {
         .getElementById("sw-register-username")
         .value.trim()
       const email = document.getElementById("sw-register-email").value.trim()
-      const phone = document.getElementById("sw-register-phone").value.trim()
+      const phone = null
       const password = document.getElementById("sw-register-password").value
 
       if (!user_name || !password) {
@@ -283,10 +280,7 @@ async function openResetPasswordModal() {
         <div class="reset-form-group">
           <div class="reset-radio-group">
             <label class="reset-radio-label">
-              <input type="radio" name="sw-method" value="phone" checked/> 手机
-            </label>
-            <label class="reset-radio-label">
-              <input type="radio" name="sw-method" value="email"  /> 邮箱
+              <input type="radio" name="sw-method" value="email"  checked/> 邮箱
             </label>
 
           </div>
@@ -447,7 +441,6 @@ async function handleUpdateProfile() {
       </div>
       <input id="newpassword" type="password" class="swal2-input" placeholder="新密码">
       <input id="newemail" type="email" class="swal2-input" placeholder="新邮箱">
-      <input id="newphone" type="tel" class="swal2-input" placeholder="新手机号">
     `,
     confirmButtonText: "确认更新",
     showCancelButton: true,
@@ -472,7 +465,7 @@ async function handleUpdateProfile() {
 
       const newPassword = document.getElementById("newpassword").value.trim()
       const newEmail = document.getElementById("newemail").value.trim()
-      const newPhone = document.getElementById("newphone").value.trim()
+      const newPhone = null
 
       if (!newPassword && !newEmail && !newPhone) {
         showTempValidationMessage("请至少填写一项需要更新的信息")
