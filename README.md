@@ -45,11 +45,11 @@ redis-cli ping  # 预期输出：PONG
 
 ## 开发模式启动（推荐本地调试）
 
-`app.py` 已包含 `if __name__ == '__main__':` 启动入口，默认监听 `0.0.0.0:5000` 且开启 debug。
+`back_end/app.py` 已包含 `if __name__ == '__main__':` 启动入口，默认监听 `0.0.0.0:5000` 且开启 debug。
 
 ```bash
 # 在虚拟环境中
-python app.py
+python back_end/app.py
 ```
 
 启动后访问：
@@ -70,13 +70,13 @@ CORS 已允许以下前端来源（Vite 默认端口）：
 项目内包含 `gunicorn.conf.py`。使用如下命令启动：
 
 ```bash
-gunicorn -c gunicorn.conf.py app:app
+gunicorn -c gunicorn.conf.py back_end.app:app
 ```
 
 如需指定绑定地址或进程数（若未在配置文件中设置），可追加参数：
 
 ```bash
-gunicorn -w 4 -b 0.0.0.0:5000 -c gunicorn.conf.py app:app
+gunicorn -w 4 -b 0.0.0.0:5000 -c gunicorn.conf.py back_end.app:app
 ```
 
 ## 环境变量

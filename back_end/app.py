@@ -9,7 +9,7 @@ from flask_jwt_extended import (
 import bcrypt
 import random
 from pathlib import Path
-from config import Config, SKIP_NAMES, spug_key
+from config import Config, SKIP_NAMES
 import datebase as db_api
 import verify_code
 
