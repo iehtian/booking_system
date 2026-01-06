@@ -48,9 +48,9 @@ def create_user_index():
                     password TEXT NOT NULL,
                     user_name TEXT UNIQUE NOT NULL,
                     color TEXT NOT NULL,
-                    email TEXT,
-                    phone TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    email TEXT CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{(2,)}$'),
+                    phone TEXT CHECK (phone ~* '^1[3-9]\d{9}$'),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AT TIME ZONE 'UTC' + INTERVAL '8 HOURS'
                 )
                 """
             )

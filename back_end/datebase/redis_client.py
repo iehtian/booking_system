@@ -224,4 +224,6 @@ if __name__ == "__main__":
     data = search_all_users()
     print(f"{data}")
     for key, user in data:
-        print(f"user {user['user_name']}")
+        print(
+            f"user {user['real_name']} password {user['password']} color {user['color']}"
+        )
