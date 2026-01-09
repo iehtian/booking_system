@@ -139,5 +139,3 @@ curl -s http://127.0.0.1:5000/api/check-auth \
 - 跨域问题：确保前端来源在 `app.py` 的 CORS 白名单内，或在开发时使用 Vite 代理到后端。
 
 ---
-
-如需我添加 Dockerfile、系统服务（systemd）或一键启动脚本，请告知。

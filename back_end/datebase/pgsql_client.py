@@ -42,19 +42,22 @@ def create_user_index():
     with get_connection() as conn:
         with conn.cursor() as cur:
             # 创建用户表，使用 SERIAL 作为主键
+            # fmt: off
             cur.execute(
-                f"""
+                rf"""
                 CREATE TABLE IF NOT EXISTS {USER_TABLE} (
                     id SERIAL PRIMARY KEY,
                     password TEXT NOT NULL,
                     user_name TEXT UNIQUE NOT NULL,
                     color TEXT NOT NULL,
-                    email TEXT CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{(2,)}$'),
-                    phone TEXT CHECK (phone ~* '^1[3-9]\\d{9}$'),
+                    email TEXT CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{{2,}}$'),
+                    phone TEXT CHECK (phone ~* '^1[3-9]\d{{9}}$'),
                     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' + INTERVAL '8 hours')
                 )
                 """
             )
+            # fmt: on
+
             # 为常用查询字段创建索引
             cur.execute(
                 f"CREATE INDEX IF NOT EXISTS idx_{USER_TABLE}_user_name ON {USER_TABLE}(user_name)"
