@@ -33,8 +33,6 @@ export default defineConfig({
         main: resolve(process.cwd(), "index.html"),
         a_instrument: resolve(process.cwd(), "pages/a_instrument.html"),
         b_instrument: resolve(process.cwd(), "pages/b_instrument.html"),
-        login: resolve(process.cwd(), "pages/login.html"),
-        register: resolve(process.cwd(), "pages/register.html"),
         output_bookings: resolve(process.cwd(), "pages/output_bookings.html"),
         daily_plan: resolve(process.cwd(), "pages/daily_plan.html"),
       },
