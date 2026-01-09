@@ -1,5 +1,5 @@
 import { host } from "./config.js"
-import { restDays, workDays, isRestDay, isWorkDay } from "./holidays.js"
+import { isRestDay } from "./holidays.js"
 
 // 使用本地时区处理日期，避免 UTC 偏移导致的前后一天问题
 function formatDateLocal(date) {
@@ -44,9 +44,9 @@ document
   .querySelector("#appointment-date")
   .addEventListener("change", () => init())
 
-async function fetchCurrentUserPlan(user_id, date) {
+async function fetchCurrentUserPlan(username, date) {
   const res = await fetch(
-    `${host}/api/daily_plan/get?date=${date}&&user_id=${user_id}`,
+    `${host}/api/daily_plan/get?date=${date}&&user_name=${username}`,
     {
       method: "GET",
       headers: { "Content-Type": "application/json" },
@@ -59,14 +59,14 @@ async function fetchCurrentUserPlan(user_id, date) {
 }
 
 async function update_info(
-  user_id,
+  user_name,
   date,
   plan = null,
   status = null,
   remark = null
 ) {
   // 构造仅包含有效字段的请求体，避免未选择状态时默认写入未完成
-  const postData = { user_id, date }
+  const postData = { user_name, date }
   if (plan !== null) postData.plan = plan
   if (status !== null) postData.status = status
   if (remark !== null) postData.remark = remark
@@ -124,7 +124,7 @@ function createRadio(name, value, checked, disabled) {
 }
 
 function renderCurrentUserRow(username, info, options = {}) {
-  const tbody = document.getElementById("plans-tbody")
+  const tbody = document.querySelector("#plans-tbody")
   // 当前用户行
   const tr = document.createElement("tr")
   tr.className = "current-user-row"
@@ -207,7 +207,7 @@ function renderCurrentUserRow(username, info, options = {}) {
 
   // 若所选日期已过去，则不允许修改/提交
   const isPastSelectedDate = () => {
-    const dateStr = document.getElementById("appointment-date").value
+    const dateStr = document.querySelector("#appointment-date").value
     if (!dateStr) return false
     const selected = parseDateLocal(dateStr)
     const today = new Date()
@@ -233,7 +233,7 @@ function renderCurrentUserRow(username, info, options = {}) {
   btnSubmit.addEventListener("click", () => {
     // 过去日期不可提交
     const past = (() => {
-      const dateStr = document.getElementById("appointment-date").value
+      const dateStr = document.querySelector("#appointment-date").value
       if (!dateStr) return false
       const selected = parseDateLocal(dateStr)
       const today = new Date()
@@ -247,21 +247,21 @@ function renderCurrentUserRow(username, info, options = {}) {
       return
     }
     const date = formatDateLocal(
-      parseDateLocal(document.getElementById("appointment-date").value)
+      parseDateLocal(document.querySelector("#appointment-date").value)
     )
     const plan = taPlan.value
     // 若未选择完成情况，则不提交该字段，避免默认未完成
-    const completeEl = document.getElementById("complete")
-    const incompleteEl = document.getElementById("incomplete")
+    const completeEl = document.querySelector("#complete")
+    const incompleteEl = document.querySelector("#incomplete")
     // 状态编码：已完成=1，未完成=0，未选择=2
     let status = 2
     if (completeEl?.checked) status = 1
     else if (incompleteEl?.checked) status = 0
     const remark = taRemark.value
-    // 获取当前用户 ID 并传递给接口
+    // 获取当前用户 user_name 并传递给接口
     const userAuth = JSON.parse(sessionStorage.getItem("userAuth") || "null")
-    const user_id = userAuth && userAuth.user ? userAuth.user.ID : null
-    update_info(user_id, date, plan, status, remark).then(() => {
+    const user_name = userAuth && userAuth.user ? userAuth.user.user_name : null
+    update_info(user_name, date, plan, status, remark).then(() => {
       // 提交后保持可编辑状态，便于随时继续修改
       enableCurrentInputs()
     })
@@ -271,14 +271,14 @@ function renderCurrentUserRow(username, info, options = {}) {
 function disableCurrentInputs() {
   const ids = ["plan", "complete", "incomplete", "updatePlanBtn", "remark"]
   ids.forEach((id) => {
-    const el = document.getElementById(id)
+    const el = document.querySelector("#" + id)
     if (el) el.disabled = true
   })
 }
 function enableCurrentInputs() {
   const ids = ["plan", "complete", "incomplete", "updatePlanBtn", "remark"]
   // 若所选日期已过去，则不启用
-  const dateStr = document.getElementById("appointment-date")?.value
+  const dateStr = document.querySelector("#appointment-date")?.value
   if (dateStr) {
     const selected = parseDateLocal(dateStr)
     const today = new Date()
@@ -290,14 +290,14 @@ function enableCurrentInputs() {
     // 允许昨天与今天，早于昨天禁用
     if (selected < yesterday) {
       ids.forEach((id) => {
-        const el = document.getElementById(id)
+        const el = document.querySelector("#" + id)
         if (el) el.disabled = true
       })
       return
     }
   }
   ids.forEach((id) => {
-    const el = document.getElementById(id)
+    const el = document.querySelector("#" + id)
     if (el) el.disabled = false
   })
 }
@@ -311,7 +311,7 @@ async function evaluateYesterdayPlan(selectedDate, userAuth) {
     const yesterdayPlans = await fetchAllPlans(yesterdayStr)
     yesterdayPlans.forEach((u) => {
       const { user, info } = u
-      if (userAuth && user === userAuth.user.name) {
+      if (userAuth && user === userAuth.user.user_name) {
         if (info.length) {
           const statusData = info[0][1]
           const remarkData = info[0][2]
@@ -337,7 +337,7 @@ async function evaluateYesterdayPlan(selectedDate, userAuth) {
 function renderOtherUserRow(userObj, currentUserName) {
   const { user, info } = userObj
   if (user === currentUserName) return // 已用当前用户行替代
-  const tbody = document.getElementById("plans-tbody")
+  const tbody = document.querySelector("#plans-tbody")
   const tr = document.createElement("tr")
   const planData = info.length ? info[0][0] : ""
   const statusData = info.length ? info[0][1] : null
@@ -424,10 +424,10 @@ async function init() {
 
   // 选中日期（Date 对象）与其字符串形式
   const selectedDate = parseDateLocal(
-    document.getElementById("appointment-date").value
+    document.querySelector("#appointment-date").value
   )
   const dateStr = formatDateLocal(selectedDate)
-  const tbody = document.getElementById("plans-tbody")
+  const tbody = document.querySelector("#plans-tbody")
   tbody.innerHTML = "" // 清空旧内容
   // const _yestoday = date - 1 // 未使用
 
@@ -452,18 +452,14 @@ async function init() {
     : await evaluateYesterdayPlan(selectedDate, userAuth)
 
   if (userAuth && userAuth.logged_in) {
-    const currentUserName = userAuth.user.name
-    const user_id = userAuth.user.ID
-    const currentPlanInfo = await fetchCurrentUserPlan(user_id, dateStr)
+    const currentUserName = userAuth.user.user_name
+    const currentPlanInfo = await fetchCurrentUserPlan(currentUserName, dateStr)
     // 调试输出当前用户信息与计划数据
     console.log("[DatePlan] 当前用户认证信息:", userAuth)
-    console.log("[DatePlan] 当前用户ID:", user_id, "日期:", dateStr)
     console.log("[DatePlan] 当前用户计划信息:", currentPlanInfo)
     renderCurrentUserRow(currentUserName, currentPlanInfo, {
       forceDisable: disableToday,
     })
-
-    // 已在前面统一评估昨日计划，这里不再重复
 
     const all = await fetchAllPlans(dateStr)
     all.forEach((u) => renderOtherUserRow(u, currentUserName))

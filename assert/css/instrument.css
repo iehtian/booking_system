@@ -117,13 +117,6 @@ label {
   cursor: pointer;
 }
 
-.date-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0.3rem;
-}
-
 .date-display-box {
   position: sticky;
 
@@ -171,32 +164,6 @@ label {
   border-left: 1px solid #000; /* 第一个元素添加左边线 */
 }
 
-/* 首列（“时间”列）使用不同背景色以便与可点击的 slot 区分 */
-
-.week-range:first-child .week-time-slot-item {
-  color: #374151;
-  background-color: #eef2ff;
-}
-
-.week-date {
-  position: sticky;
-
-  /* 5rem ≈ 导航高 3.5rem + 自身间距，改为以变量起点进行微调 */
-  top: calc(var(--nav-h, 3.5rem) + 1.5rem);
-  z-index: 1;
-  flex: 1; /* 允许元素增长以填充可用空间 */
-  padding: 0.5rem;
-  text-align: center;
-  color: #4a5568;
-  background-color: #edf2f7;
-  border-bottom: 1px solid #cbd5e0; /* 添加底部边框 */
-}
-
-/* 当页面不显示 date-display-box（例如 `b_instrument.html`）时，取消额外的 1.5rem 顶部偏移 */
-.no-date-display .week-date {
-  top: var(--nav-h, 3.5rem);
-}
-
 .week-time-slot-item {
   position: relative; /* 为 input 的绝对定位提供参照 */
   width: 100%;
@@ -217,6 +184,33 @@ label {
   background-color: #e0f2fe;
 }
 
+.week-range:first-child .week-time-slot-item {
+  color: #374151;
+  background-color: #eef2ff;
+}
+
+.week-range:first-child .highlight ~ .week-time-slot-item {
+  background-color: #e0f2fe;
+}
+
+.week-date {
+  position: sticky;
+
+  /* 5rem ≈ 导航高 3.5rem + 自身间距，改为以变量起点进行微调 */
+  top: calc(var(--nav-h, 3.5rem) + 1.5rem);
+  z-index: 1;
+  flex: 1; /* 允许元素增长以填充可用空间 */
+  padding: 0.5rem;
+  text-align: center;
+  color: #4a5568;
+  background-color: #edf2f7;
+  border-bottom: 1px solid #cbd5e0; /* 添加底部边框 */
+}
+
+.no-date-display .week-date {
+  top: var(--nav-h, 3.5rem);
+}
+
 .week-time-slot-item.disabled-slot {
   background: #f3f4f6;
 }
@@ -228,10 +222,6 @@ label {
 .disabled-slot input[type="checkbox"]:hover + label,
 .no-login-slot input[type="checkbox"]:hover + label {
   cursor: not-allowed; /* 鼠标悬停时显示禁止图标 */
-}
-
-.button-hidden {
-  display: none; /* 默认隐藏 */
 }
 
 .weekly-text {

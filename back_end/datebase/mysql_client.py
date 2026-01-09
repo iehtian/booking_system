@@ -14,10 +14,10 @@ def connect_to_database():
     return db
 
 
-def get_dateinfo(db, user_id, date):
+def get_dateinfo(db, user_name, date):
     cursor = db.cursor()
-    sql = "SELECT plan,status,remark FROM plans WHERE user_id = %s AND date = %s"
-    val = (user_id, date)
+    sql = "SELECT plan,status,remark FROM plans WHERE user_name = %s AND date = %s"
+    val = (user_name, date)
 
     cursor.execute(sql, val)
     results = cursor.fetchall()
@@ -25,7 +25,7 @@ def get_dateinfo(db, user_id, date):
     return results
 
 
-def upsert_plan_field(db, user_id, date, field, value):
+def upsert_plan_field(db, user_name, date, field, value):
     """根据是否已有记录插入或更新指定字段。
     仅允许更新 plan / status / remark 三个字段以避免 SQL 注入。
     若更新字段为 status，则其值只能是 0 或 1。
@@ -47,18 +47,25 @@ def upsert_plan_field(db, user_id, date, field, value):
         value = int(value)
 
     cursor = db.cursor()
-    exists = get_dateinfo(db, user_id, date)
+    exists = get_dateinfo(db, user_name, date)
     if exists:
-        sql = f"UPDATE plans SET {field} = %s WHERE user_id = %s AND date = %s"
-        val = (value, user_id, date)
+        sql = f"UPDATE plans SET {field} = %s WHERE user_name = %s AND date = %s"
+        val = (value, user_name, date)
     else:
-        sql = f"INSERT INTO plans (user_id,date,{field}) VALUES (%s, %s, %s)"
-        val = (user_id, date, value)
+        sql = f"INSERT INTO plans (user_name,date,{field}) VALUES (%s, %s, %s)"
+        val = (user_name, date, value)
     cursor.execute(sql, val)
     db.commit()
     print(f"{field} 字段更新成功！")
 
-    # 如果需要一次性更新多个字段，可在外部多次调用 upsert_plan_field。
+
+def delete_user_data(db, user_name):
+    cursor = db.cursor()
+    sql = "DELETE FROM plans WHERE user_name = %s"
+    val = (user_name,)
+    cursor.execute(sql, val)
+    db.commit()
+    print(f"user_name 为 {user_name} 的数据已删除！")
 
 
 if __name__ == "__main__":

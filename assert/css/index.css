@@ -26,13 +26,6 @@ body {
   flex-direction: column;
 }
 
-.title {
-  margin-bottom: 2.5rem;
-  font-size: 2.4rem;
-  color: #fff;
-  text-shadow: 0 2px 6px rgb(0 0 0 / 20%);
-}
-
 /* 登录提示条 */
 .login-hint {
   display: inline-block;
@@ -207,35 +200,3 @@ body {
 }
 
 /* `.hidden` 已移至 background.css 作为通用工具类 */
-
-.show-name {
-  margin-bottom: 0.5rem;
-  font-size: 1.25rem;
-  text-align: center;
-  background: linear-gradient(
-    45deg,
-    #ff6b6b,
-    #4ecdc4,
-    #45b7d1,
-    #96ceb4,
-    #feca57
-  );
-  background-size: 300% 300%;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gradient-shift 3s ease-in-out infinite;
-}
-
-@keyframes gradient-shift {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
-}

@@ -1,22 +1,26 @@
 """
 Database operations package for order management system.
-This package contains Redis operations for users and bookings.
+This package now uses PostgreSQL for users and bookings to replace Redis.
 """
 
-from .redis_client import (
+from .pgsql_client import (
     upsert_user,
-    search_user_by_ID,
+    search_user_by_name,
     search_all_users,
     create_user_index,
     upsert_booking,
     search_booking_by_date,
-    search_booking_by_date_and_name,
+    search_booking_by_user_and_date,
     create_booking_index,
-    search_all_users,
-    delete_booking,
+    delete_bookings_by_dates,
+    delete_bookings_by_slots,
 )
 
-from .mysql_client import connect_to_database, upsert_plan_field, get_dateinfo
+from .mysql_client import (
+    connect_to_database,
+    upsert_plan_field,
+    get_dateinfo,
+)
 
 # 包版本信息
 __version__ = "1.0.0"
@@ -44,10 +48,14 @@ __all__ = [
     "search_all_users",
     "upsert_booking",
     "search_booking_by_date",
-    "search_booking_by_date_and_name",
+    "search_booking_by_user_and_date",
     "delete_booking",
+    "delete_bookings_by_dates",
+    "delete_bookings_by_slots",
     "initialize_database",
     "connect_to_database",
     "upsert_plan_field",
     "get_dateinfo",
+    "search_user_by_name",
+    "search_all_bookings",
 ]

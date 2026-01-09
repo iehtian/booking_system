@@ -1,13 +1,13 @@
 import { host } from "./config.js"
 
 // 登录功能
-async function login(ID, password) {
+async function login(user_name, password) {
   try {
     const res = await fetch(`${host}/api/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include", // 关键：允许浏览器接收/保存 Set-Cookie（跨源或代理场景都安全）
-      body: JSON.stringify({ ID, password }),
+      body: JSON.stringify({ user_name, password }),
     })
     const data = await res.json()
     console.log("登录响应:", data)
@@ -24,12 +24,15 @@ async function login(ID, password) {
 }
 
 // 注册功能
-async function register(ID, password, name) {
+async function register(user_name, email, phone, password) {
   try {
+    const requestBody = { user_name, email, phone, password }
+    console.log("发送的注册请求体:", requestBody) // 调试日志
+
     const res = await fetch(`${host}/api/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ID, name, password }),
+      body: JSON.stringify(requestBody),
     })
     const data = await res.json()
     if (data.access_token) {
@@ -95,17 +98,17 @@ document.addEventListener("DOMContentLoaded", () => {
   if (loginBtn) {
     loginBtn.addEventListener("click", function (event) {
       event.preventDefault()
-      const ID = document.querySelector("#ID").value
+      const user_name = document.querySelector("#user_name").value
       const password = document.querySelector("#password").value
 
-      if (ID === "" || password === "") {
+      if (user_name === "" || password === "") {
         alert("Please fill in all fields.")
         return
       }
 
-      console.log("Logging in user:", ID, password)
+      console.log("Logging in user:", user_name, password)
       // 调用登录函数
-      login(ID, password)
+      login(user_name, password)
         .then((res) => {
           if (!res.success) {
             alert(
@@ -126,18 +129,16 @@ document.addEventListener("DOMContentLoaded", () => {
   if (registerBtn) {
     registerBtn.addEventListener("click", function (event) {
       event.preventDefault()
-      const ID = document.querySelector("#ID").value
       const password = document.querySelector("#password").value
-      const name = document.querySelector("#name").value
+      const name = document.querySelector("#user_name").value
 
-      if (ID === "" || password === "" || name === "") {
+      if (password === "" || name === "") {
         alert("Please fill in all fields.")
         return
       }
 
-      console.log("Registering user:", ID, password, name)
       // 调用注册函数
-      register(ID, password, name)
+      register(name, null, null, password)
         .then((data) => {
           console.log("注册响应:", data)
           if (!data.success) {
@@ -209,4 +210,69 @@ async function checkAuthStatus() {
   }
 }
 
-export { logout, checkAuthStatus }
+async function updateProfile(ID, newPassword, newEmail, newPhone) {
+  try {
+    const token = localStorage.getItem("access_token")
+    if (!token) {
+      return { success: false, message: "未登录" }
+    }
+    const res = await fetch(`${host}/api/update_password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        ID: ID,
+        new_password: newPassword,
+        new_email: newEmail,
+        new_phone: newPhone,
+      }),
+    })
+    const data = await res.json()
+    return data
+  } catch (error) {
+    console.error("更新密码错误:", error)
+    return { success: false, message: "网络或服务器错误" }
+  }
+}
+
+// 发送重置验证码
+async function sendResetCode(user_name, method) {
+  try {
+    const res = await fetch(`${host}/api/send_reset_code`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_name: user_name, method }), // method: 'email' or 'phone'
+    })
+    return await res.json()
+  } catch (error) {
+    console.error("发送验证码错误:", error, res.error)
+    return { success: false, message: "网络或服务器错误" }
+  }
+}
+
+// 重置密码
+async function resetPassword(user_name, code, newPassword) {
+  try {
+    const res = await fetch(`${host}/api/reset_password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_name, code, new_password: newPassword }),
+    })
+    return await res.json()
+  } catch (error) {
+    console.error("重置密码错误:", error)
+    return { success: false, message: "网络或服务器错误" }
+  }
+}
+
+export {
+  login,
+  register,
+  logout,
+  checkAuthStatus,
+  updateProfile,
+  sendResetCode,
+  resetPassword,
+}

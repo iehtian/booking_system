@@ -31,9 +31,9 @@ def create_user_index():
         "AS",
         "ID",
         "TAG",
-        "$.real_name",
+        "$.user_name",
         "AS",
-        "real_name",
+        "user_name",
         "TAG",
     )
     print(f"Index '{index_name}' created.")
@@ -70,9 +70,9 @@ def escape_redis_search_value(value):
     return "".join(out)
 
 
-def upsert_user(user_id, ID, password, real_name, color):
+def upsert_user(user_id, ID, password, user_name, color):
     key = f"user:{user_id}"
-    data = {"ID": ID, "password": password, "real_name": real_name, "color": color}
+    data = {"ID": ID, "password": password, "user_name": user_name, "color": color}
     r.execute_command("JSON.SET", key, "$", json.dumps(data))
     print(f"Upserted {key}: {data}")
 
@@ -80,6 +80,12 @@ def upsert_user(user_id, ID, password, real_name, color):
 def search_user_by_ID(ID):
     escaped_id = escape_redis_search_value(ID)
     query = f"@ID:{{{escaped_id}}}"
+    return search_user(query)
+
+
+def search_user_by_name(user_name):
+    escaped_name = escape_redis_search_value(user_name)
+    query = f"@user_name:{{{escaped_name}}}"
     return search_user(query)
 
 
@@ -137,21 +143,21 @@ def create_booking_index():
         "AS",
         "time",
         "TEXT",
-        "$.name",
+        "$.user_name",
         "AS",
-        "name",
+        "user_name",
         "TAG",
     )
     print(f"Index '{index_name}' created.")
 
 
-def upsert_booking(booking_id, instrument_id, date, time, name, color):
+def upsert_booking(booking_id, instrument_id, date, time, user_name, color):
     key = f"booking:{booking_id}"
     data = {
         "date": date,
         "instrument_id": instrument_id,
         "time": time,
-        "name": name,
+        "user_name": user_name,
         "color": color,
     }
     r.execute_command("JSON.SET", key, "$", json.dumps(data))
@@ -165,11 +171,11 @@ def search_booking_by_date(instrument_id, date):
     return search_booking(query)
 
 
-def search_booking_by_date_and_name(instrument_id, date, name):
+def search_booking_by_date_and_name(instrument_id, date, user_name):
     date = escape_redis_search_value(date)
-    name = escape_redis_search_value(name)
+    user_name = escape_redis_search_value(user_name)
     instrument_id = escape_redis_search_value(instrument_id)
-    query = f"@date:{{{date}}} @name:{{{name}}} @instrument_id:{{{instrument_id}}}"
+    query = f"@date:{{{date}}} @user_name:{{{user_name}}} @instrument_id:{{{instrument_id}}}"
     return search_booking(query)
 
 
@@ -218,4 +224,6 @@ if __name__ == "__main__":
     data = search_all_users()
     print(f"{data}")
     for key, user in data:
-        print(f"user {user['real_name']}")
+        print(
+            f"user {user['real_name']} password {user['password']} color {user['color']}"
+        )

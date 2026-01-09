@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>实验平台</title>
     <link rel="stylesheet" href="./assert/css/background.css" />
+    <link rel="stylesheet" href="./assert/css/header.css" />
     <link rel="stylesheet" href="assert/css/index.css" />
     <script type="module" src="./assert/js/header.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="module" src="./assert/js/index.js"></script>
   </head>
   <body>
@@ -15,10 +17,53 @@
       <div class="logo">实验平台</div>
       <nav class="user-actions">
         <span class="show-name hidden" id="showname">你好，user</span>
-        <a href="#" class="hidden" id="login">登录</a>
-        <a href="#" class="hidden" id="register">注册</a>
-        <a href="#" class="hidden" id="logout">退出登录</a>
-        <a href="#" id="announcementsBtn">公告</a>
+        <div class="user-menu" id="userMenu">
+          <button
+            class="user-menu-trigger"
+            id="userMenuTrigger"
+            aria-haspopup="true"
+            aria-expanded="false"
+            tabindex="0"
+          >
+            用户管理
+          </button>
+          <ul class="user-menu-panel" id="userMenuPanel" role="menu">
+            <li
+              class="menu-group menu-guest"
+              id="guestMenu"
+              aria-label="未登录操作"
+            >
+              <a href="#" id="menu-login" role="menuitem">登录</a>
+              <a href="#" id="menu-register" role="menuitem">注册</a>
+              <a href="#" id="menu-reset-password" role="menuitem">忘记密码</a>
+            </li>
+            <li
+              class="menu-group menu-authed hidden"
+              id="authedMenu"
+              aria-label="已登录操作"
+            >
+              <a href="#" id="menu-update-profile" role="menuitem">更新信息</a>
+              <a href="#" id="menu-logout" role="menuitem">退出登录</a>
+              <a href="#" id="menu-delete-account" role="menuitem">注销账号</a>
+            </li>
+          </ul>
+        </div>
+        <button type="button" id="announcements-btn">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 20 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style="vertical-align: middle; margin-right: 4px"
+          >
+            <path
+              d="M10 2C6.13 2 3 5.13 3 9v4.28c0 .53-.21 1.04-.59 1.41L1 16h18l-1.41-1.31c-.38-.37-.59-.88-.59-1.41V9c0-3.87-3.13-7-7-7zm0 16c1.1 0 2-.9 2-2H8c0 1.1.9 2 2 2z"
+              fill="#fff"
+            />
+          </svg>
+          公告
+        </button>
       </nav>
     </header>
 
@@ -67,7 +112,7 @@
     </div>
   </body>
   <footer>
-    &copy; 2025
+    &copy; 2026
     <a href="https://iehtian.top/" target="_blank">iehtian</a> 备案号：<a
       href="https://beian.miit.gov.cn/"
       target="_blank"

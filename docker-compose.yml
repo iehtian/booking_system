@@ -11,6 +11,21 @@ services:
       - '3308:3306'
     volumes:
       - dateplan-db-data:/var/lib/mysql
-    restart: unless-stopped  # 缩进修正
+    restart: unless-stopped
+
+  user_order-db:
+    image: postgres:latest
+    container_name: user_order-db
+    environment:
+      POSTGRES_PASSWORD: user_order_pass
+      POSTGRES_DB: user_order
+      POSTGRES_USER: user_order_user
+    ports:
+      - '5434:5432'
+    volumes:
+      - user_order-db-data:/var/lib/postgresql
+    restart: unless-stopped
+
 volumes:
   dateplan-db-data:
+  user_order-db-data:
