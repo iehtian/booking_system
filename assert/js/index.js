@@ -634,3 +634,33 @@ async function setupAnnouncements() {
     open()
   }
 }
+
+async function Forced_add_email() {
+  const userAuth = JSON.parse(sessionStorage.getItem("userAuth") || "null")
+  if (!userAuth) return
+  const res = await fetch(
+    `${host}/api/is_email_configured?user_name=${encodeURIComponent(userAuth.user.user_name)}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  )
+  const data = await res.json()
+  console.log("邮箱配置状态:", data)
+  if (!data.is_email_configured) {
+    await Swal.fire({
+      icon: "warning",
+      title: "请设置邮箱",
+      text: "为了保障账号安全，请尽快在个人资料中设置邮箱地址。",
+      confirmButtonText: "去设置",
+    })
+    await handleUpdateProfile()
+  }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await Forced_add_email()
+  // 其他初始化逻辑
+})

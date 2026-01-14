@@ -645,6 +645,25 @@ def reset_password():
         return jsonify({"error": "Internal server error"}), 500
 
 
+@app.route("/api/is_email_configured", methods=["GET"])
+def is_email_configured():
+    try:
+        user_name = request.args.get("user_name")
+        if not user_name:
+            return jsonify({"error": "User name is required"}), 400
+
+        user = db_api.search_user_by_name(user_name)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        is_configured = bool(user.get("email"))
+        return jsonify({"is_email_configured": is_configured})
+
+    except Exception as e:
+        print(f"检查邮箱配置时出错: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
 if __name__ == "__main__":
     if db_api.initialize_database():
         print("数据库初始化完成，系统已准备好运行。")
