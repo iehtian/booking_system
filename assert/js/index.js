@@ -75,10 +75,11 @@ async function initUser() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  initUser().catch(console.error)
-  setupAnnouncements().catch(console.error)
+document.addEventListener("DOMContentLoaded", async() => {
+  await initUser().catch(console.error)
+  await setupAnnouncements().catch(console.error)
   setupUserMenuAria()
+  await Forced_add_email()
 })
 
 function setupUserMenuAria() {
@@ -659,8 +660,3 @@ async function Forced_add_email() {
     await handleUpdateProfile()
   }
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  await Forced_add_email()
-  // 其他初始化逻辑
-})
