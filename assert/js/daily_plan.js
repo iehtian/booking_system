@@ -429,9 +429,7 @@ async function init() {
   const dateStr = formatDateLocal(selectedDate)
   const tbody = document.querySelector("#plans-tbody")
   tbody.innerHTML = "" // 清空旧内容
-  // const _yestoday = date - 1 // 未使用
 
-  // Normalize to Date and clear time components to compare dates in local time
   const selDate = new Date(selectedDate.getTime())
   const today = new Date()
   selDate.setHours(0, 0, 0, 0)
@@ -460,6 +458,26 @@ async function init() {
     renderCurrentUserRow(currentUserName, currentPlanInfo, {
       forceDisable: disableToday,
     })
+    const hours = new Date().getHours()
+    if(disableToday && hours > 12){
+      Swal.fire({
+        icon:"warning",
+        title:"无法填写今日计划",
+        text: "将昨日计划设置为已完成，或设置为未完成同时填写注释以填写今日计划",
+        confirmButtonText:"去填写",
+        cancelButtonText:"取消",
+        showCancelButton: true
+      }).then((result) => {
+        if (result.isConfirmed) {
+           document.querySelector("#yestoday").click();
+          
+  } else if (result.isDismissed) {
+
+  }
+      })
+
+      
+    }
 
     const all = await fetchAllPlans(dateStr)
     all.forEach((u) => renderOtherUserRow(u, currentUserName))
