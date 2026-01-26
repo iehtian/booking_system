@@ -12,108 +12,15 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
     />
-    <style>
-      body {
-        background-color: #f5f5f5;
-        padding: 2rem 0;
-      }
-      .weekly-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 0.5rem;
-        max-height: 60vh;
-        overflow-y: auto;
-      }
-      .slot-item {
-        padding: 0.5rem;
-        text-align: center;
-        font-size: 0.85rem;
-        cursor: pointer;
-        transition: all 0.2s;
-        border: 1px solid transparent;
-        margin-bottom: 1px; /* 原始间距：绝对保留 */
-      }
-      .slot-item.available {
-        background-color: #effaf3;
-        border-color: #48c774;
-      }
-      .slot-item.available:hover {
-        background-color: #48c774;
-        color: white;
-      }
-      .slot-item.booked {
-        background-color: #feecf0;
-        border-color: #f14668;
-        cursor: not-allowed;
-        opacity: 0.9;
-      }
-      .slot-item.selected {
-        background-color: #3273dc;
-        color: white;
-        border-color: #3273dc;
-      }
-      .slot-item.booked.first {
-        border-top-left-radius: 4px;
-        border-top-right-radius: 4px;
-      }
-      .slot-item.booked.last {
-        border-bottom-left-radius: 4px;
-        border-bottom-right-radius: 4px;
-        margin-bottom: 0.5rem;
-      }
-      .slot-item.booked.single {
-        border-radius: 4px;
-        margin-bottom: 0.5rem;
-      }
-      @media (max-width: 768px) {
-        .weekly-grid {
-          display: none;
-        }
-        .desktop-only {
-          display: none;
-        }
-        .mobile-only {
-          display: block;
-        }
-      }
-      @media (min-width: 769px) {
-        .mobile-only {
-          display: none;
-        }
-      }
-      .week-header {
-        position: sticky;
-        top: 0;
-        background-color: white;
-        z-index: 10;
-      }
-
-      .grid-embedded-btn {
-        grid-column: 1 / span 7;
-        background: #f0f0f0;
-        border: 1px dashed #dbdbdb;
-        padding: 4px;
-        text-align: center;
-        cursor: pointer;
-        font-size: 0.75rem;
-        color: #7a7a7a;
-        margin-bottom: 0.5rem;
-        border-radius: 4px;
-      }
-      .grid-embedded-btn:hover {
-        background: #e8e8e8;
-        color: #3273dc;
-      }
-      .hidden-slot-logic {
-        display: none !important;
-      }
-    </style>
+    <link rel="stylesheet" href="../assert/css/instruments.css" />
   </head>
   <body>
     <div class="container">
       <div class="box">
-        <!-- 日期控制 -->
-        <div class="field has-addons is-justify-content-center mb-4">
+        <!-- 桌面端日期控制 -->
+        <div
+          class="field has-addons is-justify-content-center mb-4 desktop-only"
+        >
           <p class="control">
             <button class="button" id="prevDay">◀ 前一天</button>
           </p>
@@ -124,19 +31,32 @@
             <button class="button" id="nextDay">后一天 ▶</button>
           </p>
         </div>
-        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-        <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
 
-        <div id="weeklyView"></div>
+        <!-- 桌面端周视图 -->
+        <div id="weeklyView" class="desktop-only"></div>
 
+        <!-- 移动端 -->
         <div class="mobile-only">
-          <div class="field">
-            <label class="label">选择日期</label>
-            <input class="input" type="date" id="mobileDateInput" />
+          <div class="field has-addons mb-4">
+            <p class="control">
+              <button class="button" id="mobilePrevDay">◀</button>
+            </p>
+            <p class="control is-expanded">
+              <input
+                class="input has-text-centered"
+                id="mobileDateInput"
+                type="date"
+              />
+            </p>
+            <p class="control">
+              <button class="button" id="mobileNextDay">▶</button>
+            </p>
           </div>
+
           <div id="mobileSlots"></div>
         </div>
 
+        <!-- 选择信息（桌面端） -->
         <div class="desktop-only">
           <div
             class="notification is-light mt-4"
@@ -155,6 +75,8 @@
             </button>
           </div>
         </div>
+
+        <!-- 预约信息 -->
         <div
           class="notification is-info is-light mt-5"
           id="bookingInfo"
@@ -166,233 +88,8 @@
       </div>
     </div>
 
-    <script>
-      let selectedDate = new Date()
-      const slots = [
-        { id: 1, time: "00:00-00:30" },
-        { id: 2, time: "00:30-01:00" },
-        { id: 3, time: "01:00-01:30" },
-        { id: 4, time: "01:30-02:00" },
-        { id: 5, time: "02:00-02:30" },
-        { id: 6, time: "02:30-03:00" },
-        { id: 7, time: "03:00-03:30" },
-        { id: 8, time: "03:30-04:00" },
-        { id: 9, time: "04:00-04:30" },
-        { id: 10, time: "04:30-05:00" },
-        { id: 11, time: "05:00-05:30" },
-        { id: 12, time: "05:30-06:00" },
-        { id: 13, time: "06:00-06:30" },
-        { id: 14, time: "06:30-07:00" },
-        { id: 15, time: "07:00-07:30" },
-        { id: 16, time: "07:30-08:00" },
-        { id: 17, time: "08:00-08:30" },
-        { id: 18, time: "08:30-09:00" },
-        { id: 19, time: "09:00-09:30" },
-        { id: 20, time: "09:30-10:00" },
-        { id: 21, time: "10:00-10:30" },
-        { id: 22, time: "10:30-11:00" },
-        { id: 23, time: "11:00-11:30" },
-        { id: 24, time: "11:30-12:00" },
-        { id: 25, time: "12:00-12:30" },
-        { id: 26, time: "12:30-13:00" },
-        { id: 27, time: "13:00-13:30" },
-        { id: 28, time: "13:30-14:00" },
-        { id: 29, time: "14:00-14:30" },
-        { id: 30, time: "14:30-15:00" },
-        { id: 31, time: "15:00-15:30" },
-        { id: 32, time: "15:30-16:00" },
-        { id: 33, time: "16:00-16:30" },
-        { id: 34, time: "16:30-17:00" },
-        { id: 35, time: "17:00-17:30" },
-        { id: 36, time: "17:30-18:00" },
-        { id: 37, time: "18:00-18:30" },
-        { id: 38, time: "18:30-19:00" },
-        { id: 39, time: "19:00-19:30" },
-        { id: 40, time: "19:30-20:00" },
-        { id: 41, time: "20:00-20:30" },
-        { id: 42, time: "20:30-21:00" },
-        { id: 43, time: "21:00-21:30" },
-        { id: 44, time: "21:30-22:00" },
-        { id: 45, time: "22:00-22:30" },
-        { id: 46, time: "22:30-23:00" },
-        { id: 47, time: "23:00-23:30" },
-        { id: 48, time: "23:30-24:00" },
-      ]
-
-      let isEarlyHidden = true
-      let isLateHidden = true
-      let weekData = {}
-      let booking = null
-      let selected = null
-
-      function getWeek() {
-        const today = new Date()
-        const day = today.getDay()
-        const monday = new Date(today)
-        monday.setDate(today.getDate() - (day === 0 ? 6 : day - 1))
-        return Array.from({ length: 7 }, (_, i) => {
-          const d = new Date(monday)
-          d.setDate(monday.getDate() + i)
-          return d
-        })
-      }
-
-      function fmt(date) {
-        return date.toISOString().split("T")[0]
-      }
-      function display(date) {
-        const days = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
-        return `${date.getMonth() + 1}/${date.getDate()} ${days[date.getDay()]}`
-      }
-
-      function init() {
-        getWeek().forEach((date) => {
-          const key = fmt(date)
-          if (!weekData[key]) {
-            weekData[key] = slots.map((s) => ({
-              ...s,
-              available: true,
-              date: key,
-            }))
-          }
-        })
-      }
-
-      function renderWeek() {
-        const container = document.getElementById("weeklyView")
-        const week = getWeek()
-        const today = fmt(new Date())
-
-        // 重新构建 HTML
-        let html = '<div class="weekly-grid">'
-
-        // 第一行：表头
-        week.forEach((date) => {
-          const key = fmt(date)
-          const isToday = key === today
-          html += `<div class="has-text-centered mb-2 pb-2 week-header" style="border-bottom: 2px solid ${isToday ? "#3273dc" : "#dbdbdb"}">
-            <strong class="${isToday ? "has-text-link" : ""}">${display(date)}</strong>
-          </div>`
-        })
-
-        // 第二行：内嵌的顶部按钮
-        html += `<div class="grid-embedded-btn" onclick="toggleEarly()">${isEarlyHidden ? "展开深夜 (00:00-08:00) ↓" : "收起深夜 ↑"}</div>`
-
-        // 核心渲染：保持原始列容器结构
-        week.forEach((date) => {
-          const key = fmt(date)
-          html += `<div>` // 原始的列容器
-          const daySlots = weekData[key]
-          daySlots.forEach((slot, idx) => {
-            // 判定显隐
-            let hideCls = ""
-            if (isEarlyHidden && slot.id <= 16) hideCls = "hidden-slot-logic"
-            if (isLateHidden && slot.id >= 45) hideCls = "hidden-slot-logic"
-
-            const isSelected =
-              selected && selected.date === key && selected.id === slot.id
-            let cls = !slot.available
-              ? "booked"
-              : isSelected
-                ? "selected"
-                : "available"
-
-            // 原始的样式逻辑
-            if (!slot.available) {
-              const prevBooked = idx > 0 && !daySlots[idx - 1].available
-              const nextBooked =
-                idx < daySlots.length - 1 && !daySlots[idx + 1].available
-              if (!prevBooked && !nextBooked) cls += " single"
-              else if (!prevBooked) cls += " first"
-              else if (!nextBooked) cls += " last"
-            }
-
-            const click =
-              slot.available && !booking
-                ? `onclick="select('${key}',${slot.id})"`
-                : ""
-            html += `<div class="slot-item ${cls} ${hideCls}" ${click}>${slot.time}</div>`
-          })
-          html += `</div>`
-        })
-
-        // 最后一行：内嵌的底部按钮
-        html += `<div class="grid-embedded-btn" onclick="toggleLate()">${isLateHidden ? "展开晚间 (22:00-24:00) ↓" : "收起晚间 ↑"}</div>`
-
-        html += "</div>"
-        container.innerHTML = html
-      }
-
-      window.toggleEarly = function () {
-        isEarlyHidden = !isEarlyHidden
-        renderWeek()
-      }
-      window.toggleLate = function () {
-        isLateHidden = !isLateHidden
-        // renderWeek()
-      }
-
-      function select(date, id) {
-        if (booking) return
-        const slot = weekData[date].find((s) => s.id === id)
-        selected = { date, id, time: slot.time }
-        document.getElementById("selectionInfo").style.display = "block"
-        document.getElementById("confirmBtn").style.display = "inline-flex"
-        document.getElementById("selectedInfo").innerHTML =
-          `<strong>已选择：</strong>${date} ${slot.time}`
-        renderWeek()
-      }
-
-      function confirm() {
-        const name = document.getElementById("nameInput").value.trim()
-        if (!name || !selected) return alert("请输入姓名")
-        const slot = weekData[selected.date].find((s) => s.id === selected.id)
-        slot.available = false
-        booking = { ...selected, name }
-        selected = null
-        document.getElementById("selectionInfo").style.display = "none"
-        document.getElementById("confirmBtn").style.display = "none"
-        document.getElementById("bookingInfo").style.display = "block"
-        document.getElementById("bookingDetails").innerHTML =
-          `<strong>姓名：</strong>${booking.name}<br><strong>日期：</strong>${booking.date}<br><strong>时间：</strong>${booking.time}`
-        renderWeek()
-      }
-
-      function cancel() {
-        if (booking) {
-          const slot = weekData[booking.date].find((s) => s.id === booking.id)
-          slot.available = true
-          booking = null
-          document.getElementById("bookingInfo").style.display = "none"
-          renderWeek()
-        }
-      }
-
-      init()
-      renderWeek()
-      /* ===== 日期切换 ===== */
-      function changeDay(delta) {
-        selectedDate.setDate(selectedDate.getDate() + delta)
-        fp.setDate(selectedDate, false)
-        renderWeek()
-      }
-
-      const fp = flatpickr("#dateInput", {
-        locale: "zh",
-        dateFormat: "Y-m-d",
-        defaultDate: selectedDate,
-        onChange: (d) => {
-          selectedDate = d[0]
-          renderWeek()
-        },
-      })
-
-      document.getElementById("prevDay").addEventListener("click", () => {
-        changeDay(-1)
-      })
-      document.getElementById("nextDay").addEventListener("click", () => {
-        changeDay(1)
-      })
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
+    <script type="module" src="../assert/js/new.js"></script>
   </body>
 </html>

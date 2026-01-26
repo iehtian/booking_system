@@ -1,0 +1,216 @@
+html,
+body {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* body {
+  height: 100vh;
+  padding: 2rem 0;
+  background-color: #f5f5f5;
+} */
+
+.hidden {
+  display: none !important;
+}
+
+.slot-item input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.slot-item {
+  display: block;
+  padding: 0.5rem;
+  margin: 0;
+  font-size: 0.85rem;
+  text-align: center;
+  border: 1px solid transparent;
+  border-radius: 0;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+/* 未选中状态 */
+.slot-item.available {
+  color: #333;
+  background: white;
+  background-color: #effaf3;
+  border-color: #48c774;
+}
+
+/* 选中状态 */
+.slot-item:has(input[type="checkbox"]:checked) {
+  color: white;
+  background: #3273dc;
+}
+
+.weekly-grid {
+  display: grid;
+  max-height: 70vh;
+  overflow-y: auto;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0.5rem;
+}
+
+.slot-item.selected {
+  color: white;
+  background-color: #3273dc;
+  border-color: #3273dc;
+}
+
+.slot-item.available:hover {
+  color: white;
+  background-color: #48c774;
+}
+
+.slot-item.booked {
+  background-color: #feecf0;
+  border-color: #f14668;
+  opacity: 0.9;
+  cursor: not-allowed;
+}
+
+.slot-item.booked.first {
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+.slot-item.booked.last {
+  margin-bottom: 0.5rem;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.slot-item.booked.single {
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+}
+
+.weekly-grid > div > .slot-item + .slot-item {
+  border-top: 0;
+}
+
+.weekly-grid > div > .slot-item:first-child {
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+.weekly-grid > div > .slot-item:last-child {
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.week-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: white;
+}
+
+.grid-embedded-btn {
+  padding: 4px;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  text-align: center;
+  color: #7a7a7a;
+  background: #f0f0f0;
+  border: 1px dashed #dbdbdb;
+  border-radius: 4px;
+  cursor: pointer;
+  grid-column: 1 / span 8;
+}
+
+.grid-embedded-btn:hover {
+  color: #3273dc;
+  background: #e8e8e8;
+}
+
+.hidden-slot-logic {
+  display: none !important;
+}
+
+/* 移动端样式 */
+.mobile-slots-grid {
+  display: grid;
+  margin-top: 1rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.mobile-slot-item {
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  text-align: center;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.mobile-slot-item.available {
+  background-color: #effaf3;
+  border-color: #48c774;
+}
+
+.mobile-slot-item.available:active {
+  color: white;
+  background-color: #48c774;
+}
+
+.mobile-slot-item.booked {
+  background-color: #feecf0;
+  border-color: #f14668;
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.mobile-slot-item.selected {
+  color: white;
+  background-color: #3273dc;
+  border-color: #3273dc;
+}
+
+.mobile-toggle-btn {
+  width: 100%;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  font-size: 0.85rem;
+  text-align: center;
+  color: #7a7a7a;
+  background: #f0f0f0;
+  border: 1px dashed #dbdbdb;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.mobile-toggle-btn:active {
+  color: #3273dc;
+  background: #e8e8e8;
+}
+
+/* 响应式断点 */
+@media (width <= 768px) {
+  .weekly-grid {
+    display: none;
+  }
+
+  .desktop-only {
+    display: none;
+  }
+
+  .mobile-only {
+    display: block;
+  }
+
+  body {
+    padding: 1rem 0;
+  }
+}
+
+@media (width >= 769px) {
+  .mobile-only {
+    display: none;
+  }
+}
