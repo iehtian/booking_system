@@ -9,6 +9,7 @@ import {
 } from "./user_manager.js"
 import { marked } from "marked"
 import { host } from "./config.js"
+import Swal from "sweetalert2"
 
 const loginItem = document.querySelector("#menu-login")
 const registerItem = document.querySelector("#menu-register")
@@ -75,7 +76,7 @@ async function initUser() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", async() => {
+document.addEventListener("DOMContentLoaded", async () => {
   await initUser().catch(console.error)
   await setupAnnouncements().catch(console.error)
   setupUserMenuAria()

@@ -1,5 +1,6 @@
 import { host } from "./config.js"
 import { isRestDay } from "./holidays.js"
+import Swal from "sweetalert2"
 
 // 使用本地时区处理日期，避免 UTC 偏移导致的前后一天问题
 function formatDateLocal(date) {
@@ -459,24 +460,20 @@ async function init() {
       forceDisable: disableToday,
     })
     const hours = new Date().getHours()
-    if(disableToday && hours > 12){
+    if (disableToday && hours > 12) {
       Swal.fire({
-        icon:"warning",
-        title:"无法填写今日计划",
+        icon: "warning",
+        title: "无法填写今日计划",
         text: "将昨日计划设置为已完成，或设置为未完成同时填写注释以填写今日计划",
-        confirmButtonText:"去填写",
-        cancelButtonText:"取消",
-        showCancelButton: true
+        confirmButtonText: "去填写",
+        cancelButtonText: "取消",
+        showCancelButton: true,
       }).then((result) => {
         if (result.isConfirmed) {
-           document.querySelector("#yestoday").click();
-          
-  } else if (result.isDismissed) {
-
-  }
+          document.querySelector("#yestoday").click()
+        } else if (result.isDismissed) {
+        }
       })
-
-      
     }
 
     const all = await fetchAllPlans(dateStr)
