@@ -173,8 +173,8 @@ function renderWeek() {
 
     daySlots.forEach((slot, idx) => {
       let hideCls = ""
-      if (isEarlyHidden && slot.id <= 16) hideCls = "hidden-slot-logic"
-      if (isLateHidden && slot.id >= 45) hideCls = "hidden-slot-logic"
+      if (isEarlyHidden && slot.id <= 16) return
+      if (isLateHidden && slot.id >= 45) return
 
       const isSelected =
         selected && selected.date === key && selected.id === slot.id
@@ -201,7 +201,19 @@ function renderWeek() {
       input.name = "timeslot"
       input.value = `${key}-${slot.id}`
       input.disabled = !slot.available
+      input.tabIndex = -1
       input.addEventListener("change", function (e) {
+        e.preventDefault()
+        e.target.blur()
+      })
+
+      input.addEventListener("focus", function (e) {
+        console.log("输入框获得焦点")
+        e.preventDefault()
+      })
+
+      input.addEventListener("blur", function (e) {
+        console.log("输入框失去焦点")
         e.preventDefault()
       })
 
@@ -309,7 +321,7 @@ function select(date, id) {
   document.getElementById("selectionInfo").style.display = "block"
   document.getElementById("confirmBtn").style.display = "inline-flex"
   setSelectedText(document.getElementById("selectedInfo"), date, slot.time)
-  renderWeek()
+  // renderWeek()
 }
 
 // Expose to inline handlers in module scope
