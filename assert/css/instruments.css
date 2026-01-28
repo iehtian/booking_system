@@ -1,16 +1,18 @@
 html,
 body {
-  height: 100vh;
-  overflow: hidden;
+  height: 100vh; /* 改为固定高度 */
+  overflow: hidden; /* 禁止页面滚动 */
 }
 
-/* body {
-  height: 100vh;
-  padding: 2rem 0;
-  background-color: #f5f5f5;
-} */
-
 .hidden {
+  display: none !important;
+}
+
+.hidden-slot-logic-early {
+  display: none !important;
+}
+
+.hidden-slot-logic-late {
   display: none !important;
 }
 
@@ -22,6 +24,7 @@ body {
 }
 
 .slot-item {
+  position: relative;
   display: block;
   padding: 0.5rem;
   margin: 0;
@@ -126,10 +129,6 @@ body {
 .grid-embedded-btn:hover {
   color: #3273dc;
   background: #e8e8e8;
-}
-
-.hidden-slot-logic {
-  display: none !important;
 }
 
 /* 移动端样式 */
