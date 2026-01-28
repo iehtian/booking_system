@@ -28,8 +28,6 @@ let slots = generateTimeIntervalsSimple().map((time, index) => ({
 }))
 console.log(slots)
 
-let isEarlyHidden = true
-let isLateHidden = true
 let mobileIsEarlyHidden = true
 let mobileIsLateHidden = true
 let weekData = {}
@@ -140,18 +138,17 @@ function renderWeek() {
 
   const earlyBtn = document.createElement("div")
   earlyBtn.className = "grid-embedded-btn"
-  earlyBtn.textContent = isEarlyHidden
-    ? "展开深夜 (00:00-08:00) ↓"
-    : "收起深夜 ↑"
-  earlyBtn.addEventListener("click", toggleEarly)
+  earlyBtn.id = "toggleEarlyBtn"
+  earlyBtn.textContent = "展开深夜 (00:00-08:00) ↓"
+  earlyBtn.addEventListener("click", () => toggleEarly(earlyBtn))
   grid.appendChild(earlyBtn)
 
   // 左侧时间列，与日期列对齐
   const timeColumn = document.createElement("div")
   slots.forEach(({ id, time }) => {
     let hideCls = ""
-    if (isEarlyHidden && id <= 16) hideCls = "hidden-slot-logic-early Early"
-    if (isLateHidden && id >= 45) hideCls = "hidden-slot-logic-late Late"
+    if (id <= 16) hideCls = "hidden-slot-logic-early Early"
+    if (id >= 45) hideCls = "hidden-slot-logic-late Late"
 
     const label = document.createElement("label")
     label.className = ["slot-item", hideCls].filter(Boolean).join(" ")
@@ -174,9 +171,8 @@ function renderWeek() {
 
     daySlots.forEach((slot, idx) => {
       let hideCls = ""
-      if (isEarlyHidden && slot.id <= 16)
-        hideCls = "hidden-slot-logic-early Early"
-      if (isLateHidden && slot.id >= 45) hideCls = "hidden-slot-logic-late Late"
+      if (slot.id <= 16) hideCls = "hidden-slot-logic-early Early"
+      if (slot.id >= 45) hideCls = "hidden-slot-logic-late Late"
 
       const isSelected =
         selected && selected.date === key && selected.id === slot.id
@@ -220,28 +216,44 @@ function renderWeek() {
 
   const lateBtn = document.createElement("div")
   lateBtn.className = "grid-embedded-btn"
-  lateBtn.textContent = isLateHidden ? "展开晚间 (22:00-24:00) ↓" : "收起晚间 ↑"
-  lateBtn.addEventListener("click", toggleLate)
+  lateBtn.id = "toggleLateBtn"
+  lateBtn.textContent = "展开晚间 (22:00-24:00) ↓"
+  lateBtn.addEventListener("click", () => toggleLate(lateBtn))
   grid.appendChild(lateBtn)
 
   fragment.appendChild(grid)
   container.appendChild(fragment)
 }
 
-window.toggleEarly = function () {
+toggleEarly = function (btn) {
   const earlys = document.querySelectorAll(".Early")
-  console.log(earlys.length)
+
   earlys.forEach((el) => {
     el.classList.toggle("hidden-slot-logic-early")
   })
+
+  if (btn) {
+    const firstEarly = earlys[0]
+    const isHidden = firstEarly
+      ? firstEarly.classList.contains("hidden-slot-logic-early")
+      : false
+    btn.textContent = isHidden ? "展开深夜 (00:00-08:00) ↓" : "收起深夜 ↑"
+  }
 }
 
-window.toggleLate = function () {
-  const late = document.querySelectorAll(".Late")
+toggleLate = function (btn) {
+  const lates = document.querySelectorAll(".Late")
 
-  late.forEach((el) => {
+  lates.forEach((el) => {
     el.classList.toggle("hidden-slot-logic-late")
   })
+  if (btn) {
+    const firstLate = lates[0]
+    const isHidden = firstLate
+      ? firstLate.classList.contains("hidden-slot-logic-late")
+      : false
+    btn.textContent = isHidden ? "展开晚间 (22:00-24:00) ↓" : "收起晚间 ↑"
+  }
 }
 
 function renderMobileSlots() {
