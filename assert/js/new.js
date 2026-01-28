@@ -30,8 +30,8 @@ console.log(slots)
 
 let mobileIsEarlyHidden = true
 let mobileIsLateHidden = true
-// 仅保存按日期的已预约 slotId 映射
-let weekData = { bookedByDate: {} }
+let weekData = slots
+
 let booking = null
 let selected = null
 
@@ -78,17 +78,8 @@ function display(date) {
   return `${date.getMonth() + 1}/${date.getDate()} ${days[date.getDay()]}`
 }
 
-function getSlotById(id) {
-  return slots.find((s) => s.id === id)
-}
-
-function isSlotAvailable(dateKey, slotId) {
-  const booked = weekData.bookedByDate[dateKey]
-  return !booked || !booked.has(slotId)
-}
-
-// 初始化页面模板
-function initTemplate(selectedDate) {
+// 初始化页面
+function init(selectedDate) {
   // 生成主结构
   const container = document.getElementById("weeklyView")
   container.innerHTML = ""
@@ -151,12 +142,18 @@ function initTemplate(selectedDate) {
     dayColumn.className = "day-column"
     dayColumn.dataset.idx = idx
     dayColumn.dataset.date = key
-    slots.forEach((slot, idx2) => {
+    const daySlots = weekData
+    daySlots.forEach((slot, idx2) => {
       let hideCls = ""
       if (slot.id <= 16) hideCls = "hidden-slot-logic-early Early"
       if (slot.id >= 45) hideCls = "hidden-slot-logic-late Late"
+      const available = true
       const label = document.createElement("label")
-      label.className = ["slot-item", "available", hideCls]
+      label.className = [
+        "slot-item",
+        available ? "available" : "booked",
+        hideCls,
+      ]
         .filter(Boolean)
         .join(" ")
       label.dataset.idx = idx2
@@ -168,7 +165,7 @@ function initTemplate(selectedDate) {
       input.type = "checkbox"
       input.name = "timeslot"
       input.value = `${key}-${slot.id}`
-      input.disabled = !isSlotAvailable(key, slot.id)
+      input.disabled = !available
       label.appendChild(input)
       // span
       const span = document.createElement("span")
@@ -216,15 +213,17 @@ function weekChangeDay(selectedDate) {
     const date = week[idx]
     const key = fmt(date)
     col.dataset.date = key
+    const daySlots = weekData
     const labels = col.querySelectorAll("label.slot-item")
     labels.forEach((label, i) => {
-      const slot = slots[i]
+      const slot = daySlots[i]
+      const available = true
       label.dataset.time = slot.time
       label.dataset.slotid = slot.id
       label.dataset.date = key
       // 更新可用状态
       label.classList.remove("booked", "selected", "available")
-      if (!isSlotAvailable(key, slot.id)) label.classList.add("booked")
+      if (!available) label.classList.add("booked")
       else label.classList.add("available")
       // 选中状态
       if (selected && selected.date === key && selected.id === slot.id) {
@@ -232,7 +231,7 @@ function weekChangeDay(selectedDate) {
       }
       // input
       const input = label.querySelector("input[type=checkbox]")
-      if (input) input.disabled = !isSlotAvailable(key, slot.id)
+      if (input) input.disabled = !available
       // span
       const span = label.querySelector("span.slot-time")
       if (span) span.textContent = slot.time
@@ -274,6 +273,7 @@ const toggleLate = function (btn) {
 function renderMobileSlots() {
   const container = document.getElementById("mobileSlots")
   const key = fmt(mobileSelectedDate)
+  const daySlots = weekData
 
   container.innerHTML = ""
   const fragment = document.createDocumentFragment()
@@ -289,23 +289,20 @@ function renderMobileSlots() {
   const grid = document.createElement("div")
   grid.className = "mobile-slots-grid"
 
-  slots.forEach((slot) => {
+  daySlots.forEach((slot) => {
     if (mobileIsEarlyHidden && slot.id <= 16) return
     if (mobileIsLateHidden && slot.id >= 45) return
+    const available = true
 
     const isSelected =
       selected && selected.date === key && selected.id === slot.id
-    const cls = !isSlotAvailable(key, slot.id)
-      ? "booked"
-      : isSelected
-        ? "selected"
-        : "available"
+    const cls = !available ? "booked" : isSelected ? "selected" : "available"
 
     const item = document.createElement("div")
     item.className = ["mobile-slot-item", cls].join(" ")
     item.textContent = slot.time
 
-    if (isSlotAvailable(key, slot.id) && !booking) {
+    if (available && !booking) {
       item.addEventListener("click", () => mobileSelect(key, slot.id))
     }
 
@@ -337,7 +334,7 @@ window.toggleMobileLate = function () {
 
 function select(date, id) {
   if (booking) return
-  const slot = getSlotById(id)
+  const slot = weekData.find((s) => s.id === id)
   selected = { date, id, time: slot.time }
   document.getElementById("selectionInfo").style.display = "block"
   document.getElementById("confirmBtn").style.display = "inline-flex"
@@ -350,7 +347,7 @@ window.select = select
 
 window.mobileSelect = function (date, id) {
   if (booking) return
-  const slot = getSlotById(id)
+  const slot = weekData.find((s) => s.id === id)
   selected = { date, id, time: slot.time }
 
   // 显示确认按钮
@@ -388,46 +385,31 @@ window.mobileSelect = function (date, id) {
 }
 
 function confirm() {
-  if (!selected) return alert("请选择时间段")
-
-  const dateKey = selected.date
-  if (!weekData.bookedByDate[dateKey]) {
-    weekData.bookedByDate[dateKey] = new Set()
-  }
-  weekData.bookedByDate[dateKey].add(selected.id)
-  booking = { ...selected }
-  selected = null
-
-  document.getElementById("selectionInfo").style.display = "none"
-  document.getElementById("confirmBtn").style.display = "none"
-
-  const mobileInfo = document.getElementById("mobileSelectionInfo")
-  if (mobileInfo) mobileInfo.style.display = "none"
-
-  document.getElementById("bookingInfo").style.display = "block"
-  setBookingDetails(document.getElementById("bookingDetails"), booking)
-
-  // renderWeek()
-  renderMobileSlots()
+  //   if (!selected) return alert("请选择时间段")
+  //   setSlotAvailable(selected.date, selected.id, false)
+  //   booking = { ...selected }
+  //   selected = null
+  //   document.getElementById("selectionInfo").style.display = "none"
+  //   document.getElementById("confirmBtn").style.display = "none"
+  //   const mobileInfo = document.getElementById("mobileSelectionInfo")
+  //   if (mobileInfo) mobileInfo.style.display = "none"
+  //   document.getElementById("bookingInfo").style.display = "block"
+  //   setBookingDetails(document.getElementById("bookingDetails"), booking)
+  //   weekChangeDay(selectedDate)
+  //   renderMobileSlots()
 }
 
 // Allow inline mobile confirmation button to call confirm()
 window.confirm = confirm
 
 function cancel() {
-  if (booking) {
-    const dateKey = booking.date
-    if (weekData.bookedByDate[dateKey]) {
-      weekData.bookedByDate[dateKey].delete(booking.id)
-      if (weekData.bookedByDate[dateKey].size === 0) {
-        delete weekData.bookedByDate[dateKey]
-      }
-    }
-    booking = null
-    document.getElementById("bookingInfo").style.display = "none"
-    // renderWeek()
-    renderMobileSlots()
-  }
+  //   if (booking) {
+  //     setSlotAvailable(booking.date, booking.id, true)
+  //     booking = null
+  //     document.getElementById("bookingInfo").style.display = "none"
+  //     weekChangeDay(selectedDate)
+  //     renderMobileSlots()
+  //   }
 }
 
 // 桌面端日期切换
@@ -447,7 +429,7 @@ const fp = flatpickr("#dateInput", {
   },
 })
 
-initTemplate(new Date())
+init(new Date())
 renderMobileSlots()
 
 document.getElementById("prevDay").addEventListener("click", () => {
