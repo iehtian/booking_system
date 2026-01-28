@@ -30,7 +30,8 @@ console.log(slots)
 
 let mobileIsEarlyHidden = true
 let mobileIsLateHidden = true
-let weekData = {}
+// 仅保存按日期的已预约 slotId 映射
+let weekData = { bookedByDate: {} }
 let booking = null
 let selected = null
 
@@ -58,10 +59,9 @@ function setBookingDetails(target, bookingInfo) {
 }
 
 function getWeek(selectedDate) {
-  const today = new Date()
-  const day = today.getDay()
-  const monday = new Date(today)
-  monday.setDate(today.getDate() - (day === 0 ? 6 : day - 1))
+  const day = selectedDate.getDay()
+  const monday = new Date(selectedDate)
+  monday.setDate(selectedDate.getDate() - (day === 0 ? 6 : day - 1))
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday)
     d.setDate(monday.getDate() + i)
@@ -70,7 +70,6 @@ function getWeek(selectedDate) {
 }
 
 function fmt(date) {
-  console.log("格式化日期:", date)
   return date.toISOString().split("T")[0]
 }
 
@@ -79,40 +78,25 @@ function display(date) {
   return `${date.getMonth() + 1}/${date.getDate()} ${days[date.getDay()]}`
 }
 
-function init(selectedDate) {
-  getWeek(selectedDate).forEach((date) => {
-    const key = fmt(date)
-    if (!weekData[key]) {
-      weekData[key] = slots.map((s) => ({
-        ...s,
-        available: true,
-        date: key,
-      }))
-    }
-  })
-  console.log("初始化 weekData:", weekData)
-
-  // 初始化当前日期的数据
-  const todayKey = fmt(new Date())
-  if (!weekData[todayKey]) {
-    weekData[todayKey] = slots.map((s) => ({
-      ...s,
-      available: true,
-      date: todayKey,
-    }))
-  }
+function getSlotById(id) {
+  return slots.find((s) => s.id === id)
 }
 
-function renderWeek(selectedDate) {
+function isSlotAvailable(dateKey, slotId) {
+  const booked = weekData.bookedByDate[dateKey]
+  return !booked || !booked.has(slotId)
+}
+
+// 初始化页面模板
+function initTemplate(selectedDate) {
+  // 生成主结构
   const container = document.getElementById("weeklyView")
-  const week = getWeek(selectedDate)
-
   container.innerHTML = ""
-
   const fragment = document.createDocumentFragment()
   const grid = document.createElement("div")
   grid.className = "weekly-grid"
 
+  // 时间头部
   const timeHeader = document.createElement("div")
   timeHeader.className = "has-text-centered mb-2 pb-2 week-header"
   timeHeader.style.borderBottom = "2px solid #dbdbdb"
@@ -122,23 +106,20 @@ function renderWeek(selectedDate) {
   timeHeader.appendChild(timeStrong)
   grid.appendChild(timeHeader)
 
-  console.log("渲染 week:", week)
-  week.forEach((date) => {
+  // 日期头部
+  getWeek(selectedDate).forEach((date) => {
     const key = fmt(date)
-    console.log("渲染日期:selectedDate", selectedDate)
-    const isSelectedDay = key === fmt(selectedDate)
     const header = document.createElement("div")
     header.className = "has-text-centered mb-2 pb-2 week-header"
-    header.style.borderBottom = `2px solid ${isSelectedDay ? "#3273dc" : "#dbdbdb"}`
-
+    header.style.borderBottom = `2px solid #dbdbdb`
+    header.dataset.date = key
     const strong = document.createElement("strong")
-    if (isSelectedDay) strong.className = "has-text-info"
     strong.textContent = display(date)
-
     header.appendChild(strong)
     grid.appendChild(header)
   })
 
+  // 深夜展开按钮
   const earlyBtn = document.createElement("div")
   earlyBtn.className = "grid-embedded-btn"
   earlyBtn.id = "toggleEarlyBtn"
@@ -146,77 +127,60 @@ function renderWeek(selectedDate) {
   earlyBtn.addEventListener("click", () => toggleEarly(earlyBtn))
   grid.appendChild(earlyBtn)
 
-  // 左侧时间列，与日期列对齐
+  // 时间列
   const timeColumn = document.createElement("div")
+  timeColumn.className = "time-column"
   slots.forEach(({ id, time }) => {
     let hideCls = ""
     if (id <= 16) hideCls = "hidden-slot-logic-early Early"
     if (id >= 45) hideCls = "hidden-slot-logic-late Late"
-
     const label = document.createElement("label")
     label.className = ["slot-item", hideCls].filter(Boolean).join(" ")
-
     const span = document.createElement("span")
     span.className = "slot-time"
     span.textContent = time
-
     label.appendChild(span)
     timeColumn.appendChild(label)
   })
-
   grid.appendChild(timeColumn)
 
-  week.forEach((date, idx) => {
+  // 日期列（每列一个div，内部slot-item）
+  getWeek(selectedDate).forEach((date, idx) => {
     const key = fmt(date)
     const dayColumn = document.createElement("div")
+    dayColumn.className = "day-column"
     dayColumn.dataset.idx = idx
-    const daySlots = weekData[key]
-
-    daySlots.forEach((slot, idx) => {
+    dayColumn.dataset.date = key
+    slots.forEach((slot, idx2) => {
       let hideCls = ""
       if (slot.id <= 16) hideCls = "hidden-slot-logic-early Early"
       if (slot.id >= 45) hideCls = "hidden-slot-logic-late Late"
-
-      const isSelected =
-        selected && selected.date === key && selected.id === slot.id
-      let cls = !slot.available
-        ? "booked"
-        : isSelected
-          ? "selected"
-          : "available"
-
-      if (!slot.available) {
-        const prevBooked = idx > 0 && !daySlots[idx - 1].available
-        const nextBooked =
-          idx < daySlots.length - 1 && !daySlots[idx + 1].available
-        if (!prevBooked && !nextBooked) cls += " single"
-        else if (!prevBooked) cls += " first"
-        else if (!nextBooked) cls += " last"
-      }
-
       const label = document.createElement("label")
-      label.className = ["slot-item", cls, hideCls].filter(Boolean).join(" ")
-
+      label.className = ["slot-item", "available", hideCls]
+        .filter(Boolean)
+        .join(" ")
+      label.dataset.idx = idx2
+      label.dataset.time = slot.time
+      label.dataset.slotid = slot.id
+      label.dataset.date = key
+      // input
       const input = document.createElement("input")
       input.type = "checkbox"
       input.name = "timeslot"
       input.value = `${key}-${slot.id}`
-      input.disabled = !slot.available
-
+      input.disabled = !isSlotAvailable(key, slot.id)
+      label.appendChild(input)
+      // span
       const span = document.createElement("span")
       span.className = "slot-time"
       span.textContent = slot.time
-      label.dataset.idx = idx
-      label.dataset.time = slot.time
-
-      label.appendChild(input)
       label.appendChild(span)
       dayColumn.appendChild(label)
     })
-
     grid.appendChild(dayColumn)
   })
 
+  // 晚间展开按钮
   const lateBtn = document.createElement("div")
   lateBtn.className = "grid-embedded-btn"
   lateBtn.id = "toggleLateBtn"
@@ -226,6 +190,54 @@ function renderWeek(selectedDate) {
 
   fragment.appendChild(grid)
   container.appendChild(fragment)
+}
+
+// 只更新一周的属性和文字，不重建结构
+function weekChangeDay(selectedDate) {
+  const week = getWeek(selectedDate)
+  // 更新日期头部
+  const headers = document.querySelectorAll("#weeklyView .week-header")
+  headers.forEach((header, idx) => {
+    if (idx === 0) return // 跳过时间头部
+    const date = week[idx - 1]
+    const key = fmt(date)
+    header.dataset.date = key
+    header.querySelector("strong").textContent = display(date)
+    header.style.borderBottom = `2px solid ${key === fmt(selectedDate) ? "#3273dc" : "#dbdbdb"}`
+    if (key === fmt(selectedDate)) {
+      header.querySelector("strong").className = "has-text-info"
+    } else {
+      header.querySelector("strong").className = ""
+    }
+  })
+  // 更新每一列的slot
+  const columns = document.querySelectorAll("#weeklyView .day-column")
+  columns.forEach((col, idx) => {
+    const date = week[idx]
+    const key = fmt(date)
+    col.dataset.date = key
+    const labels = col.querySelectorAll("label.slot-item")
+    labels.forEach((label, i) => {
+      const slot = slots[i]
+      label.dataset.time = slot.time
+      label.dataset.slotid = slot.id
+      label.dataset.date = key
+      // 更新可用状态
+      label.classList.remove("booked", "selected", "available")
+      if (!isSlotAvailable(key, slot.id)) label.classList.add("booked")
+      else label.classList.add("available")
+      // 选中状态
+      if (selected && selected.date === key && selected.id === slot.id) {
+        label.classList.add("selected")
+      }
+      // input
+      const input = label.querySelector("input[type=checkbox]")
+      if (input) input.disabled = !isSlotAvailable(key, slot.id)
+      // span
+      const span = label.querySelector("span.slot-time")
+      if (span) span.textContent = slot.time
+    })
+  })
 }
 
 const toggleEarly = function (btn) {
@@ -263,16 +275,6 @@ function renderMobileSlots() {
   const container = document.getElementById("mobileSlots")
   const key = fmt(mobileSelectedDate)
 
-  if (!weekData[key]) {
-    weekData[key] = slots.map((s) => ({
-      ...s,
-      available: true,
-      date: key,
-    }))
-  }
-
-  const daySlots = weekData[key]
-
   container.innerHTML = ""
   const fragment = document.createDocumentFragment()
 
@@ -287,13 +289,13 @@ function renderMobileSlots() {
   const grid = document.createElement("div")
   grid.className = "mobile-slots-grid"
 
-  daySlots.forEach((slot) => {
+  slots.forEach((slot) => {
     if (mobileIsEarlyHidden && slot.id <= 16) return
     if (mobileIsLateHidden && slot.id >= 45) return
 
     const isSelected =
       selected && selected.date === key && selected.id === slot.id
-    const cls = !slot.available
+    const cls = !isSlotAvailable(key, slot.id)
       ? "booked"
       : isSelected
         ? "selected"
@@ -303,7 +305,7 @@ function renderMobileSlots() {
     item.className = ["mobile-slot-item", cls].join(" ")
     item.textContent = slot.time
 
-    if (slot.available && !booking) {
+    if (isSlotAvailable(key, slot.id) && !booking) {
       item.addEventListener("click", () => mobileSelect(key, slot.id))
     }
 
@@ -335,7 +337,7 @@ window.toggleMobileLate = function () {
 
 function select(date, id) {
   if (booking) return
-  const slot = weekData[date].find((s) => s.id === id)
+  const slot = getSlotById(id)
   selected = { date, id, time: slot.time }
   document.getElementById("selectionInfo").style.display = "block"
   document.getElementById("confirmBtn").style.display = "inline-flex"
@@ -348,7 +350,7 @@ window.select = select
 
 window.mobileSelect = function (date, id) {
   if (booking) return
-  const slot = weekData[date].find((s) => s.id === id)
+  const slot = getSlotById(id)
   selected = { date, id, time: slot.time }
 
   // 显示确认按钮
@@ -388,8 +390,11 @@ window.mobileSelect = function (date, id) {
 function confirm() {
   if (!selected) return alert("请选择时间段")
 
-  const slot = weekData[selected.date].find((s) => s.id === selected.id)
-  slot.available = false
+  const dateKey = selected.date
+  if (!weekData.bookedByDate[dateKey]) {
+    weekData.bookedByDate[dateKey] = new Set()
+  }
+  weekData.bookedByDate[dateKey].add(selected.id)
   booking = { ...selected }
   selected = null
 
@@ -402,7 +407,7 @@ function confirm() {
   document.getElementById("bookingInfo").style.display = "block"
   setBookingDetails(document.getElementById("bookingDetails"), booking)
 
-  renderWeek()
+  // renderWeek()
   renderMobileSlots()
 }
 
@@ -411,11 +416,16 @@ window.confirm = confirm
 
 function cancel() {
   if (booking) {
-    const slot = weekData[booking.date].find((s) => s.id === booking.id)
-    slot.available = true
+    const dateKey = booking.date
+    if (weekData.bookedByDate[dateKey]) {
+      weekData.bookedByDate[dateKey].delete(booking.id)
+      if (weekData.bookedByDate[dateKey].size === 0) {
+        delete weekData.bookedByDate[dateKey]
+      }
+    }
     booking = null
     document.getElementById("bookingInfo").style.display = "none"
-    renderWeek()
+    // renderWeek()
     renderMobileSlots()
   }
 }
@@ -424,7 +434,7 @@ function cancel() {
 function changeDay(delta) {
   selectedDate.setDate(selectedDate.getDate() + delta)
   fp.setDate(selectedDate, false)
-  renderWeek(selectedDate)
+  weekChangeDay(selectedDate)
 }
 
 const fp = flatpickr("#dateInput", {
@@ -433,12 +443,11 @@ const fp = flatpickr("#dateInput", {
   defaultDate: selectedDate,
   onChange: (d) => {
     selectedDate = d[0]
-    renderWeek(selectedDate)
+    weekChangeDay(selectedDate)
   },
 })
 
-init(new Date())
-renderWeek(selectedDate)
+initTemplate(new Date())
 renderMobileSlots()
 
 document.getElementById("prevDay").addEventListener("click", () => {
