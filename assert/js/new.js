@@ -57,7 +57,7 @@ function setBookingDetails(target, bookingInfo) {
   target.appendChild(document.createTextNode(bookingInfo.time))
 }
 
-function getWeek() {
+function getWeek(selectedDate) {
   const today = new Date()
   const day = today.getDay()
   const monday = new Date(today)
@@ -70,6 +70,7 @@ function getWeek() {
 }
 
 function fmt(date) {
+  console.log("格式化日期:", date)
   return date.toISOString().split("T")[0]
 }
 
@@ -78,8 +79,8 @@ function display(date) {
   return `${date.getMonth() + 1}/${date.getDate()} ${days[date.getDay()]}`
 }
 
-function init() {
-  getWeek().forEach((date) => {
+function init(selectedDate) {
+  getWeek(selectedDate).forEach((date) => {
     const key = fmt(date)
     if (!weekData[key]) {
       weekData[key] = slots.map((s) => ({
@@ -89,6 +90,7 @@ function init() {
       }))
     }
   })
+  console.log("初始化 weekData:", weekData)
 
   // 初始化当前日期的数据
   const todayKey = fmt(new Date())
@@ -101,10 +103,9 @@ function init() {
   }
 }
 
-function renderWeek() {
+function renderWeek(selectedDate) {
   const container = document.getElementById("weeklyView")
-  const week = getWeek()
-  const today = fmt(new Date())
+  const week = getWeek(selectedDate)
 
   container.innerHTML = ""
 
@@ -121,8 +122,10 @@ function renderWeek() {
   timeHeader.appendChild(timeStrong)
   grid.appendChild(timeHeader)
 
+  console.log("渲染 week:", week)
   week.forEach((date) => {
     const key = fmt(date)
+    console.log("渲染日期:selectedDate", selectedDate)
     const isSelectedDay = key === fmt(selectedDate)
     const header = document.createElement("div")
     header.className = "has-text-centered mb-2 pb-2 week-header"
@@ -225,7 +228,7 @@ function renderWeek() {
   container.appendChild(fragment)
 }
 
-toggleEarly = function (btn) {
+const toggleEarly = function (btn) {
   const earlys = document.querySelectorAll(".Early")
 
   earlys.forEach((el) => {
@@ -241,7 +244,7 @@ toggleEarly = function (btn) {
   }
 }
 
-toggleLate = function (btn) {
+const toggleLate = function (btn) {
   const lates = document.querySelectorAll(".Late")
 
   lates.forEach((el) => {
@@ -417,16 +420,11 @@ function cancel() {
   }
 }
 
-// 初始化
-init()
-renderWeek()
-renderMobileSlots()
-
 // 桌面端日期切换
 function changeDay(delta) {
   selectedDate.setDate(selectedDate.getDate() + delta)
   fp.setDate(selectedDate, false)
-  renderWeek()
+  renderWeek(selectedDate)
 }
 
 const fp = flatpickr("#dateInput", {
@@ -435,9 +433,13 @@ const fp = flatpickr("#dateInput", {
   defaultDate: selectedDate,
   onChange: (d) => {
     selectedDate = d[0]
-    renderWeek()
+    renderWeek(selectedDate)
   },
 })
+
+init(new Date())
+renderWeek(selectedDate)
+renderMobileSlots()
 
 document.getElementById("prevDay").addEventListener("click", () => {
   changeDay(-1)

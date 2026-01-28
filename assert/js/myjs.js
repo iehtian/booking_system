@@ -8,7 +8,7 @@ import { instruments_map } from "./instruments.js"
 const width = document.documentElement.clientWidth || document.body.clientWidth
 console.log("当前屏幕宽度:", width)
 const instrumentname = document.querySelector("title").innerText
-// instruments_map 现在可能返回一个对象 {id, slotType} 或者仍然是字符串（兼容性）
+
 const instrumentEntry = instruments_map[instrumentname]
 let instrument = instrumentEntry
 let slotType = "half" // 默认 30 分钟
