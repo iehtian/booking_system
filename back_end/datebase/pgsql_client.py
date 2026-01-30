@@ -249,15 +249,19 @@ def _row_to_booking(row):
 
     期望行格式: (id, user_id, instrument_id, booking_date, start_time, end_time, user_name)
     """
+    start_time_str = row[4].strftime("%H:%M") if row[4] else None
+    end_time_str = row[5].strftime("%H:%M") if row[5] else None
+    if end_time_str == "00:00":
+        end_time_str = "24:00"
     return {
         "id": row[0],
         "user_id": row[1],
         "instrument_id": row[2],
         "date": row[3].isoformat() if row[3] else None,
-        "start_time": row[4].strftime("%H:%M") if row[4] else None,
-        "end_time": row[5].strftime("%H:%M") if row[5] else None,
-        "time": f"{row[4].strftime('%H:%M')}-{row[5].strftime('%H:%M')}"
-        if row[4] and row[5]
+        "start_time": start_time_str,
+        "end_time": end_time_str,
+        "time": f"{start_time_str}-{end_time_str}"
+        if start_time_str and end_time_str
         else None,
         "user_name": row[6] if len(row) > 6 else None,
     }
