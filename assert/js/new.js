@@ -1,5 +1,7 @@
 let selectedDate = new Date()
 let mobileSelectedDate = new Date()
+import axios from "axios"
+import { host } from "./config.js"
 
 function generateTimeIntervalsSimple() {
   const intervals = []
@@ -23,7 +25,7 @@ function generateTimeIntervalsSimple() {
 }
 
 let slots = generateTimeIntervalsSimple().map((time, index) => ({
-  id: index + 1,
+  id: index,
   time: time,
 }))
 console.log(slots)
@@ -31,16 +33,66 @@ console.log(slots)
 let mobileIsEarlyHidden = true
 let mobileIsLateHidden = true
 let weekData = slots
+let selectedWeek = null
+let selectedRes = []
 
 let booking = null
 let selected = null
 
-function setSelectedText(target, date, time) {
+const processSchedule = (list) => {
+  // 1. 基础排序：先排日期，再排时间
+  const sorted = list.sort((a, b) => {
+    // 1. 第一优先级：日期
+    if (a.date !== b.date) {
+      return a.date.localeCompare(b.date)
+    }
+
+    // 2. 第二优先级：时间 (取时间段的开始部分)
+    const timeA = a.time.split("-")[0]
+    const timeB = b.time.split("-")[0]
+    if (timeA !== timeB) {
+      return timeA.localeCompare(timeB)
+    }
+
+    // 3. 第三优先级：ID (当日期和时间都一样时)
+    return a.id - b.id
+  })
+
+  const result = []
+
+  for (const item of sorted) {
+    const last = result[result.length - 1]
+    const [startTime, endTime] = item.time.split("-")
+
+    // 2. 合并逻辑：日期相同 且 上一个结束时间 等于 当前开始时间
+    if (
+      last &&
+      last.date === item.date &&
+      last.time.split("-")[1] === startTime
+    ) {
+      const lastStart = last.time.split("-")[0]
+      last.time = `${lastStart}-${endTime}`
+      last.ids = [...(last.ids || [last.id]), item.id]
+    } else {
+      result.push({ ...item, ids: [item.id] })
+    }
+  }
+
+  return result
+}
+
+function setSelectedText(target, selectedRes) {
+  const processedRes = processSchedule(selectedRes)
   target.textContent = ""
   const strong = document.createElement("strong")
   strong.textContent = "已选择:"
   target.appendChild(strong)
-  target.appendChild(document.createTextNode(`${date} ${time}`))
+  for (let i = 0; i < processedRes.length; i++) {
+    if (i > 0) target.appendChild(document.createTextNode("; "))
+    const span = document.createElement("span")
+    span.textContent = `${processedRes[i].date} ${processedRes[i].time}`
+    target.appendChild(span)
+  }
 }
 
 function setBookingDetails(target, bookingInfo) {
@@ -81,6 +133,9 @@ function display(date) {
 // 初始化页面
 function init(selectedDate) {
   // 生成主结构
+  console.log("weekData:", weekData)
+  selectedWeek = getWeek(selectedDate)
+  console.log("selectedWeek:", selectedWeek)
   const container = document.getElementById("weeklyView")
   container.innerHTML = ""
   const fragment = document.createDocumentFragment()
@@ -98,7 +153,7 @@ function init(selectedDate) {
   grid.appendChild(timeHeader)
 
   // 日期头部
-  getWeek(selectedDate).forEach((date) => {
+  selectedWeek.forEach((date) => {
     const key = fmt(date)
     const header = document.createElement("div")
     header.className = "has-text-centered mb-2 pb-2 week-header"
@@ -123,7 +178,7 @@ function init(selectedDate) {
   timeColumn.className = "time-column"
   slots.forEach(({ id, time }) => {
     let hideCls = ""
-    if (id <= 16) hideCls = "hidden-slot-logic-early Early"
+    if (id <= 15) hideCls = "hidden-slot-logic-early Early"
     if (id >= 45) hideCls = "hidden-slot-logic-late Late"
     const label = document.createElement("label")
     label.className = ["slot-item", hideCls].filter(Boolean).join(" ")
@@ -136,16 +191,17 @@ function init(selectedDate) {
   grid.appendChild(timeColumn)
 
   // 日期列（每列一个div，内部slot-item）
-  getWeek(selectedDate).forEach((date, idx) => {
+  selectedWeek.forEach((date, idx) => {
     const key = fmt(date)
     const dayColumn = document.createElement("div")
     dayColumn.className = "day-column"
     dayColumn.dataset.idx = idx
     dayColumn.dataset.date = key
     const daySlots = weekData
+
     daySlots.forEach((slot, idx2) => {
       let hideCls = ""
-      if (slot.id <= 16) hideCls = "hidden-slot-logic-early Early"
+      if (slot.id <= 15) hideCls = "hidden-slot-logic-early Early"
       if (slot.id >= 45) hideCls = "hidden-slot-logic-late Late"
       const available = true
       const label = document.createElement("label")
@@ -157,14 +213,13 @@ function init(selectedDate) {
         .filter(Boolean)
         .join(" ")
       label.dataset.idx = idx2
-      label.dataset.time = slot.time
-      label.dataset.slotid = slot.id
       label.dataset.date = key
       // input
       const input = document.createElement("input")
       input.type = "checkbox"
       input.name = "timeslot"
       input.value = `${key}-${slot.id}`
+      input.dataset.slotid = slot.id
       input.disabled = !available
       label.appendChild(input)
       // span
@@ -189,9 +244,22 @@ function init(selectedDate) {
   container.appendChild(fragment)
 }
 
+function addslotselectorHandlers() {
+  const checkboxes = document.querySelectorAll(
+    "#weeklyView .day-column input[type=checkbox]"
+  )
+  checkboxes.forEach((checkbox) => {
+    checkbox.addEventListener("change", (e) => {
+      const parent = checkbox.parentElement
+      const date = parent.dataset.date
+      select(date, e)
+    })
+  })
+}
+
 // 只更新一周的属性和文字，不重建结构
 function weekChangeDay(selectedDate) {
-  const week = getWeek(selectedDate)
+  const week = selectedWeek
   // 更新日期头部
   const headers = document.querySelectorAll("#weeklyView .week-header")
   headers.forEach((header, idx) => {
@@ -290,7 +358,7 @@ function renderMobileSlots() {
   grid.className = "mobile-slots-grid"
 
   daySlots.forEach((slot) => {
-    if (mobileIsEarlyHidden && slot.id <= 16) return
+    if (mobileIsEarlyHidden && slot.id <= 15) return
     if (mobileIsLateHidden && slot.id >= 45) return
     const available = true
 
@@ -332,13 +400,19 @@ window.toggleMobileLate = function () {
   renderMobileSlots()
 }
 
-function select(date, id) {
-  if (booking) return
-  const slot = weekData.find((s) => s.id === id)
-  selected = { date, id, time: slot.time }
+function select(date, event) {
+  let id = parseInt(event.target.dataset.slotid, 10)
+  if (event.target.checked) {
+    const slot = weekData.find((s) => id === s.id)
+    console.log("slot:", slot)
+    selected = { date, id, time: slot.time }
+    selectedRes.push(selected)
+  } else {
+    selectedRes = selectedRes.filter((s) => !(s.date === date && s.id === id))
+  }
   document.getElementById("selectionInfo").style.display = "block"
   document.getElementById("confirmBtn").style.display = "inline-flex"
-  setSelectedText(document.getElementById("selectedInfo"), date, slot.time)
+  setSelectedText(document.getElementById("selectedInfo"), selectedRes)
   // renderWeek()
 }
 
@@ -384,19 +458,93 @@ window.mobileSelect = function (date, id) {
   renderMobileSlots()
 }
 
+async function submitBookings(instrument, submitData) {
+  const thisDate = submitData.date
+  const slots = submitData.slots
+
+  if (!thisDate || slots.length === 0) {
+    alert("请先选择日期和时间段")
+    return
+  }
+
+  try {
+    const token = localStorage.getItem("access_token")
+    if (!token) {
+      alert("未登录，无法提交预约")
+      return false
+    }
+    const appointmentData = {
+      instrument: instrument,
+      date: thisDate,
+      slots: slots,
+    }
+
+    console.log("发送的数据:", appointmentData)
+
+    // 使用 axios.post，第二个参数直接传对象
+    const response = await axios.post(
+      `${host}/api/info_save`,
+      appointmentData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
+
+    // Axios 默认认为 2xx 状态码都是 ok 的
+    // 结果就在 response.data 中
+    if (response.status === 200 || response.status === 201) {
+      return true
+    }
+  } catch (error) {
+    // Axios 的错误处理更丰富
+    // 如果服务器返回了 4xx/5xx 错误，会进入这里
+    alert("提交预约失败，请重试")
+
+    if (error.response) {
+      // 请求已发出，服务器响应了状态码
+      console.error(
+        "提交失败 (状态码):",
+        error.response.status,
+        error.response.data
+      )
+    } else if (error.request) {
+      // 请求已发出，但没收到响应（网络问题）
+      console.error("网络异常，未收到响应:", error.request)
+    } else {
+      console.error("请求配置出错:", error.message)
+    }
+
+    return false
+  }
+}
+
 function confirm() {
-  //   if (!selected) return alert("请选择时间段")
-  //   setSlotAvailable(selected.date, selected.id, false)
-  //   booking = { ...selected }
-  //   selected = null
-  //   document.getElementById("selectionInfo").style.display = "none"
-  //   document.getElementById("confirmBtn").style.display = "none"
-  //   const mobileInfo = document.getElementById("mobileSelectionInfo")
-  //   if (mobileInfo) mobileInfo.style.display = "none"
-  //   document.getElementById("bookingInfo").style.display = "block"
-  //   setBookingDetails(document.getElementById("bookingDetails"), booking)
-  //   weekChangeDay(selectedDate)
-  //   renderMobileSlots()
+  if (!selectedRes || selectedRes.length === 0) {
+    alert("请先选择时间段")
+    return
+  }
+
+  console.log("确认预约:", selectedRes)
+  // 提交预约
+  const submitData = {
+    date: selectedRes[0].date,
+    slots: selectedRes.map((s) => s.time),
+  }
+  submitBookings("instrument_name", submitData).then((success) => {
+    if (success) {
+      alert("预约成功")
+      // 重置选择
+      selectedRes = []
+      selected = null
+      document.getElementById("selectionInfo").style.display = "none"
+      document.getElementById("confirmBtn").style.display = "none"
+      setSelectedText(document.getElementById("selectedInfo"), selectedRes)
+      weekChangeDay(selectedDate)
+      renderMobileSlots()
+    }
+  })
 }
 
 // Allow inline mobile confirmation button to call confirm()
@@ -431,6 +579,7 @@ const fp = flatpickr("#dateInput", {
 
 init(new Date())
 renderMobileSlots()
+addslotselectorHandlers()
 
 document.getElementById("prevDay").addEventListener("click", () => {
   changeDay(-1)

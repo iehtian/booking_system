@@ -112,9 +112,12 @@ def hello_world():
 
 
 @app.route("/api/info_save", methods=["POST"])
+@jwt_required()
 def save_info():
     """将预约信息保存"""
     try:
+        current_user_name = get_jwt_identity()
+
         data = request.get_json()
         print(f"接收到的预约数据: {data}")
         instrument = data.get("instrument") or data.get(
@@ -122,7 +125,7 @@ def save_info():
         )  # 默认为A仪器系统
         date = data.get("date")
         slots = data.get("slots")  # 现在接收时间段数组
-        user_name = data.get("user_name")
+        user_name = current_user_name
 
         if not date or not slots or not user_name:
             return jsonify(
