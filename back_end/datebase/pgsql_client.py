@@ -275,8 +275,8 @@ def search_booking_by_date(instrument_id, date):
     # 包含用户信息的结果
     results = []
     for row in rows:
-        booking = _row_to_booking(row[:7])  # 前7个字段包含 user_name
-        booking["color"] = row[7]  # 添加颜色信息
+        booking = _row_to_booking(row[:6])  # 前7个字段包含 user_name
+        booking["color"] = row[6]  # 添加颜色信息
         results.append(booking)
     return results
 

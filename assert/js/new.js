@@ -147,21 +147,6 @@ function setSelectedText(target, selectedRes) {
   }
 }
 
-function setBookingDetails(target, bookingInfo) {
-  target.textContent = ""
-  const dateStrong = document.createElement("strong")
-  dateStrong.textContent = "日期:"
-  target.appendChild(dateStrong)
-  target.appendChild(document.createTextNode(bookingInfo.date))
-
-  target.appendChild(document.createElement("br"))
-
-  const timeStrong = document.createElement("strong")
-  timeStrong.textContent = "时间:"
-  target.appendChild(timeStrong)
-  target.appendChild(document.createTextNode(bookingInfo.time))
-}
-
 function getWeek(selectedDate) {
   const day = selectedDate.getDay()
   const monday = new Date(selectedDate)
@@ -305,25 +290,34 @@ async function init(selectedDate) {
   container.appendChild(fragment)
 
   const data = await week_bookings
+
   data.forEach((dayBookings, dayIdx) => {
     console.log("dayBookings:", dayBookings)
-    // 获取类为day-column的第dayIdx个元素
-    const dayColumn = container.querySelectorAll(".day-column")[dayIdx]
-    const labels = dayColumn.querySelectorAll("label.slot-item")
-    const inputs = dayColumn.querySelectorAll("input[type=checkbox]")
-    inputs.forEach((input) => {
-      const slotId = parseInt(input.dataset.slotid, 10)
-      // 检查该slotId是否在dayBookings中
-      const isBooked = dayBookings.includes(slotId)
-      if (isBooked) {
-        input.parentElement.classList.remove("available")
-        input.parentElement.classList.add("booked")
-        input.disabled = true
-      }
-    })
+    processDayColumn(dayBookings, dayIdx, container, markSlotAsBooked)
   })
 
   console.log("我的预约数据:", data)
+}
+
+const markSlotAsBooked = (input) => {
+  const container = input.parentElement
+  container.classList.replace("available", "booked")
+  input.disabled = true
+  input.checked = false
+}
+
+const processDayColumn = (dayBookings, dayIdx, container, onBooked) => {
+  const dayColumn = container.querySelectorAll(".day-column")[dayIdx]
+  if (!dayColumn) return
+
+  const inputs = dayColumn.querySelectorAll("input[type=checkbox]")
+
+  inputs.forEach((input) => {
+    const slotId = parseInt(input.dataset.slotid, 10)
+    if (dayBookings.includes(slotId)) {
+      onBooked(input) // 执行回调
+    }
+  })
 }
 
 function addslotselectorHandlers() {

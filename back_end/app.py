@@ -140,7 +140,7 @@ def save_info():
         search_by_date_result = db_api.search_booking_by_date(instrument, date)
         print(f"数据库中已有的预约记录: {search_by_date_result}")
         if search_by_date_result:
-            tmies = [slot["time-slot-id"] for slot in search_by_date_result]
+            tmies = [slot["time_slot_id"] for slot in search_by_date_result]
             for slot in slots_ids:
                 if slot in tmies:
                     return jsonify(
