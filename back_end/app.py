@@ -289,7 +289,7 @@ def get_user_bookings():
     """获取特定日期当前用户的所有预约信息"""
     try:
         date = request.args.get("date")
-        instrument = request.args.get("instrument") or request.args.get("instrument")
+        instrument = request.args.get("instrument")
 
         if not date or not instrument:
             return jsonify(

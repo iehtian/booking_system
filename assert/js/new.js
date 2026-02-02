@@ -2,6 +2,37 @@ let selectedDate = new Date()
 let mobileSelectedDate = new Date()
 import axios from "axios"
 import { host } from "./config.js"
+let instrument_id = "c_instrument" // 示例仪器 ID
+
+async function getBookings_myself(instrument, date) {
+  try {
+    const token = localStorage.getItem("access_token")
+    if (!token) {
+      alert("未登录，无法获取预约信息")
+      return []
+    }
+
+    const response = await axios.get(
+      `${host}/api/bookings_user?instrument=${instrument}&date=${date}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
+
+    if (response.status === 200) {
+      return response.data || []
+    } else {
+      alert("获取预约信息失败，请重试")
+      console.error("获取失败:", response.status, response.data)
+      return []
+    }
+  } catch (error) {
+    console.error("获取预约信息时出错:", error)
+    return []
+  }
+}
 
 function generateTimeIntervalsSimple() {
   const intervals = []
@@ -30,11 +61,38 @@ let slots = generateTimeIntervalsSimple().map((time, index) => ({
 }))
 console.log(slots)
 
+function createState(initialState) {
+  let state = { ...initialState }
+  const listeners = new Set()
+  const notify = () => listeners.forEach((listener) => listener(state))
+
+  return {
+    get() {
+      return state
+    },
+    set(patch) {
+      state = { ...state, ...patch }
+      notify()
+    },
+    update(updater) {
+      state = updater(state)
+      notify()
+    },
+    subscribe(listener) {
+      listeners.add(listener)
+      return () => listeners.delete(listener)
+    },
+  }
+}
+
 let mobileIsEarlyHidden = true
 let mobileIsLateHidden = true
-let weekData = slots
 let selectedWeek = null
-let selectedRes = []
+
+const desktopState = createState({
+  weekData: slots,
+  selectedRes: [],
+})
 
 let booking = null
 let selected = null
@@ -131,11 +189,19 @@ function display(date) {
 }
 
 // 初始化页面
-function init(selectedDate) {
+async function init(selectedDate) {
   // 生成主结构
-  console.log("weekData:", weekData)
+  console.log("weekData:", desktopState.get().weekData)
   selectedWeek = getWeek(selectedDate)
   console.log("selectedWeek:", selectedWeek)
+
+  // const has_booking = getBookings_myself(instrument_id, fmt(selectedDate))
+  const pormise_week = []
+  for (const date of selectedWeek) {
+    pormise_week.push(getBookings_myself(instrument_id, fmt(date)))
+  }
+  const week_bookings = Promise.all(pormise_week)
+
   const container = document.getElementById("weeklyView")
   container.innerHTML = ""
   const fragment = document.createDocumentFragment()
@@ -197,6 +263,7 @@ function init(selectedDate) {
     dayColumn.className = "day-column"
     dayColumn.dataset.idx = idx
     dayColumn.dataset.date = key
+    const { weekData } = desktopState.get()
     const daySlots = weekData
 
     daySlots.forEach((slot, idx2) => {
@@ -242,6 +309,30 @@ function init(selectedDate) {
 
   fragment.appendChild(grid)
   container.appendChild(fragment)
+
+  const data = await week_bookings
+  data.forEach((dayBookings, dayIdx) => {
+    console.log("dayBookings:", dayBookings)
+    // 获取类为day-column的第dayIdx个元素
+    const dayColumn = container.querySelectorAll(".day-column")[dayIdx]
+    const labels = dayColumn.querySelectorAll("label.slot-item")
+    labels.forEach((label) => {
+      const slotId = parseInt(label.dataset.slotid, 10)
+      // 检查该slotId是否在dayBookings中
+      const isBooked = dayBookings.some((booking) => {
+        console.log("checking booking:", booking, "against slotId:", slotId)
+        booking.includes(slotId)
+      })
+      if (isBooked) {
+        label.classList.remove("available")
+        label.classList.add("booked")
+        const input = label.querySelector("input[type=checkbox]")
+        if (input) input.disabled = true
+      }
+    })
+  })
+
+  console.log("我的预约数据:", data)
 }
 
 function addslotselectorHandlers() {
@@ -281,6 +372,7 @@ function weekChangeDay(selectedDate) {
     const date = week[idx]
     const key = fmt(date)
     col.dataset.date = key
+    const { weekData } = desktopState.get()
     const daySlots = weekData
     const labels = col.querySelectorAll("label.slot-item")
     labels.forEach((label, i) => {
@@ -341,6 +433,7 @@ const toggleLate = function (btn) {
 function renderMobileSlots() {
   const container = document.getElementById("mobileSlots")
   const key = fmt(mobileSelectedDate)
+  const { weekData } = desktopState.get()
   const daySlots = weekData
 
   container.innerHTML = ""
@@ -401,18 +494,24 @@ window.toggleMobileLate = function () {
 }
 
 function select(date, event) {
+  const { weekData, selectedRes } = desktopState.get()
   let id = parseInt(event.target.dataset.slotid, 10)
   if (event.target.checked) {
     const slot = weekData.find((s) => id === s.id)
     console.log("slot:", slot)
     selected = { date, id, time: slot.time }
-    selectedRes.push(selected)
+    desktopState.set({ selectedRes: [...selectedRes, selected] })
   } else {
-    selectedRes = selectedRes.filter((s) => !(s.date === date && s.id === id))
+    desktopState.set({
+      selectedRes: selectedRes.filter((s) => !(s.date === date && s.id === id)),
+    })
   }
   document.getElementById("selectionInfo").style.display = "block"
   document.getElementById("confirmBtn").style.display = "inline-flex"
-  setSelectedText(document.getElementById("selectedInfo"), selectedRes)
+  setSelectedText(
+    document.getElementById("selectedInfo"),
+    desktopState.get().selectedRes
+  )
   // renderWeek()
 }
 
@@ -421,6 +520,7 @@ window.select = select
 
 window.mobileSelect = function (date, id) {
   if (booking) return
+  const { weekData } = desktopState.get()
   const slot = weekData.find((s) => s.id === id)
   selected = { date, id, time: slot.time }
 
@@ -521,26 +621,31 @@ async function submitBookings(instrument, submitData) {
 }
 
 function confirm() {
+  const { selectedRes } = desktopState.get()
   if (!selectedRes || selectedRes.length === 0) {
     alert("请先选择时间段")
     return
   }
 
-  console.log("确认预约:", selectedRes)
+  const selectionSnapshot = [...selectedRes]
+  console.log("确认预约:", selectionSnapshot)
   // 提交预约
   const submitData = {
-    date: selectedRes[0].date,
-    slots: selectedRes.map((s) => s.time),
+    date: selectionSnapshot[0].date,
+    slots: selectionSnapshot.map((s) => s.time),
   }
-  submitBookings("instrument_name", submitData).then((success) => {
+  submitBookings(instrument_id, submitData).then((success) => {
     if (success) {
       alert("预约成功")
       // 重置选择
-      selectedRes = []
+      desktopState.set({ selectedRes: [] })
       selected = null
       document.getElementById("selectionInfo").style.display = "none"
       document.getElementById("confirmBtn").style.display = "none"
-      setSelectedText(document.getElementById("selectedInfo"), selectedRes)
+      setSelectedText(
+        document.getElementById("selectedInfo"),
+        desktopState.get().selectedRes
+      )
       weekChangeDay(selectedDate)
       renderMobileSlots()
     }
