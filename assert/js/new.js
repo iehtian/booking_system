@@ -99,20 +99,14 @@ let selected = null
 
 const processSchedule = (list) => {
   // 1. 基础排序：先排日期，再排时间
+  console.log("原始列表:", list)
   const sorted = list.sort((a, b) => {
     // 1. 第一优先级：日期
     if (a.date !== b.date) {
       return a.date.localeCompare(b.date)
     }
 
-    // 2. 第二优先级：时间 (取时间段的开始部分)
-    const timeA = a.time.split("-")[0]
-    const timeB = b.time.split("-")[0]
-    if (timeA !== timeB) {
-      return timeA.localeCompare(timeB)
-    }
-
-    // 3. 第三优先级：ID (当日期和时间都一样时)
+    // 2. 第二优先级：ID  代表了时间
     return a.id - b.id
   })
 
@@ -316,18 +310,15 @@ async function init(selectedDate) {
     // 获取类为day-column的第dayIdx个元素
     const dayColumn = container.querySelectorAll(".day-column")[dayIdx]
     const labels = dayColumn.querySelectorAll("label.slot-item")
-    labels.forEach((label) => {
-      const slotId = parseInt(label.dataset.slotid, 10)
+    const inputs = dayColumn.querySelectorAll("input[type=checkbox]")
+    inputs.forEach((input) => {
+      const slotId = parseInt(input.dataset.slotid, 10)
       // 检查该slotId是否在dayBookings中
-      const isBooked = dayBookings.some((booking) => {
-        console.log("checking booking:", booking, "against slotId:", slotId)
-        booking.includes(slotId)
-      })
+      const isBooked = dayBookings.includes(slotId)
       if (isBooked) {
-        label.classList.remove("available")
-        label.classList.add("booked")
-        const input = label.querySelector("input[type=checkbox]")
-        if (input) input.disabled = true
+        input.parentElement.classList.remove("available")
+        input.parentElement.classList.add("booked")
+        input.disabled = true
       }
     })
   })
@@ -632,7 +623,7 @@ function confirm() {
   // 提交预约
   const submitData = {
     date: selectionSnapshot[0].date,
-    slots: selectionSnapshot.map((s) => s.time),
+    slots: selectionSnapshot.map((s) => s.id),
   }
   submitBookings(instrument_id, submitData).then((success) => {
     if (success) {

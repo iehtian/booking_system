@@ -173,17 +173,14 @@ def create_booking_index():
                     user_id INTEGER NOT NULL,
                     instrument_id TEXT NOT NULL,
                     booking_date DATE NOT NULL,
-                    start_time TIME NOT NULL,
-                    end_time TIME NOT NULL,
+                    time_slot_id INTEGER NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     CONSTRAINT fk_user 
                         FOREIGN KEY (user_id) 
                         REFERENCES {USER_TABLE}(id) 
                         ON DELETE CASCADE,
                     CONSTRAINT unique_time_slot 
-                        UNIQUE (instrument_id, booking_date, start_time, end_time),
-                    CONSTRAINT check_time_order 
-                        CHECK (end_time > start_time)
+                        UNIQUE (instrument_id, booking_date, time_slot_id)
                 )
                 """
             )
@@ -201,21 +198,21 @@ def create_booking_index():
     print(f"Table '{BOOKING_TABLE}' ensured.")
 
 
-def upsert_booking(user_name, instrument_id, date, start_time, end_time):
+def upsert_booking(user_name, instrument_id, date, time_slot_id):
     """插入预约，通过 user_name 获取 user_id"""
     # 先根据 user_name 查询 user_id
     get_user_sql = f"SELECT id FROM {USER_TABLE} WHERE user_name = %s"
 
     insert_sql = f"""
         INSERT INTO {BOOKING_TABLE}
-            (user_id, instrument_id, booking_date, start_time, end_time)
-        VALUES (%s, %s, %s, %s, %s)
+            (user_id, instrument_id, booking_date, time_slot_id)
+        VALUES (%s, %s, %s, %s)
         RETURNING id
     """
     logging.info(
         f"Creating booking -> "
         f"{{'user_name': {user_name}, 'instrument_id': {instrument_id}, "
-        f"'date': {date}, 'time': {start_time}-{end_time}}}"
+        f"'date': {date}, 'time_slot_id': {time_slot_id}}}"
     )
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -229,9 +226,7 @@ def upsert_booking(user_name, instrument_id, date, start_time, end_time):
             user_id = result[0]
 
             # 插入预约
-            cur.execute(
-                insert_sql, (user_id, instrument_id, date, start_time, end_time)
-            )
+            cur.execute(insert_sql, (user_id, instrument_id, date, time_slot_id))
             booking_id = cur.fetchone()[0]
             conn.commit()
 
@@ -239,7 +234,7 @@ def upsert_booking(user_name, instrument_id, date, start_time, end_time):
         f"Created booking id={booking_id} -> "
         f"{{'user_name': {user_name}, 'user_id': {user_id}, "
         f"'instrument_id': {instrument_id}, 'date': {date}, "
-        f"'time': {start_time}-{end_time}}}"
+        f"'time_slot_id': {time_slot_id}}}"
     )
     return booking_id
 
@@ -247,23 +242,16 @@ def upsert_booking(user_name, instrument_id, date, start_time, end_time):
 def _row_to_booking(row):
     """将数据库行转换为预约字典
 
-    期望行格式: (id, user_id, instrument_id, booking_date, start_time, end_time, user_name)
+    期望行格式: (id, user_id, instrument_id, booking_date, time_slot_id, user_name)
     """
-    start_time_str = row[4].strftime("%H:%M") if row[4] else None
-    end_time_str = row[5].strftime("%H:%M") if row[5] else None
-    if end_time_str == "00:00":
-        end_time_str = "24:00"
+
     return {
         "id": row[0],
         "user_id": row[1],
         "instrument_id": row[2],
         "date": row[3].isoformat() if row[3] else None,
-        "start_time": start_time_str,
-        "end_time": end_time_str,
-        "time": f"{start_time_str}-{end_time_str}"
-        if start_time_str and end_time_str
-        else None,
-        "user_name": row[6] if len(row) > 6 else None,
+        "time_slot_id": row[4] if len(row) > 4 else None,
+        "user_name": row[5] if len(row) > 5 else None,
     }
 
 
@@ -271,12 +259,12 @@ def search_booking_by_date(instrument_id, date):
     """查询某仪器某日期的所有预约（关联用户信息）"""
     sql = f"""
         SELECT b.id, b.user_id, b.instrument_id, b.booking_date, 
-               b.start_time, b.end_time,
+               b.time_slot_id,
                u.user_name, u.color
         FROM {BOOKING_TABLE} b
         JOIN {USER_TABLE} u ON b.user_id = u.id
         WHERE b.instrument_id = %s AND b.booking_date = %s
-        ORDER BY b.start_time
+        ORDER BY b.time_slot_id
     """
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -297,16 +285,17 @@ def search_booking_by_user_and_date(user_id, date):
     """查询某人某日期的所有预约"""
     sql = f"""
         SELECT b.id, b.user_id, b.instrument_id, b.booking_date, 
-               b.start_time, b.end_time, u.user_name
+               b.time_slot_id, u.user_name
         FROM {BOOKING_TABLE} b
         JOIN {USER_TABLE} u ON b.user_id = u.id
         WHERE b.user_id = %s AND b.booking_date = %s
-        ORDER BY b.start_time
+        ORDER BY b.time_slot_id
     """
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(sql, (user_id, date))
             rows = cur.fetchall()
+            print(rows)
     return [_row_to_booking(row) for row in rows]
 
 

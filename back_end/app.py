@@ -124,24 +124,24 @@ def save_info():
             "instrument", "a_instrument"
         )  # 默认为A仪器系统
         date = data.get("date")
-        slots = data.get("slots")  # 现在接收时间段数组
+        slots_ids = data.get("slots")  # 现在接收时间段数组
         user_name = current_user_name
 
-        if not date or not slots or not user_name:
+        if not date or not slots_ids or not user_name:
             return jsonify(
                 {"error": "Missing required fields: date, slots, user_name"}
             ), 400
 
-        if not isinstance(slots, list) or len(slots) == 0:
-            return jsonify({"error": "slots must be a non-empty array"}), 400
+        if not isinstance(slots_ids, list) or len(slots_ids) == 0:
+            return jsonify({"error": "slots_ids must be a non-empty array"}), 400
         print(
-            f"准备保存预约: user_name={user_name}, instrument={instrument}, date={date}, slots={slots}"
+            f"准备保存预约: user_name={user_name}, instrument={instrument}, date={date}, slots_ids={slots_ids}"
         )
         search_by_date_result = db_api.search_booking_by_date(instrument, date)
         print(f"数据库中已有的预约记录: {search_by_date_result}")
         if search_by_date_result:
-            tmies = [slot["time"] for slot in search_by_date_result]
-            for slot in slots:
+            tmies = [slot["time-slot-id"] for slot in search_by_date_result]
+            for slot in slots_ids:
                 if slot in tmies:
                     return jsonify(
                         {"error": f"Time slot {slot} is already booked"}
@@ -149,11 +149,9 @@ def save_info():
 
         # 所有时间段都可用，批量保存预约
         successful_slots = []
-        for slot in slots:
+        for slot in slots_ids:
             print(f"保存预约时间段: {slot}")
-            db_api.upsert_booking(
-                user_name, instrument, date, slot.split("-")[0], slot.split("-")[1]
-            )
+            db_api.upsert_booking(user_name, instrument, date, slot)
             successful_slots.append(slot)
 
         print(
@@ -305,7 +303,7 @@ def get_user_bookings():
         print(f"获取用户 {current_user_name} 的预约信息")
         user_bookings = db_api.search_booking_by_user_and_date(user["id"], date)
         print(f"用户 {current_user_name} 在 {date} 的预约记录: {user_bookings}")
-        times = [slot["time"] for slot in user_bookings]
+        times = [slot["time_slot_id"] for slot in user_bookings]
         print(f"当前用户在 {date} 的预约时间段: {times}")
         return jsonify(times)
 
