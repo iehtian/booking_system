@@ -26,9 +26,12 @@ body {
 .slot-item {
   position: relative;
   display: block;
+  height: 32px;
   padding: 0.5rem;
   margin: 0;
+  overflow: hidden;
   font-size: 0.85rem;
+  line-height: 32px;
   text-align: center;
   border: 1px solid transparent;
   border-radius: 0;
@@ -50,12 +53,23 @@ body {
   background: #3273dc;
 }
 
+.slot-time {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .weekly-grid {
   display: grid;
   max-height: 70vh;
   overflow-y: auto;
   grid-template-columns: repeat(8, 1fr);
   gap: 0.5rem;
+}
+
+.weekly-grid > div {
+  min-width: 0;
 }
 
 .slot-item.selected {
@@ -110,7 +124,10 @@ body {
   position: sticky;
   top: 0;
   z-index: 10;
+  overflow: hidden;
   background-color: white;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .grid-embedded-btn {
