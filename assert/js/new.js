@@ -92,6 +92,7 @@ let selectedWeek = null
 const desktopState = createState({
   weekData: slots,
   selectedRes: [],
+  bookinged_slots: [],
 })
 
 let booking = null
@@ -290,8 +291,12 @@ async function init(selectedDate) {
   container.appendChild(fragment)
 
   const data = await week_bookings
-
-  data.forEach((dayBookings, dayIdx) => {
+  desktopState.set({ bookinged_slots: data })
+  console.log(
+    "desktopState bookinged_slots:",
+    desktopState.get().bookinged_slots
+  )
+  desktopState.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
     console.log("dayBookings:", dayBookings)
     processDayColumn(dayBookings, dayIdx, container, markSlotAsBooked)
   })
