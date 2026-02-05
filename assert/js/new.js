@@ -155,11 +155,11 @@ function createState(initialState) {
 
 let mobileIsEarlyHidden = true
 let mobileIsLateHidden = true
-let selectedWeek = null
 
 const desktopState = createState({
   weekData: slots,
   selectedRes: [],
+  selectedWeek: null,
   bookinged_slots: [],
 })
 
@@ -239,12 +239,12 @@ function display(date) {
 // 初始化页面
 async function init(selectedDate) {
   // 生成主结构
-  selectedWeek = getWeek(selectedDate)
-  console.log("selectedWeek:", selectedWeek)
+  desktopState.set({ selectedWeek: getWeek(selectedDate) })
+  console.log("selectedWeek:", desktopState.get().selectedWeek)
 
   const pormise_week = []
 
-  for (const date of selectedWeek) {
+  for (const date of desktopState.get().selectedWeek) {
     pormise_week.push(getBookings(instrument_id, fmt(date)))
   }
   const week_bookings = Promise.all(pormise_week)
@@ -266,7 +266,7 @@ async function init(selectedDate) {
   grid.appendChild(timeHeader)
 
   // 日期头部
-  selectedWeek.forEach((date) => {
+  desktopState.get().selectedWeek.forEach((date) => {
     const key = fmt(date)
     const header = document.createElement("div")
     header.className = "has-text-centered mb-2 pb-2 week-header"
@@ -304,7 +304,7 @@ async function init(selectedDate) {
   grid.appendChild(timeColumn)
 
   // 日期列（每列一个div，内部slot-item）
-  selectedWeek.forEach((date, idx) => {
+  desktopState.get().selectedWeek.forEach((date, idx) => {
     const key = fmt(date)
     const dayColumn = document.createElement("div")
     dayColumn.className = "day-column"
@@ -405,9 +405,8 @@ const renderBookedGroups = (dayBookings, dayIdx, container, my_name) => {
           parent.style.backgroundColor = color // 设置背景色
           // 如果是第一个slot，添加用户信息
           if (slotId === firstSlot) {
-            const span = document.createElement("span")
+            const span = parent.querySelector("span.slot-time")
             span.style.whiteSpace = "pre"
-            span.classList.add("weekly-text") // 添加类名以应用样式
             span.textContent = `${user_name}  (${first_time_str}-${last_time_str})`
             parent.appendChild(span)
           }
@@ -432,22 +431,40 @@ function addslotselectorHandlers() {
 
 // 只更新一周的属性和文字，不重建结构
 function weekChangeDay(selectedDate) {
-  const week = selectedWeek
+  let week = desktopState.get().selectedWeek
+  const selectedKey = fmt(selectedDate)
+  const inWeek = week.some((d) => fmt(d) === selectedKey)
+  const updateHeaders = () => {
+    const headers = document.querySelectorAll("#weeklyView .week-header")
+    headers.forEach((header, idx) => {
+      if (idx === 0) return // 跳过时间头部
+      const date = week[idx - 1]
+      const key = fmt(date)
+      header.dataset.date = key
+      header.querySelector("strong").textContent = display(date)
+      header.style.borderBottom = `2px solid ${key === selectedKey ? "#3273dc" : "#dbdbdb"}`
+      if (key === selectedKey) {
+        header.querySelector("strong").className = "has-text-info"
+      } else {
+        header.querySelector("strong").className = ""
+      }
+    })
+  }
+
+  if (inWeek) {
+    updateHeaders()
+    return
+  }
+
+  desktopState.set({ selectedWeek: getWeek(selectedDate) })
+  console.log(
+    "weekChangeDay new selectedWeek:",
+    desktopState.get().selectedWeek
+  )
+  week = desktopState.get().selectedWeek
+  console.log("weekChangeDay selectedWeek:", week)
   // 更新日期头部
-  const headers = document.querySelectorAll("#weeklyView .week-header")
-  headers.forEach((header, idx) => {
-    if (idx === 0) return // 跳过时间头部
-    const date = week[idx - 1]
-    const key = fmt(date)
-    header.dataset.date = key
-    header.querySelector("strong").textContent = display(date)
-    header.style.borderBottom = `2px solid ${key === fmt(selectedDate) ? "#3273dc" : "#dbdbdb"}`
-    if (key === fmt(selectedDate)) {
-      header.querySelector("strong").className = "has-text-info"
-    } else {
-      header.querySelector("strong").className = ""
-    }
-  })
+  updateHeaders()
   // 更新每一列的slot
   const columns = document.querySelectorAll("#weeklyView .day-column")
   columns.forEach((col, idx) => {
@@ -458,25 +475,22 @@ function weekChangeDay(selectedDate) {
     const daySlots = weekData
     const labels = col.querySelectorAll("label.slot-item")
     labels.forEach((label, i) => {
+      label.style.backgroundColor = ""
       const slot = daySlots[i]
-      const available = true
       label.dataset.time = slot.time
       label.dataset.slotid = slot.id
       label.dataset.date = key
       // 更新可用状态
       label.classList.remove("booked", "selected", "available")
-      if (!available) label.classList.add("booked")
-      else label.classList.add("available")
-      // 选中状态
-      if (selected && selected.date === key && selected.id === slot.id) {
-        label.classList.add("selected")
-      }
+      label.classList.add("available")
       // input
       const input = label.querySelector("input[type=checkbox]")
-      if (input) input.disabled = !available
-      // span
-      const span = label.querySelector("span.slot-time")
-      if (span) span.textContent = slot.time
+      if (input) input.disabled = false
+      const spans = label.querySelectorAll("span")
+      spans.forEach((span) => {
+        span.classList.remove("weekly-text")
+        span.textContent = ""
+      })
     })
   })
 }
