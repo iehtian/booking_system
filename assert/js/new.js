@@ -239,14 +239,12 @@ function display(date) {
 // 初始化页面
 async function init(selectedDate) {
   // 生成主结构
-  console.log("weekData:", desktopState.get().weekData)
   selectedWeek = getWeek(selectedDate)
   console.log("selectedWeek:", selectedWeek)
 
-  // const has_booking = getBookings_myself(instrument_id, fmt(selectedDate))
   const pormise_week = []
+
   for (const date of selectedWeek) {
-    // pormise_week.push(getBookings_myself(instrument_id, fmt(date)))
     pormise_week.push(getBookings(instrument_id, fmt(date)))
   }
   const week_bookings = Promise.all(pormise_week)
@@ -365,69 +363,56 @@ async function init(selectedDate) {
     "desktopState bookinged_slots:",
     desktopState.get().bookinged_slots
   )
-  // desktopState.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
-  //   console.log("dayBookings:", dayBookings)
-  //   processDayColumn(dayBookings, dayIdx, container, markSlotAsBooked)
-  // })
+
+  const result = JSON.parse(sessionStorage.getItem("userAuth") || "null")
+  let my_name = null
+  if (result && result.user) {
+    my_name = result.user.user_name
+  }
 
   desktopState.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
-    const booked_groups = mergeBookings(dayBookings)
-    console.log("dayIdx:", dayIdx, "booked_groups:", booked_groups)
-    booked_groups.forEach((group) => {
-      const { firstSlot, lastSlot, user_name, color } = group
-      console.log(
-        `Processing group: ${user_name} from slot ${firstSlot} to ${lastSlot}`
-      )
-      const first_time_str = slots[firstSlot].time.split("-")[0]
-      const last_time_str = slots[lastSlot].time.split("-")[1]
-      for (let slotId = firstSlot; slotId <= lastSlot; slotId++) {
-        const dayColumn = container.querySelectorAll(".day-column")[dayIdx]
-        if (!dayColumn) continue
+    renderBookedGroups(dayBookings, dayIdx, container, my_name)
+  })
+}
 
-        const input = dayColumn.querySelector(
-          `input[type=checkbox][data-slotid='${slotId}']`
-        )
-        if (input) {
-          // 标记为已预约
-          const parent = input.parentElement
-          if (parent) {
+const renderBookedGroups = (dayBookings, dayIdx, container, my_name) => {
+  const booked_groups = mergeBookings(dayBookings)
+  console.log("dayIdx:", dayIdx, "booked_groups:", booked_groups)
+  booked_groups.forEach((group) => {
+    const { firstSlot, lastSlot, user_name, color } = group
+    console.log(
+      `Processing group: ${user_name} from slot ${firstSlot} to ${lastSlot}`
+    )
+    const first_time_str = slots[firstSlot].time.split("-")[0]
+    const last_time_str = slots[lastSlot].time.split("-")[1]
+    for (let slotId = firstSlot; slotId <= lastSlot; slotId++) {
+      const dayColumn = container.querySelectorAll(".day-column")[dayIdx]
+      if (!dayColumn) continue
+
+      const input = dayColumn.querySelector(
+        `input[type=checkbox][data-slotid='${slotId}']`
+      )
+      if (input) {
+        // 标记为已预约
+        const parent = input.parentElement
+        if (parent) {
+          if (user_name === my_name) {
+          } else {
             input.disabled = true
             parent.classList.replace("available", "booked")
-            parent.style.backgroundColor = color // 设置背景色
-            // 如果是第一个slot，添加用户信息
-            if (slotId === firstSlot) {
-              const span = document.createElement("span")
-              span.style.whiteSpace = "pre"
-              span.classList.add("weekly-text") // 添加类名以应用样式
-              span.textContent = `${user_name}  (${first_time_str}-${last_time_str})`
-              parent.appendChild(span)
-            }
+          }
+
+          parent.style.backgroundColor = color // 设置背景色
+          // 如果是第一个slot，添加用户信息
+          if (slotId === firstSlot) {
+            const span = document.createElement("span")
+            span.style.whiteSpace = "pre"
+            span.classList.add("weekly-text") // 添加类名以应用样式
+            span.textContent = `${user_name}  (${first_time_str}-${last_time_str})`
+            parent.appendChild(span)
           }
         }
       }
-    })
-  })
-
-  // console.log("我的预约数据:", data)
-}
-
-const markSlotAsBooked = (input) => {
-  const container = input.parentElement
-  container.classList.replace("available", "booked")
-  input.disabled = true
-  input.checked = false
-}
-
-const processDayColumn = (dayBookings, dayIdx, container, onBooked) => {
-  const dayColumn = container.querySelectorAll(".day-column")[dayIdx]
-  if (!dayColumn) return
-
-  const inputs = dayColumn.querySelectorAll("input[type=checkbox]")
-
-  inputs.forEach((input) => {
-    const slotId = parseInt(input.dataset.slotid, 10)
-    if (dayBookings.includes(slotId)) {
-      onBooked(input) // 执行回调
     }
   })
 }
