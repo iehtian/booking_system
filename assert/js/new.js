@@ -4,6 +4,74 @@ import axios from "axios"
 import { host } from "./config.js"
 let instrument_id = "c_instrument" // 示例仪器 ID
 
+function mergeBookings(bookings) {
+  // 先对时间段排序（按开始时间）
+  console.log("Bookings to merge:", bookings)
+  const sorted = Object.entries(bookings).sort(([a], [b]) => {
+    return a.localeCompare(b)
+  })
+
+  const groups = []
+  let currentGroup = []
+  let lastEnd = null
+  let lastName = null
+
+  sorted.forEach(([time_slot_id, value]) => {
+    const { user_name, color } = value
+
+    if (lastEnd + 1 === Number(time_slot_id) && lastName === user_name) {
+      // 连续且同名 → 合并到当前 group
+      console.log("Merging into current group")
+      currentGroup.push({
+        time_slot_id: Number(time_slot_id),
+        user_name,
+        color,
+      })
+    } else {
+      // 不连续 或 name 不同 → 开新组
+      if (currentGroup.length > 0) {
+        groups.push(currentGroup)
+      }
+      currentGroup = [{ time_slot_id: Number(time_slot_id), user_name, color }]
+    }
+    lastEnd = Number(time_slot_id)
+    lastName = user_name
+  })
+
+  if (currentGroup.length > 0) {
+    groups.push(currentGroup)
+  }
+  const format_groups = groups.map((group) => ({
+    firstSlot: group[0].time_slot_id,
+    lastSlot: group[group.length - 1].time_slot_id,
+    color: group[0].color,
+    user_name: group[0].user_name,
+  }))
+
+  return format_groups
+}
+
+async function getBookings(instrument, date) {
+  try {
+    const response = await axios.get(
+      `${host}/api/bookings?instrument=${instrument}&date=${date}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    )
+
+    const data = response.data
+    console.log("获取的预约数据:", data)
+
+    return data.bookings || {}
+  } catch (error) {
+    console.error("获取已预约时间段时出错:", error)
+  }
+}
+
 async function getBookings_myself(instrument, date) {
   try {
     const token = localStorage.getItem("access_token")
@@ -178,7 +246,8 @@ async function init(selectedDate) {
   // const has_booking = getBookings_myself(instrument_id, fmt(selectedDate))
   const pormise_week = []
   for (const date of selectedWeek) {
-    pormise_week.push(getBookings_myself(instrument_id, fmt(date)))
+    // pormise_week.push(getBookings_myself(instrument_id, fmt(date)))
+    pormise_week.push(getBookings(instrument_id, fmt(date)))
   }
   const week_bookings = Promise.all(pormise_week)
 
@@ -272,7 +341,7 @@ async function init(selectedDate) {
       // span
       const span = document.createElement("span")
       span.className = "slot-time"
-      span.textContent = slot.time
+      // span.textContent = slot.time
       label.appendChild(span)
       dayColumn.appendChild(label)
     })
@@ -296,12 +365,50 @@ async function init(selectedDate) {
     "desktopState bookinged_slots:",
     desktopState.get().bookinged_slots
   )
+  // desktopState.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
+  //   console.log("dayBookings:", dayBookings)
+  //   processDayColumn(dayBookings, dayIdx, container, markSlotAsBooked)
+  // })
+
   desktopState.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
-    console.log("dayBookings:", dayBookings)
-    processDayColumn(dayBookings, dayIdx, container, markSlotAsBooked)
+    const booked_groups = mergeBookings(dayBookings)
+    console.log("dayIdx:", dayIdx, "booked_groups:", booked_groups)
+    booked_groups.forEach((group) => {
+      const { firstSlot, lastSlot, user_name, color } = group
+      console.log(
+        `Processing group: ${user_name} from slot ${firstSlot} to ${lastSlot}`
+      )
+      const first_time_str = slots[firstSlot].time.split("-")[0]
+      const last_time_str = slots[lastSlot].time.split("-")[1]
+      for (let slotId = firstSlot; slotId <= lastSlot; slotId++) {
+        const dayColumn = container.querySelectorAll(".day-column")[dayIdx]
+        if (!dayColumn) continue
+
+        const input = dayColumn.querySelector(
+          `input[type=checkbox][data-slotid='${slotId}']`
+        )
+        if (input) {
+          // 标记为已预约
+          const parent = input.parentElement
+          if (parent) {
+            input.disabled = true
+            parent.classList.replace("available", "booked")
+            parent.style.backgroundColor = color // 设置背景色
+            // 如果是第一个slot，添加用户信息
+            if (slotId === firstSlot) {
+              const span = document.createElement("span")
+              span.style.whiteSpace = "pre"
+              span.classList.add("weekly-text") // 添加类名以应用样式
+              span.textContent = `${user_name}  (${first_time_str}-${last_time_str})`
+              parent.appendChild(span)
+            }
+          }
+        }
+      }
+    })
   })
 
-  console.log("我的预约数据:", data)
+  // console.log("我的预约数据:", data)
 }
 
 const markSlotAsBooked = (input) => {
@@ -489,12 +596,17 @@ function select(date, event) {
   if (event.target.checked) {
     const slot = weekData.find((s) => id === s.id)
     console.log("slot:", slot)
+    let span = event.target.parentElement.querySelector("span.slot-time")
+    console.log("span:", span)
+    span.textContent = slot.time
     selected = { date, id, time: slot.time }
     desktopState.set({ selectedRes: [...selectedRes, selected] })
   } else {
     desktopState.set({
       selectedRes: selectedRes.filter((s) => !(s.date === date && s.id === id)),
     })
+    let span = event.target.parentElement.querySelector("span.slot-time")
+    span.textContent = ""
   }
   document.getElementById("selectionInfo").style.display = "block"
   document.getElementById("confirmBtn").style.display = "inline-flex"

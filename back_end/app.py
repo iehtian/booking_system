@@ -272,7 +272,7 @@ def get_bookings():
 
     bookings_dict = {}
     for slot in search_by_date_result:
-        time_slot = slot["time"]
+        time_slot = slot["time_slot_id"]
         user_name = slot["user_name"]
         color = slot.get("color", "#ffffff")
         bookings_dict[time_slot] = {"user_name": user_name, "color": color}
