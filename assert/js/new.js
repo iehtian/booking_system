@@ -457,6 +457,7 @@ function weekChangeDay(selectedDate) {
   }
 
   desktopState.set({ selectedWeek: getWeek(selectedDate) })
+  desktopState.set({ selectedRes: [] })
   console.log(
     "weekChangeDay new selectedWeek:",
     desktopState.get().selectedWeek
@@ -486,6 +487,11 @@ function weekChangeDay(selectedDate) {
       // input
       const input = label.querySelector("input[type=checkbox]")
       if (input) input.disabled = false
+      input.checked = false
+      const element = document.querySelector(".desktop-only")
+      if (element) {
+        element.remove()
+      }
       const spans = label.querySelectorAll("span")
       spans.forEach((span) => {
         span.classList.remove("weekly-text")
