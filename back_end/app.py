@@ -173,9 +173,12 @@ def save_info():
 
 
 @app.route("/api/cancel_booking", methods=["POST"])
+@jwt_required()
 def cancel_booking():
     """取消预约信息"""
     try:
+        current_user_name = get_jwt_identity()
+
         data = request.get_json()
         print(f"接收到的取消预约数据: {data}")
         instrument = data.get("instrument") or "a_instrument"
@@ -187,19 +190,25 @@ def cancel_booking():
         if not isinstance(slots, list) or len(slots) == 0:
             return jsonify({"error": "slots must be a non-empty array"}), 400
 
+        print(
+            f"准备取消预约: user_name={current_user_name}, instrument={instrument}, date={date}, slots={slots}"
+        )
         search_by_date_result = db_api.search_booking_by_date(instrument, date)
+        print(f"数据库中已有的预约记录: {search_by_date_result}")
         if not search_by_date_result:
             return jsonify({"error": "No bookings found for the specified date"}), 404
 
-        times = [slot["time"] for slot in search_by_date_result]
+        booked_slot_ids = [slot["time_slot_id"] for slot in search_by_date_result]
         for slot in slots:
-            if slot not in times:
+            if slot not in booked_slot_ids:
                 return jsonify({"error": f"Time slot {slot} is not booked"}), 404
 
         deleted_count = db_api.delete_bookings_by_slots(instrument, date, slots)
         successful_cancellations = list(slots)
 
-        print(f"批量取消预约成功: {date} 取消了 {deleted_count} 个时间段")
+        print(
+            f"批量取消预约成功: {current_user_name} 在 {date} 取消了 {deleted_count} 个时间段"
+        )
         print(f"取消的时间段: {successful_cancellations}")
         return jsonify(
             {

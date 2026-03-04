@@ -324,32 +324,16 @@ def delete_bookings_by_slots(instrument_id, date, slots):
     if not slots:
         return 0
 
-    time_pairs = []
-    for slot in slots:
-        try:
-            start_str, end_str = slot.split("-")
-            start_time = datetime.strptime(start_str, "%H:%M").time()
-            end_time = datetime.strptime(end_str, "%H:%M").time()
-            time_pairs.append((start_time, end_time))
-        except ValueError as exc:
-            raise ValueError(f"Invalid slot format: {slot}") from exc
-
-    # Psycopg2 无法直接绑定 row-valued IN，需要使用 mogrify 构造 VALUES 列表
-    values_clause = ",".join(["(%s, %s)"] * len(time_pairs))
     sql = f"""
         DELETE FROM {BOOKING_TABLE}
         WHERE instrument_id = %s
           AND booking_date = %s
-          AND (start_time, end_time) IN ({values_clause})
+          AND time_slot_id = ANY(%s)
     """
-
-    params = [instrument_id, date]
-    for start_time, end_time in time_pairs:
-        params.extend([start_time, end_time])
 
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute(sql, params)
+            cur.execute(sql, (instrument_id, date, slots))
             deleted = cur.rowcount
             conn.commit()
 
