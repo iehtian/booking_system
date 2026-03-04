@@ -72,36 +72,6 @@ async function getBookings(instrument, date) {
   }
 }
 
-async function getBookings_myself(instrument, date) {
-  try {
-    const token = localStorage.getItem("access_token")
-    if (!token) {
-      alert("未登录，无法获取预约信息")
-      return []
-    }
-
-    const response = await axios.get(
-      `${host}/api/bookings_user?instrument=${instrument}&date=${date}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    )
-
-    if (response.status === 200) {
-      return response.data || []
-    } else {
-      alert("获取预约信息失败，请重试")
-      console.error("获取失败:", response.status, response.data)
-      return []
-    }
-  } catch (error) {
-    console.error("获取预约信息时出错:", error)
-    return []
-  }
-}
-
 function generateTimeIntervalsSimple() {
   const intervals = []
 
@@ -433,7 +403,7 @@ function addslotselectorHandlers() {
 }
 
 // 只更新一周的属性和文字，不重建结构
-function weekChangeDay(selectedDate) {
+async function weekChangeDay(selectedDate) {
   let week = desktopState.get().selectedWeek
   const selectedKey = fmt(selectedDate)
   const inWeek = week.some((d) => fmt(d) === selectedKey)
@@ -456,7 +426,6 @@ function weekChangeDay(selectedDate) {
     updateHeaders()
     return
   }
-  console.log("weekChangeDay selectedDate:", selectedDate)
 
   desktopState.set({ selectedWeek: getWeek(selectedDate) })
   desktopState.set({ selectedRes: [] })
@@ -464,8 +433,15 @@ function weekChangeDay(selectedDate) {
     "weekChangeDay new selectedWeek:",
     desktopState.get().selectedWeek
   )
+
   week = desktopState.get().selectedWeek
   console.log("weekChangeDay selectedWeek:", week)
+  const pormise_week = []
+
+  for (const date of week) {
+    pormise_week.push(getBookings(instrument_id, fmt(date)))
+  }
+
   // 更新日期头部
   updateHeaders()
   console.log("Headers updated for new week")
@@ -497,6 +473,13 @@ function weekChangeDay(selectedDate) {
         span.textContent = ""
       })
     })
+  })
+  const week_bookings = await Promise.all(pormise_week)
+  desktopState.set({ bookinged_slots: week_bookings })
+  const container = document.getElementById("weeklyView")
+  const my_name = JSON.parse(sessionStorage.getItem("userAuth") || "null")?.user
+  desktopState.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
+    renderBookedGroups(dayBookings, dayIdx, container, my_name?.user_name)
   })
 }
 
