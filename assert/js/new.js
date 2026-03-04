@@ -294,7 +294,7 @@ async function init(selectedDate) {
       const label = document.createElement("label")
       label.className = [
         "slot-item",
-        available ? "available" : "booked",
+        available ? "available" : "disabled",
         hideCls,
       ]
         .filter(Boolean)
@@ -346,6 +346,7 @@ async function init(selectedDate) {
   desktopState.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
     renderBookedGroups(dayBookings, dayIdx, container, my_name)
   })
+  disabledSlotwithDate()
 }
 
 const renderBookedGroups = (dayBookings, dayIdx, container, my_name) => {
@@ -372,7 +373,7 @@ const renderBookedGroups = (dayBookings, dayIdx, container, my_name) => {
           if (user_name === my_name) {
           } else {
             input.disabled = true
-            parent.classList.replace("available", "booked")
+            parent.classList.replace("available", "disabled")
           }
 
           parent.style.backgroundColor = color // 设置背景色
@@ -462,7 +463,7 @@ async function weekChangeDay(selectedDate) {
       label.dataset.slotid = slot.id
       label.dataset.date = key
       // 更新可用状态
-      label.classList.remove("booked", "selected", "available")
+      label.classList.remove("disabled", "selected", "available")
       label.classList.add("available")
       // input
       const input = label.querySelector("input[type=checkbox]")
@@ -482,6 +483,7 @@ async function weekChangeDay(selectedDate) {
   desktopState.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
     renderBookedGroups(dayBookings, dayIdx, container, my_name?.user_name)
   })
+  disabledSlotwithDate()
 }
 
 const toggleEarly = function (btn) {
@@ -542,7 +544,7 @@ function renderMobileSlots() {
 
     const isSelected =
       selected && selected.date === key && selected.id === slot.id
-    const cls = !available ? "booked" : isSelected ? "selected" : "available"
+    const cls = !available ? "disabled" : isSelected ? "selected" : "available"
 
     const item = document.createElement("div")
     item.className = ["mobile-slot-item", cls].join(" ")
@@ -790,6 +792,56 @@ const fp = flatpickr("#dateInput", {
     weekChangeDay(selectedDate)
   },
 })
+
+function disabledSlotwithDate() {
+  const now = new Date()
+  const todayKey = fmt(now)
+  const currentMinutes = now.getHours() * 60 + now.getMinutes()
+
+  const container = document.getElementById("weeklyView")
+  const columns = container.querySelectorAll(".day-column")
+
+  columns.forEach((col) => {
+    const dateKey = col.dataset.date
+
+    // 过去的日期，整列全部禁用
+    if (dateKey < todayKey) {
+      col.querySelectorAll("label.slot-item").forEach((label) => {
+        label.classList.remove("available")
+        label.classList.add("disabled")
+        const input = label.querySelector("input[type=checkbox]")
+        if (input) {
+          input.disabled = true
+          input.checked = false
+        }
+      })
+      return
+    }
+
+    // 今天：只禁用已过去的 slot
+    if (dateKey === todayKey) {
+      col.querySelectorAll("label.slot-item").forEach((label) => {
+        const input = label.querySelector("input[type=checkbox]")
+        if (!input) return
+
+        const slotId = parseInt(input.dataset.slotid, 10)
+        // slot 的开始时间（分钟）：每个 slot 30 分钟，slot 0 = 00:00
+        const slotStartMinutes = slotId * 30
+
+        // 当前所在 slot 不禁用，只禁用开始时间严格早于现在的
+        if (slotStartMinutes < currentMinutes) {
+          // 仅在未被 disabled 标记时才改 available → disabled
+          if (label.classList.contains("available")) {
+            label.classList.remove("available")
+            label.classList.add("disabled")
+          }
+          input.disabled = true
+          input.checked = false
+        }
+      })
+    }
+  })
+}
 
 init(new Date())
 renderMobileSlots()
