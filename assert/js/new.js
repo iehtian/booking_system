@@ -270,12 +270,15 @@ async function init(selectedDate) {
     const key = fmt(date)
     const header = document.createElement("div")
     header.className = "has-text-centered mb-2 pb-2 week-header"
-    header.style.borderBottom = `2px solid #dbdbdb`
+    header.style.borderBottom = `2px solid ${key === fmt(selectedDate) ? "#3273dc" : "#dbdbdb"}`
     header.dataset.date = key
     const strong = document.createElement("strong")
     strong.textContent = display(date)
     header.appendChild(strong)
     grid.appendChild(header)
+    header
+      .querySelector("strong")
+      .classList.toggle("has-text-info", key === fmt(selectedDate))
   })
 
   // 深夜展开按钮
@@ -443,11 +446,9 @@ function weekChangeDay(selectedDate) {
       header.dataset.date = key
       header.querySelector("strong").textContent = display(date)
       header.style.borderBottom = `2px solid ${key === selectedKey ? "#3273dc" : "#dbdbdb"}`
-      if (key === selectedKey) {
-        header.querySelector("strong").className = "has-text-info"
-      } else {
-        header.querySelector("strong").className = ""
-      }
+      header
+        .querySelector("strong")
+        .classList.toggle("has-text-info", key === selectedKey)
     })
   }
 
