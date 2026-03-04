@@ -583,11 +583,25 @@ function select(date, event) {
   let id = parseInt(event.target.dataset.slotid, 10)
   if (event.target.checked) {
     const slot = weekData.find((s) => id === s.id)
-    console.log("slot:", slot)
     let span = event.target.parentElement.querySelector("span.slot-time")
-    console.log("span:", span)
     span.textContent = slot.time
     selected = { date, id, time: slot.time }
+    console.log("Selected:", selected)
+    console.log("Before:", desktopState.get().bookinged_slots)
+    // 该注释用于设计，当天的预约数据已经加载时，选中一个时间段会在控制台输出该时间段是否已被预约（true/false），
+    // 这样可以用来判断点击后显示给用户“提交”还是“取消”
+    // let this_idx = -1
+    // desktopState.get().selectedWeek.forEach((d, index) => {
+    //   const key = fmt(d)
+    //   if (key === date) {
+    //     this_idx = index
+    //   }
+    // })
+    // console.log("Selected date index in week:", this_idx)
+    // console.log(
+    //   "Bookings for the day:",
+    //   desktopState.get().bookinged_slots[this_idx].hasOwnProperty(id)
+    // )
     desktopState.set({ selectedRes: [...selectedRes, selected] })
   } else {
     desktopState.set({
@@ -596,12 +610,17 @@ function select(date, event) {
     let span = event.target.parentElement.querySelector("span.slot-time")
     span.textContent = span.dataset.first || "" // 恢复初始文本，或者清空
   }
-  document.getElementById("selectionInfo").style.display = "block"
-  document.getElementById("confirmBtn").style.display = "inline-flex"
-  setSelectedText(
-    document.getElementById("selectedInfo"),
-    desktopState.get().selectedRes
-  )
+  if (desktopState.get().selectedRes.length > 0) {
+    document.getElementById("selectionInfo").style.display = "block"
+    document.getElementById("confirmBtn").style.display = "inline-flex"
+    setSelectedText(
+      document.getElementById("selectedInfo"),
+      desktopState.get().selectedRes
+    )
+  } else {
+    document.getElementById("selectionInfo").style.display = "none"
+    document.getElementById("confirmBtn").style.display = "none"
+  }
   // renderWeek()
 }
 
