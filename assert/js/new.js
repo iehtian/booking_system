@@ -381,6 +381,7 @@ const renderBookedGroups = (dayBookings, dayIdx, container, my_name) => {
             const span = parent.querySelector("span.slot-time")
             span.style.whiteSpace = "pre"
             span.textContent = `${user_name}  (${first_time_str}-${last_time_str})`
+            span.dataset.first = span.textContent
             parent.appendChild(span)
           }
         }
@@ -593,7 +594,7 @@ function select(date, event) {
       selectedRes: selectedRes.filter((s) => !(s.date === date && s.id === id)),
     })
     let span = event.target.parentElement.querySelector("span.slot-time")
-    span.textContent = ""
+    span.textContent = span.dataset.first || "" // 恢复初始文本，或者清空
   }
   document.getElementById("selectionInfo").style.display = "block"
   document.getElementById("confirmBtn").style.display = "inline-flex"
