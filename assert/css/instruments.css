@@ -48,7 +48,7 @@ body {
   color: #333;
   background: white;
   background-color: #effaf3;
-  border-color: #48c774;
+  border-color: #cbd5e0;
 }
 
 /* 选中状态 */
@@ -84,7 +84,7 @@ body {
 
 .slot-item.available:hover {
   color: white;
-  background-color: #48c774;
+  background-color: #3bb666;
 }
 
 .slot-item.disabled {

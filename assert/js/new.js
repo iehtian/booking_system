@@ -345,11 +345,10 @@ async function init(selectedDate) {
   if (result && result.user) {
     my_name = result.user.user_name
   }
-
+  disabledSlotwithDate()
   desktopState.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
     renderBookedGroups(dayBookings, dayIdx, container, my_name)
   })
-  disabledSlotwithDate()
 }
 
 const renderBookedGroups = (dayBookings, dayIdx, container, my_name) => {
@@ -374,6 +373,9 @@ const renderBookedGroups = (dayBookings, dayIdx, container, my_name) => {
         const parent = input.parentElement
         if (parent) {
           if (user_name === my_name) {
+            input.disabled = false
+            parent.classList.remove("disabled")
+            parent.classList.add("available")
           } else {
             input.disabled = true
             parent.classList.replace("available", "disabled")
@@ -483,10 +485,10 @@ async function weekChangeDay(selectedDate) {
   desktopState.set({ bookinged_slots: week_bookings })
   const container = document.getElementById("weeklyView")
   const my_name = JSON.parse(sessionStorage.getItem("userAuth") || "null")?.user
+  disabledSlotwithDate()
   desktopState.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
     renderBookedGroups(dayBookings, dayIdx, container, my_name?.user_name)
   })
-  disabledSlotwithDate()
 }
 
 const toggleEarly = function (btn) {
@@ -618,6 +620,7 @@ function select(date, event) {
   if (desktopState.get().selectedRes.length > 0) {
     document.getElementById("selectionInfo").style.display = "block"
     document.getElementById("confirmBtn").style.display = "inline-flex"
+    document.getElementById("cancelBtn").style.display = "inline-flex"
     setSelectedText(
       document.getElementById("selectedInfo"),
       desktopState.get().selectedRes
@@ -625,6 +628,7 @@ function select(date, event) {
   } else {
     document.getElementById("selectionInfo").style.display = "none"
     document.getElementById("confirmBtn").style.display = "none"
+    document.getElementById("cancelBtn").style.display = "none"
   }
   // renderWeek()
 }
@@ -638,7 +642,7 @@ window.mobileSelect = function (date, id) {
   const slot = weekData.find((s) => s.id === id)
   selected = { date, id, time: slot.time }
 
-  // 显示确认按钮
+  // 显示提交按钮和取消按钮
   if (!document.getElementById("mobileConfirmBtn")) {
     const notification = document.createElement("div")
     notification.className = "notification is-light mt-4"
@@ -651,11 +655,18 @@ window.mobileSelect = function (date, id) {
     const button = document.createElement("button")
     button.className = "button is-success is-fullwidth mt-3"
     button.id = "mobileConfirmBtn"
-    button.textContent = "确认预约"
+    button.textContent = "提交预约"
     button.addEventListener("click", confirm)
+
+    const cancelBtn = document.createElement("button")
+    cancelBtn.className = "button is-danger is-fullwidth mt-2"
+    cancelBtn.id = "mobileCancelBtn"
+    cancelBtn.textContent = "取消选择"
+    cancelBtn.addEventListener("click", cancel)
 
     notification.appendChild(info)
     notification.appendChild(button)
+    notification.appendChild(cancelBtn)
 
     document
       .getElementById("mobileSlots")
@@ -742,7 +753,7 @@ function confirm() {
   }
 
   const selectionSnapshot = [...selectedRes]
-  console.log("确认预约:", selectionSnapshot)
+  console.log("提交预约:", selectionSnapshot)
   // 提交预约
   const submitData = {
     date: selectionSnapshot[0].date,
@@ -768,15 +779,15 @@ function confirm() {
 
 // Allow inline mobile confirmation button to call confirm()
 window.confirm = confirm
+window.cancel = cancel
 
 function cancel() {
-  //   if (booking) {
-  //     setSlotAvailable(booking.date, booking.id, true)
-  //     booking = null
-  //     document.getElementById("bookingInfo").style.display = "none"
-  //     weekChangeDay(selectedDate)
-  //     renderMobileSlots()
-  //   }
+  desktopState.set({ selectedRes: [] })
+  selected = null
+  document.getElementById("mobileSelectionInfo").style.display = "none"
+  document.getElementById("mobileConfirmBtn").style.display = "none"
+  document.getElementById("mobileCancelBtn").style.display = "none"
+  setSelectedText(document.getElementById("mobileSelectedInfo"), null)
 }
 
 // 桌面端日期切换
@@ -818,7 +829,6 @@ function disabledSlotwithDate() {
         const input = label.querySelector("input[type=checkbox]")
         if (input) {
           input.disabled = true
-          input.checked = false
         }
       })
       return
@@ -842,7 +852,6 @@ function disabledSlotwithDate() {
             label.classList.add("disabled")
           }
           input.disabled = true
-          input.checked = false
         }
       })
     }
