@@ -198,7 +198,10 @@ function getWeek(selectedDate) {
 }
 
 function fmt(date) {
-  return date.toISOString().split("T")[0]
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
 }
 
 function display(date) {
@@ -784,7 +787,10 @@ function changeDay(delta) {
 }
 
 const fp = flatpickr("#dateInput", {
-  locale: "zh",
+  locale: {
+    ...flatpickr.l10ns.zh,
+    firstDayOfWeek: 1, // 0=周日, 1=周一
+  },
   dateFormat: "Y-m-d",
   defaultDate: selectedDate,
   onChange: (d) => {
