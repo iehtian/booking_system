@@ -456,6 +456,7 @@ function weekChangeDay(selectedDate) {
     updateHeaders()
     return
   }
+  console.log("weekChangeDay selectedDate:", selectedDate)
 
   desktopState.set({ selectedWeek: getWeek(selectedDate) })
   desktopState.set({ selectedRes: [] })
@@ -467,6 +468,7 @@ function weekChangeDay(selectedDate) {
   console.log("weekChangeDay selectedWeek:", week)
   // 更新日期头部
   updateHeaders()
+  console.log("Headers updated for new week")
   // 更新每一列的slot
   const columns = document.querySelectorAll("#weeklyView .day-column")
   columns.forEach((col, idx) => {
@@ -489,10 +491,6 @@ function weekChangeDay(selectedDate) {
       const input = label.querySelector("input[type=checkbox]")
       if (input) input.disabled = false
       input.checked = false
-      const element = document.querySelector(".desktop-only")
-      if (element) {
-        element.remove()
-      }
       const spans = label.querySelectorAll("span")
       spans.forEach((span) => {
         span.classList.remove("weekly-text")
