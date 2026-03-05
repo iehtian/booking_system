@@ -290,6 +290,25 @@ function updateMobileSelectionUI() {
   setSelectedText(document.getElementById("mobileSelectedInfo"), selectedRes)
 }
 
+function clearAllSelectedState() {
+  desktopState.set({ selectedRes: [] })
+  selected = null
+
+  const checkedInputs = document.querySelectorAll(
+    "#weeklyView .day-column input[type=checkbox]:checked"
+  )
+  checkedInputs.forEach((input) => {
+    input.checked = false
+    const span = input.parentElement?.querySelector("span.slot-time")
+    if (span) {
+      span.textContent = span.dataset.first || ""
+    }
+  })
+
+  updateDesktopSelectionUI()
+  updateMobileSelectionUI()
+}
+
 // 初始化页面
 async function init(selectedDate) {
   // 生成主结构
@@ -915,6 +934,9 @@ window.cancel = cancel
 function changeDay(delta) {
   selectedDate.setDate(selectedDate.getDate() + delta)
   mobileSelectedDate = new Date(selectedDate)
+  if (window.matchMedia("(max-width: 768px)").matches) {
+    clearAllSelectedState()
+  }
   fp.setDate(selectedDate, false)
   weekChangeDay(selectedDate)
   renderMobileSlots()
@@ -930,6 +952,9 @@ const fp = flatpickr("#dateInput", {
   onChange: (d) => {
     selectedDate = d[0]
     mobileSelectedDate = new Date(selectedDate)
+    if (window.matchMedia("(max-width: 768px)").matches) {
+      clearAllSelectedState()
+    }
     weekChangeDay(selectedDate)
     renderMobileSlots()
   },
