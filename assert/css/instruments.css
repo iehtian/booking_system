@@ -156,13 +156,14 @@ body {
 .mobile-slots-grid {
   display: grid;
   margin-top: 1rem;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.5rem;
 }
 
 .mobile-slot-item {
-  padding: 0.75rem;
-  font-size: 0.9rem;
+  padding: 0.55rem 0.25rem;
+  font-size: 0.78rem;
+  line-height: 1.2;
   text-align: center;
   border: 2px solid transparent;
   border-radius: 4px;
@@ -185,6 +186,18 @@ body {
   border-color: #f14668;
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+.mobile-slot-item.disabled {
+  background-color: #f3f4f6;
+  border-color: #cbd5e0;
+  opacity: 0.9;
+  cursor: not-allowed;
+}
+
+.mobile-slot-item.mine {
+  color: white;
+  border-color: transparent;
 }
 
 .mobile-slot-item.selected {
@@ -225,8 +238,18 @@ body {
     display: block;
   }
 
+  html,
+  body {
+    height: auto;
+    overflow: auto;
+  }
+
   body {
     padding: 1rem 0;
+  }
+
+  .container {
+    max-width: 96%;
   }
 }
 

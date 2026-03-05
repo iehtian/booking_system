@@ -123,9 +123,6 @@ function createState(initialState) {
   }
 }
 
-let mobileIsEarlyHidden = true
-let mobileIsLateHidden = true
-
 const desktopState = createState({
   weekData: slots,
   selectedRes: [],
@@ -207,6 +204,90 @@ function fmt(date) {
 function display(date) {
   const days = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
   return `${date.getMonth() + 1}/${date.getDate()} ${days[date.getDay()]}`
+}
+
+function getCurrentUserName() {
+  const result = JSON.parse(sessionStorage.getItem("userAuth") || "null")
+  return result?.user?.user_name || null
+}
+
+function getWeekIndexByDateKey(dateKey) {
+  const week = desktopState.get().selectedWeek || []
+  return week.findIndex((d) => fmt(d) === dateKey)
+}
+
+function getBookingsByDateKey(dateKey) {
+  const idx = getWeekIndexByDateKey(dateKey)
+  if (idx < 0) return null
+  return desktopState.get().bookinged_slots[idx] || {}
+}
+
+function isPastSlot(dateKey, slotId) {
+  const now = new Date()
+  const todayKey = fmt(now)
+  if (dateKey < todayKey) return true
+  if (dateKey > todayKey) return false
+  const currentMinutes = now.getHours() * 60 + now.getMinutes()
+  return slotId * 30 < currentMinutes
+}
+
+function updateDesktopSelectionUI() {
+  const selectedRes = desktopState.get().selectedRes
+  const hasSelection = selectedRes.length > 0
+  document.getElementById("selectionInfo").style.display = hasSelection
+    ? "block"
+    : "none"
+  document.getElementById("confirmBtn").style.display = hasSelection
+    ? "inline-flex"
+    : "none"
+  document.getElementById("cancelBtn").style.display = hasSelection
+    ? "inline-flex"
+    : "none"
+  setSelectedText(document.getElementById("selectedInfo"), selectedRes)
+}
+
+function ensureMobileSelectionPanel() {
+  let panel = document.getElementById("mobileSelectionInfo")
+  if (panel) return panel
+
+  panel = document.createElement("div")
+  panel.className = "notification is-light mt-4"
+  panel.id = "mobileSelectionInfo"
+
+  const info = document.createElement("p")
+  info.id = "mobileSelectedInfo"
+
+  const confirmBtn = document.createElement("button")
+  confirmBtn.className = "button is-success is-fullwidth mt-3"
+  confirmBtn.id = "mobileConfirmBtn"
+  confirmBtn.textContent = "提交预约"
+  confirmBtn.addEventListener("click", confirm)
+
+  const cancelBtn = document.createElement("button")
+  cancelBtn.className = "button is-danger is-fullwidth mt-2"
+  cancelBtn.id = "mobileCancelBtn"
+  cancelBtn.textContent = "取消预约"
+  cancelBtn.addEventListener("click", cancel)
+
+  panel.appendChild(info)
+  panel.appendChild(confirmBtn)
+  panel.appendChild(cancelBtn)
+  document
+    .getElementById("mobileSlots")
+    .insertAdjacentElement("afterend", panel)
+  return panel
+}
+
+function updateMobileSelectionUI() {
+  const selectedRes = desktopState.get().selectedRes
+  const panel = ensureMobileSelectionPanel()
+  if (selectedRes.length === 0) {
+    panel.style.display = "none"
+    return
+  }
+
+  panel.style.display = "block"
+  setSelectedText(document.getElementById("mobileSelectedInfo"), selectedRes)
 }
 
 // 初始化页面
@@ -431,11 +512,15 @@ async function weekChangeDay(selectedDate) {
 
   if (inWeek) {
     updateHeaders()
+    updateDesktopSelectionUI()
+    updateMobileSelectionUI()
     return
   }
 
   desktopState.set({ selectedWeek: getWeek(selectedDate) })
   desktopState.set({ selectedRes: [] })
+  updateDesktopSelectionUI()
+  updateMobileSelectionUI()
   console.log(
     "weekChangeDay new selectedWeek:",
     desktopState.get().selectedWeek
@@ -527,61 +612,83 @@ function renderMobileSlots() {
   const key = fmt(mobileSelectedDate)
   const { weekData } = desktopState.get()
   const daySlots = weekData
+  const myName = getCurrentUserName()
+  const dayBookings = getBookingsByDateKey(key)
 
   container.innerHTML = ""
-  const fragment = document.createDocumentFragment()
-
-  const earlyBtn = document.createElement("div")
-  earlyBtn.className = "mobile-toggle-btn"
-  earlyBtn.textContent = mobileIsEarlyHidden
-    ? "展开深夜 (00:00-08:00) ↓"
-    : "收起深夜 ↑"
-  earlyBtn.addEventListener("click", toggleMobileEarly)
-  fragment.appendChild(earlyBtn)
-
   const grid = document.createElement("div")
   grid.className = "mobile-slots-grid"
 
   daySlots.forEach((slot) => {
-    if (mobileIsEarlyHidden && slot.id <= 15) return
-    if (mobileIsLateHidden && slot.id >= 45) return
-    const available = true
+    const bookingInfo = dayBookings ? dayBookings[slot.id] : null
+    const isBookedByMe = bookingInfo && bookingInfo.user_name === myName
+    const isBookedByOthers = bookingInfo && bookingInfo.user_name !== myName
+    const isPast = isPastSlot(key, slot.id)
+    const unavailable = isPast || isBookedByOthers
 
-    const isSelected =
-      selected && selected.date === key && selected.id === slot.id
-    const cls = !available ? "disabled" : isSelected ? "selected" : "available"
+    const isSelected = desktopState
+      .get()
+      .selectedRes.some((s) => s.date === key && s.id === slot.id)
 
-    const item = document.createElement("div")
-    item.className = ["mobile-slot-item", cls].join(" ")
+    let cls = "available"
+    if (isBookedByOthers) cls = "booked"
+    if (isPast) cls = "disabled"
+    if (isSelected) cls = "selected"
+
+    const item = document.createElement("button")
+    item.type = "button"
+    item.className = ["mobile-slot-item", cls, isBookedByMe ? "mine" : ""]
+      .filter(Boolean)
+      .join(" ")
+
+    if (bookingInfo && !isSelected) {
+      item.style.backgroundColor = bookingInfo.color
+      item.style.opacity = isBookedByMe ? "1" : "0.75"
+    }
+
     item.textContent = slot.time
 
-    if (available && !booking) {
+    if (!unavailable) {
       item.addEventListener("click", () => mobileSelect(key, slot.id))
+    } else {
+      item.disabled = true
     }
 
     grid.appendChild(item)
   })
 
-  fragment.appendChild(grid)
-
-  const lateBtn = document.createElement("div")
-  lateBtn.className = "mobile-toggle-btn"
-  lateBtn.textContent = mobileIsLateHidden
-    ? "展开晚间 (22:00-24:00) ↓"
-    : "收起晚间 ↑"
-  lateBtn.addEventListener("click", toggleMobileLate)
-  fragment.appendChild(lateBtn)
-
-  container.appendChild(fragment)
+  container.appendChild(grid)
+  updateMobileSelectionUI()
 }
 
-window.toggleMobileEarly = function () {
-  mobileIsEarlyHidden = !mobileIsEarlyHidden
-  renderMobileSlots()
+async function syncWeekForDate(targetDate) {
+  selectedDate = new Date(targetDate)
+  fp.setDate(selectedDate, false)
+  await weekChangeDay(selectedDate)
 }
 
-window.toggleMobileLate = function () {
-  mobileIsLateHidden = !mobileIsLateHidden
+window.mobileSelect = function (date, id) {
+  if (booking) return
+  const { weekData, selectedRes } = desktopState.get()
+  const slot = weekData.find((s) => s.id === id)
+  if (!slot) return
+
+  const hasTarget = selectedRes.some((s) => s.date === date && s.id === id)
+  let nextSelectedRes
+
+  if (hasTarget) {
+    nextSelectedRes = selectedRes.filter(
+      (s) => !(s.date === date && s.id === id)
+    )
+  } else {
+    // 移动端只处理当前日期，避免跨天提交数据。
+    const sameDaySelections = selectedRes.filter((s) => s.date === date)
+    nextSelectedRes = [...sameDaySelections, { date, id, time: slot.time }]
+  }
+
+  desktopState.set({ selectedRes: nextSelectedRes })
+  selected = nextSelectedRes[nextSelectedRes.length - 1] || null
+  updateMobileSelectionUI()
   renderMobileSlots()
 }
 
@@ -617,71 +724,13 @@ function select(date, event) {
     let span = event.target.parentElement.querySelector("span.slot-time")
     span.textContent = span.dataset.first || "" // 恢复初始文本，或者清空
   }
-  if (desktopState.get().selectedRes.length > 0) {
-    document.getElementById("selectionInfo").style.display = "block"
-    document.getElementById("confirmBtn").style.display = "inline-flex"
-    document.getElementById("cancelBtn").style.display = "inline-flex"
-    setSelectedText(
-      document.getElementById("selectedInfo"),
-      desktopState.get().selectedRes
-    )
-  } else {
-    document.getElementById("selectionInfo").style.display = "none"
-    document.getElementById("confirmBtn").style.display = "none"
-    document.getElementById("cancelBtn").style.display = "none"
-  }
+  updateDesktopSelectionUI()
+  updateMobileSelectionUI()
   // renderWeek()
 }
 
 // Expose to inline handlers in module scope
 window.select = select
-
-window.mobileSelect = function (date, id) {
-  if (booking) return
-  const { weekData } = desktopState.get()
-  const slot = weekData.find((s) => s.id === id)
-  selected = { date, id, time: slot.time }
-
-  // 显示提交按钮和取消按钮
-  if (!document.getElementById("mobileConfirmBtn")) {
-    const notification = document.createElement("div")
-    notification.className = "notification is-light mt-4"
-    notification.id = "mobileSelectionInfo"
-
-    const info = document.createElement("p")
-    info.id = "mobileSelectedInfo"
-    setSelectedText(info, date, slot.time)
-
-    const button = document.createElement("button")
-    button.className = "button is-success is-fullwidth mt-3"
-    button.id = "mobileConfirmBtn"
-    button.textContent = "提交预约"
-    button.addEventListener("click", confirm)
-
-    const cancelBtn = document.createElement("button")
-    cancelBtn.className = "button is-danger is-fullwidth mt-2"
-    cancelBtn.id = "mobileCancelBtn"
-    cancelBtn.textContent = "取消选择"
-    cancelBtn.addEventListener("click", cancel)
-
-    notification.appendChild(info)
-    notification.appendChild(button)
-    notification.appendChild(cancelBtn)
-
-    document
-      .getElementById("mobileSlots")
-      .insertAdjacentElement("afterend", notification)
-  } else {
-    document.getElementById("mobileSelectionInfo").style.display = "block"
-    setSelectedText(
-      document.getElementById("mobileSelectedInfo"),
-      date,
-      slot.time
-    )
-  }
-
-  renderMobileSlots()
-}
 
 async function submitBookings(instrument, submitData) {
   const thisDate = submitData.date
@@ -761,12 +810,8 @@ function confirm() {
       // 重置选择
       desktopState.set({ selectedRes: [] })
       selected = null
-      document.getElementById("selectionInfo").style.display = "none"
-      document.getElementById("confirmBtn").style.display = "none"
-      setSelectedText(
-        document.getElementById("selectedInfo"),
-        desktopState.get().selectedRes
-      )
+      updateDesktopSelectionUI()
+      updateMobileSelectionUI()
       weekChangeDay(selectedDate)
       renderMobileSlots()
     }
@@ -855,13 +900,8 @@ function cancel() {
       // 重置选择
       desktopState.set({ selectedRes: [] })
       selected = null
-      document.getElementById("selectionInfo").style.display = "none"
-      document.getElementById("confirmBtn").style.display = "none"
-      document.getElementById("cancelBtn").style.display = "none"
-      setSelectedText(
-        document.getElementById("selectedInfo"),
-        desktopState.get().selectedRes
-      )
+      updateDesktopSelectionUI()
+      updateMobileSelectionUI()
       weekChangeDay(selectedDate)
       renderMobileSlots()
     }
@@ -940,8 +980,11 @@ function disabledSlotwithDate() {
   })
 }
 
-init(new Date())
-renderMobileSlots()
+init(new Date()).then(() => {
+  renderMobileSlots()
+  updateDesktopSelectionUI()
+  updateMobileSelectionUI()
+})
 addslotselectorHandlers()
 
 document.getElementById("prevDay").addEventListener("click", () => {
@@ -956,24 +999,26 @@ document.getElementById("confirmBtn").addEventListener("click", confirm)
 document.getElementById("cancelBtn").addEventListener("click", cancel)
 
 // 移动端日期切换
-function changeMobileDay(delta) {
+async function changeMobileDay(delta) {
   mobileSelectedDate.setDate(mobileSelectedDate.getDate() + delta)
   document.getElementById("mobileDateInput").value = fmt(mobileSelectedDate)
+  await syncWeekForDate(mobileSelectedDate)
   renderMobileSlots()
 }
 
 document.getElementById("mobileDateInput").value = fmt(mobileSelectedDate)
-document.getElementById("mobileDateInput").addEventListener("change", (e) => {
-  mobileSelectedDate = new Date(e.target.value + "T00:00:00")
-  renderMobileSlots()
+document
+  .getElementById("mobileDateInput")
+  .addEventListener("change", async (e) => {
+    mobileSelectedDate = new Date(e.target.value + "T00:00:00")
+    await syncWeekForDate(mobileSelectedDate)
+    renderMobileSlots()
+  })
+
+document.getElementById("mobilePrevDay").addEventListener("click", async () => {
+  await changeMobileDay(-1)
 })
 
-document.getElementById("mobilePrevDay").addEventListener("click", () => {
-  changeMobileDay(-1)
+document.getElementById("mobileNextDay").addEventListener("click", async () => {
+  await changeMobileDay(1)
 })
-
-document.getElementById("mobileNextDay").addEventListener("click", () => {
-  changeMobileDay(1)
-})
-
-function handleSlotChange() {}
