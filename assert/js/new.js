@@ -175,12 +175,57 @@ function setSelectedText(target, selectedRes) {
   const strong = document.createElement("strong")
   strong.textContent = "已选择:"
   target.appendChild(strong)
-  for (let i = 0; i < processedRes.length; i++) {
-    if (i > 0) target.appendChild(document.createTextNode("; "))
-    const span = document.createElement("span")
-    span.textContent = `${processedRes[i].date} ${processedRes[i].time}`
-    target.appendChild(span)
+  if (processedRes.length === 0) return
+
+  const formatDateWithoutYear = (dateStr) => {
+    const parts = dateStr.split("-")
+    if (parts.length !== 3) return dateStr
+    return `${parts[1]}-${parts[2]}`
   }
+
+  const weekdayText = (dateStr) => {
+    const d = new Date(dateStr)
+    const weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
+    if (Number.isNaN(d.getTime())) return ""
+    return weekdays[d.getDay()]
+  }
+
+  const groupedByDate = processedRes.reduce((acc, item) => {
+    if (!acc[item.date]) acc[item.date] = []
+    acc[item.date].push(item.time)
+    return acc
+  }, {})
+
+  const list = document.createElement("div")
+  list.className = "selected-summary-list"
+
+  Object.entries(groupedByDate).forEach(([date, times]) => {
+    const wrapper = document.createElement("div")
+    wrapper.className = "selected-day-group"
+
+    const dateLine = document.createElement("div")
+    dateLine.className = "selected-day-date"
+    const dayText = weekdayText(date)
+    dateLine.textContent = dayText
+      ? `${formatDateWithoutYear(date)} ${dayText}`
+      : formatDateWithoutYear(date)
+
+    const timeLine = document.createElement("div")
+    timeLine.className = "selected-day-times"
+
+    times.forEach((time) => {
+      const chip = document.createElement("span")
+      chip.className = "selected-time-chip"
+      chip.textContent = time
+      timeLine.appendChild(chip)
+    })
+
+    wrapper.appendChild(dateLine)
+    wrapper.appendChild(timeLine)
+    list.appendChild(wrapper)
+  })
+
+  target.appendChild(list)
 }
 
 function getWeek(selectedDate) {

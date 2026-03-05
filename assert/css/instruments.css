@@ -20,6 +20,66 @@ body {
   max-width: 85%; /* 占据视口宽度的 85% */
 }
 
+.box {
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+[id="selectionInfo"] {
+  max-height: 11rem;
+  padding: 0.6rem 0.7rem;
+  margin-top: 0.75rem !important;
+  overflow-y: auto;
+}
+
+[id="selectedInfo"],
+[id="mobileSelectedInfo"] {
+  margin: 0;
+  line-height: 1.2;
+}
+
+[id="mobileSelectionInfo"] {
+  padding: 0.6rem 0.7rem;
+}
+
+.selected-summary-list {
+  display: flex;
+  margin-top: 0.35rem;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.selected-day-group {
+  padding: 0.4rem 0.5rem;
+  background: #fff;
+  border: 1px solid #d5e3f6;
+  border-radius: 6px;
+}
+
+.selected-day-date {
+  margin-bottom: 0.3rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #1f4b7b;
+}
+
+.selected-day-times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.selected-time-chip {
+  display: inline-block;
+  padding: 0.12rem 0.36rem;
+  font-size: 0.74rem;
+  line-height: 1.1;
+  color: #245a8c;
+  background: #edf4fb;
+  border: 1px solid #c6dff5;
+  border-radius: 999px;
+}
+
 .slot-item input[type="checkbox"] {
   position: absolute;
   opacity: 0;
@@ -263,6 +323,11 @@ body {
 
   .container {
     max-width: 96%;
+  }
+
+  .box {
+    max-height: none;
+    overflow-y: visible;
   }
 }
 
