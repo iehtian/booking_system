@@ -646,7 +646,12 @@ function renderMobileSlots() {
       item.style.opacity = isBookedByMe ? "1" : "0.75"
     }
 
-    item.textContent = slot.time
+    if (bookingInfo) {
+      item.textContent = bookingInfo.user_name
+      item.title = bookingInfo.user_name
+    } else {
+      item.textContent = slot.time
+    }
 
     if (!unavailable) {
       item.addEventListener("click", () => mobileSelect(key, slot.id))
