@@ -666,12 +666,6 @@ function renderMobileSlots() {
   updateMobileSelectionUI()
 }
 
-async function syncWeekForDate(targetDate) {
-  selectedDate = new Date(targetDate)
-  fp.setDate(selectedDate, false)
-  await weekChangeDay(selectedDate)
-}
-
 window.mobileSelect = function (date, id) {
   if (booking) return
   const { weekData, selectedRes } = desktopState.get()
@@ -920,8 +914,10 @@ window.cancel = cancel
 // 桌面端日期切换
 function changeDay(delta) {
   selectedDate.setDate(selectedDate.getDate() + delta)
+  mobileSelectedDate = new Date(selectedDate)
   fp.setDate(selectedDate, false)
   weekChangeDay(selectedDate)
+  renderMobileSlots()
 }
 
 const fp = flatpickr("#dateInput", {
@@ -933,7 +929,9 @@ const fp = flatpickr("#dateInput", {
   defaultDate: selectedDate,
   onChange: (d) => {
     selectedDate = d[0]
+    mobileSelectedDate = new Date(selectedDate)
     weekChangeDay(selectedDate)
+    renderMobileSlots()
   },
 })
 
@@ -1002,28 +1000,3 @@ document.getElementById("nextDay").addEventListener("click", () => {
 
 document.getElementById("confirmBtn").addEventListener("click", confirm)
 document.getElementById("cancelBtn").addEventListener("click", cancel)
-
-// 移动端日期切换
-async function changeMobileDay(delta) {
-  mobileSelectedDate.setDate(mobileSelectedDate.getDate() + delta)
-  document.getElementById("mobileDateInput").value = fmt(mobileSelectedDate)
-  await syncWeekForDate(mobileSelectedDate)
-  renderMobileSlots()
-}
-
-document.getElementById("mobileDateInput").value = fmt(mobileSelectedDate)
-document
-  .getElementById("mobileDateInput")
-  .addEventListener("change", async (e) => {
-    mobileSelectedDate = new Date(e.target.value + "T00:00:00")
-    await syncWeekForDate(mobileSelectedDate)
-    renderMobileSlots()
-  })
-
-document.getElementById("mobilePrevDay").addEventListener("click", async () => {
-  await changeMobileDay(-1)
-})
-
-document.getElementById("mobileNextDay").addEventListener("click", async () => {
-  await changeMobileDay(1)
-})

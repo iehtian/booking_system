@@ -224,6 +224,15 @@ body {
   background: #e8e8e8;
 }
 
+/* 默认显示桌面端，隐藏移动端，避免媒体查询失效时双显示 */
+.desktop-only {
+  display: block;
+}
+
+.mobile-only {
+  display: none;
+}
+
 /* 响应式断点 */
 @media (width <= 768px) {
   .weekly-grid {
@@ -232,6 +241,10 @@ body {
 
   .desktop-only {
     display: none;
+  }
+
+  #desktop-date-controls.desktop-only {
+    display: flex;
   }
 
   .mobile-only {
@@ -254,6 +267,10 @@ body {
 }
 
 @media (width >= 769px) {
+  .desktop-only {
+    display: block;
+  }
+
   .mobile-only {
     display: none;
   }
