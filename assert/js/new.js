@@ -123,7 +123,7 @@ function createState(initialState) {
   }
 }
 
-const desktopState = createState({
+const State = createState({
   weekData: slots,
   selectedRes: [],
   selectedWeek: null,
@@ -257,14 +257,14 @@ function getCurrentUserName() {
 }
 
 function getWeekIndexByDateKey(dateKey) {
-  const week = desktopState.get().selectedWeek || []
+  const week = State.get().selectedWeek || []
   return week.findIndex((d) => fmt(d) === dateKey)
 }
 
 function getBookingsByDateKey(dateKey) {
   const idx = getWeekIndexByDateKey(dateKey)
   if (idx < 0) return null
-  return desktopState.get().bookinged_slots[idx] || {}
+  return State.get().bookinged_slots[idx] || {}
 }
 
 function isPastSlot(dateKey, slotId) {
@@ -277,7 +277,7 @@ function isPastSlot(dateKey, slotId) {
 }
 
 function updateDesktopSelectionUI() {
-  const selectedRes = desktopState.get().selectedRes
+  const selectedRes = State.get().selectedRes
   const hasSelection = selectedRes.length > 0
   document.getElementById("selectionInfo").style.display = hasSelection
     ? "block"
@@ -324,7 +324,7 @@ function ensureMobileSelectionPanel() {
 }
 
 function updateMobileSelectionUI() {
-  const selectedRes = desktopState.get().selectedRes
+  const selectedRes = State.get().selectedRes
   const panel = ensureMobileSelectionPanel()
   if (selectedRes.length === 0) {
     panel.style.display = "none"
@@ -336,7 +336,7 @@ function updateMobileSelectionUI() {
 }
 
 function clearAllSelectedState() {
-  desktopState.set({ selectedRes: [] })
+  State.set({ selectedRes: [] })
   selected = null
 
   const checkedInputs = document.querySelectorAll(
@@ -357,12 +357,12 @@ function clearAllSelectedState() {
 // 初始化页面
 async function init(selectedDate) {
   // 生成主结构
-  desktopState.set({ selectedWeek: getWeek(selectedDate) })
-  console.log("selectedWeek:", desktopState.get().selectedWeek)
+  State.set({ selectedWeek: getWeek(selectedDate) })
+  console.log("selectedWeek:", State.get().selectedWeek)
 
   const pormise_week = []
 
-  for (const date of desktopState.get().selectedWeek) {
+  for (const date of State.get().selectedWeek) {
     pormise_week.push(getBookings(instrument_id, fmt(date)))
   }
   const week_bookings = Promise.all(pormise_week)
@@ -384,7 +384,7 @@ async function init(selectedDate) {
   grid.appendChild(timeHeader)
 
   // 日期头部
-  desktopState.get().selectedWeek.forEach((date) => {
+  State.get().selectedWeek.forEach((date) => {
     const key = fmt(date)
     const header = document.createElement("div")
     header.className = "has-text-centered mb-2 pb-2 week-header"
@@ -425,13 +425,13 @@ async function init(selectedDate) {
   grid.appendChild(timeColumn)
 
   // 日期列（每列一个div，内部slot-item）
-  desktopState.get().selectedWeek.forEach((date, idx) => {
+  State.get().selectedWeek.forEach((date, idx) => {
     const key = fmt(date)
     const dayColumn = document.createElement("div")
     dayColumn.className = "day-column"
     dayColumn.dataset.idx = idx
     dayColumn.dataset.date = key
-    const { weekData } = desktopState.get()
+    const { weekData } = State.get()
     const daySlots = weekData
 
     daySlots.forEach((slot, idx2) => {
@@ -479,11 +479,8 @@ async function init(selectedDate) {
   container.appendChild(fragment)
 
   const data = await week_bookings
-  desktopState.set({ bookinged_slots: data })
-  console.log(
-    "desktopState bookinged_slots:",
-    desktopState.get().bookinged_slots
-  )
+  State.set({ bookinged_slots: data })
+  console.log("State bookinged_slots:", State.get().bookinged_slots)
 
   const result = JSON.parse(sessionStorage.getItem("userAuth") || "null")
   let my_name = null
@@ -491,7 +488,7 @@ async function init(selectedDate) {
     my_name = result.user.user_name
   }
   disabledSlotwithDate()
-  desktopState.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
+  State.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
     renderBookedGroups(dayBookings, dayIdx, container, my_name)
   })
 }
@@ -556,7 +553,7 @@ function addslotselectorHandlers() {
 
 // 只更新一周的属性和文字，不重建结构
 async function weekChangeDay(selectedDate) {
-  let week = desktopState.get().selectedWeek
+  let week = State.get().selectedWeek
   const selectedKey = fmt(selectedDate)
   const inWeek = week.some((d) => fmt(d) === selectedKey)
   const updateHeaders = () => {
@@ -581,16 +578,13 @@ async function weekChangeDay(selectedDate) {
     return
   }
 
-  desktopState.set({ selectedWeek: getWeek(selectedDate) })
-  desktopState.set({ selectedRes: [] })
+  State.set({ selectedWeek: getWeek(selectedDate) })
+  State.set({ selectedRes: [] })
   updateDesktopSelectionUI()
   updateMobileSelectionUI()
-  console.log(
-    "weekChangeDay new selectedWeek:",
-    desktopState.get().selectedWeek
-  )
+  console.log("weekChangeDay new selectedWeek:", State.get().selectedWeek)
 
-  week = desktopState.get().selectedWeek
+  week = State.get().selectedWeek
   console.log("weekChangeDay selectedWeek:", week)
   const pormise_week = []
 
@@ -607,7 +601,7 @@ async function weekChangeDay(selectedDate) {
     const date = week[idx]
     const key = fmt(date)
     col.dataset.date = key
-    const { weekData } = desktopState.get()
+    const { weekData } = State.get()
     const daySlots = weekData
     const labels = col.querySelectorAll("label.slot-item")
     labels.forEach((label, i) => {
@@ -631,11 +625,11 @@ async function weekChangeDay(selectedDate) {
     })
   })
   const week_bookings = await Promise.all(pormise_week)
-  desktopState.set({ bookinged_slots: week_bookings })
+  State.set({ bookinged_slots: week_bookings })
   const container = document.getElementById("weeklyView")
   const my_name = JSON.parse(sessionStorage.getItem("userAuth") || "null")?.user
   disabledSlotwithDate()
-  desktopState.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
+  State.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
     renderBookedGroups(dayBookings, dayIdx, container, my_name?.user_name)
   })
 }
@@ -674,7 +668,7 @@ const toggleLate = function (btn) {
 function renderMobileSlots() {
   const container = document.getElementById("mobileSlots")
   const key = fmt(mobileSelectedDate)
-  const { weekData } = desktopState.get()
+  const { weekData } = State.get()
   const daySlots = weekData
   const myName = getCurrentUserName()
   const dayBookings = getBookingsByDateKey(key)
@@ -690,9 +684,9 @@ function renderMobileSlots() {
     const isPast = isPastSlot(key, slot.id)
     const unavailable = isPast || isBookedByOthers
 
-    const isSelected = desktopState
-      .get()
-      .selectedRes.some((s) => s.date === key && s.id === slot.id)
+    const isSelected = State.get().selectedRes.some(
+      (s) => s.date === key && s.id === slot.id
+    )
 
     let cls = "available"
     if (isBookedByOthers) cls = "booked"
@@ -732,7 +726,7 @@ function renderMobileSlots() {
 
 window.mobileSelect = function (date, id) {
   if (booking) return
-  const { weekData, selectedRes } = desktopState.get()
+  const { weekData, selectedRes } = State.get()
   const slot = weekData.find((s) => s.id === id)
   if (!slot) return
 
@@ -749,14 +743,14 @@ window.mobileSelect = function (date, id) {
     nextSelectedRes = [...sameDaySelections, { date, id, time: slot.time }]
   }
 
-  desktopState.set({ selectedRes: nextSelectedRes })
+  State.set({ selectedRes: nextSelectedRes })
   selected = nextSelectedRes[nextSelectedRes.length - 1] || null
   updateMobileSelectionUI()
   renderMobileSlots()
 }
 
 function select(date, event) {
-  const { weekData, selectedRes } = desktopState.get()
+  const { weekData, selectedRes } = State.get()
   let id = parseInt(event.target.dataset.slotid, 10)
   if (event.target.checked) {
     const slot = weekData.find((s) => id === s.id)
@@ -764,11 +758,11 @@ function select(date, event) {
     span.textContent = slot.time
     selected = { date, id, time: slot.time }
     console.log("Selected:", selected)
-    console.log("Before:", desktopState.get().bookinged_slots)
+    console.log("Before:", State.get().bookinged_slots)
     // 该注释用于设计，当天的预约数据已经加载时，选中一个时间段会在控制台输出该时间段是否已被预约（true/false），
     // 这样可以用来判断点击后显示给用户“提交”还是“取消”
     // let this_idx = -1
-    // desktopState.get().selectedWeek.forEach((d, index) => {
+    // State.get().selectedWeek.forEach((d, index) => {
     //   const key = fmt(d)
     //   if (key === date) {
     //     this_idx = index
@@ -777,11 +771,11 @@ function select(date, event) {
     // console.log("Selected date index in week:", this_idx)
     // console.log(
     //   "Bookings for the day:",
-    //   desktopState.get().bookinged_slots[this_idx].hasOwnProperty(id)
+    //   State.get().bookinged_slots[this_idx].hasOwnProperty(id)
     // )
-    desktopState.set({ selectedRes: [...selectedRes, selected] })
+    State.set({ selectedRes: [...selectedRes, selected] })
   } else {
-    desktopState.set({
+    State.set({
       selectedRes: selectedRes.filter((s) => !(s.date === date && s.id === id)),
     })
     let span = event.target.parentElement.querySelector("span.slot-time")
@@ -854,7 +848,7 @@ async function submitBookings(instrument, submitData) {
 }
 
 function confirm() {
-  const { selectedRes } = desktopState.get()
+  const { selectedRes } = State.get()
   if (!selectedRes || selectedRes.length === 0) {
     alert("请先选择时间段")
     return
@@ -871,7 +865,7 @@ function confirm() {
     if (success) {
       alert("预约成功")
       // 重置选择
-      desktopState.set({ selectedRes: [] })
+      State.set({ selectedRes: [] })
       selected = null
       updateDesktopSelectionUI()
       updateMobileSelectionUI()
@@ -944,7 +938,7 @@ async function cancelBookings(instrument, cancelData) {
 }
 
 function cancel() {
-  const { selectedRes } = desktopState.get()
+  const { selectedRes } = State.get()
   if (!selectedRes || selectedRes.length === 0) {
     alert("请先选择时间段")
     return
@@ -961,7 +955,7 @@ function cancel() {
     if (success) {
       alert("取消预约成功")
       // 重置选择
-      desktopState.set({ selectedRes: [] })
+      State.set({ selectedRes: [] })
       selected = null
       updateDesktopSelectionUI()
       updateMobileSelectionUI()
