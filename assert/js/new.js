@@ -2,74 +2,12 @@ let selectedDate = new Date()
 let mobileSelectedDate = new Date()
 let instrument_id = "c_instrument" // 示例仪器 ID
 import { getBookings, submitBookings, cancelBookings } from "./booking_api.js"
-
-function mergeBookings(bookings) {
-  // 先对时间段排序（按开始时间）
-  console.log("Bookings to merge:", bookings)
-  const sorted = Object.entries(bookings).sort(([a], [b]) => {
-    return a.localeCompare(b)
-  })
-
-  const groups = []
-  let currentGroup = []
-  let lastEnd = null
-  let lastName = null
-
-  sorted.forEach(([time_slot_id, value]) => {
-    const { user_name, color } = value
-
-    if (lastEnd + 1 === Number(time_slot_id) && lastName === user_name) {
-      // 连续且同名 → 合并到当前 group
-      console.log("Merging into current group")
-      currentGroup.push({
-        time_slot_id: Number(time_slot_id),
-        user_name,
-        color,
-      })
-    } else {
-      // 不连续 或 name 不同 → 开新组
-      if (currentGroup.length > 0) {
-        groups.push(currentGroup)
-      }
-      currentGroup = [{ time_slot_id: Number(time_slot_id), user_name, color }]
-    }
-    lastEnd = Number(time_slot_id)
-    lastName = user_name
-  })
-
-  if (currentGroup.length > 0) {
-    groups.push(currentGroup)
-  }
-  const format_groups = groups.map((group) => ({
-    firstSlot: group[0].time_slot_id,
-    lastSlot: group[group.length - 1].time_slot_id,
-    color: group[0].color,
-    user_name: group[0].user_name,
-  }))
-
-  return format_groups
-}
-
-function generateTimeIntervalsSimple() {
-  const intervals = []
-
-  for (let i = 0; i <= 48; i++) {
-    const totalMinutes = i * 30
-    const hours = Math.floor(totalMinutes / 60)
-    const minutes = totalMinutes % 60
-
-    const timeStr = `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}`
-    intervals.push(timeStr)
-  }
-
-  const timeSlots = []
-  for (let i = 0; i < intervals.length - 1; i++) {
-    timeSlots.push(intervals[i] + "-" + intervals[i + 1])
-  }
-  return timeSlots
-}
+import {
+  mergeBookings,
+  generateTimeIntervalsSimple,
+  processSchedule,
+  fmt,
+} from "./utils/slots.js"
 
 let slots = generateTimeIntervalsSimple().map((time, index) => ({
   id: index,
@@ -102,6 +40,7 @@ function createState(initialState) {
 }
 
 const State = createState({
+  user_name: null,
   weekData: slots,
   selectedRes: [],
   selectedWeek: null,
@@ -110,42 +49,6 @@ const State = createState({
 
 let booking = null
 let selected = null
-
-const processSchedule = (list) => {
-  // 1. 基础排序：先排日期，再排时间
-  console.log("原始列表:", list)
-  const sorted = list.sort((a, b) => {
-    // 1. 第一优先级：日期
-    if (a.date !== b.date) {
-      return a.date.localeCompare(b.date)
-    }
-
-    // 2. 第二优先级：ID  代表了时间
-    return a.id - b.id
-  })
-
-  const result = []
-
-  for (const item of sorted) {
-    const last = result[result.length - 1]
-    const [startTime, endTime] = item.time.split("-")
-
-    // 2. 合并逻辑：日期相同 且 上一个结束时间 等于 当前开始时间
-    if (
-      last &&
-      last.date === item.date &&
-      last.time.split("-")[1] === startTime
-    ) {
-      const lastStart = last.time.split("-")[0]
-      last.time = `${lastStart}-${endTime}`
-      last.ids = [...(last.ids || [last.id]), item.id]
-    } else {
-      result.push({ ...item, ids: [item.id] })
-    }
-  }
-
-  return result
-}
 
 function setSelectedText(target, selectedRes) {
   const processedRes = processSchedule(selectedRes)
@@ -215,13 +118,6 @@ function getWeek(selectedDate) {
     d.setDate(monday.getDate() + i)
     return d
   })
-}
-
-function fmt(date) {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, "0")
-  const d = String(date.getDate()).padStart(2, "0")
-  return `${y}-${m}-${d}`
 }
 
 function display(date) {
@@ -460,14 +356,9 @@ async function init(selectedDate) {
   State.set({ bookinged_slots: data })
   console.log("State bookinged_slots:", State.get().bookinged_slots)
 
-  const result = JSON.parse(sessionStorage.getItem("userAuth") || "null")
-  let my_name = null
-  if (result && result.user) {
-    my_name = result.user.user_name
-  }
   disabledSlotwithDate()
   State.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
-    renderBookedGroups(dayBookings, dayIdx, container, my_name)
+    renderBookedGroups(dayBookings, dayIdx, container, State.get().user_name)
   })
 }
 
@@ -605,10 +496,10 @@ async function weekChangeDay(selectedDate) {
   const week_bookings = await Promise.all(pormise_week)
   State.set({ bookinged_slots: week_bookings })
   const container = document.getElementById("weeklyView")
-  const my_name = JSON.parse(sessionStorage.getItem("userAuth") || "null")?.user
+
   disabledSlotwithDate()
   State.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
-    renderBookedGroups(dayBookings, dayIdx, container, my_name?.user_name)
+    renderBookedGroups(dayBookings, dayIdx, container, State.get().user_name)
   })
 }
 
@@ -648,7 +539,7 @@ function renderMobileSlots() {
   const key = fmt(mobileSelectedDate)
   const { weekData } = State.get()
   const daySlots = weekData
-  const myName = getCurrentUserName()
+  const myName = State.get().user_name
   const dayBookings = getBookingsByDateKey(key)
 
   container.innerHTML = ""
@@ -922,3 +813,7 @@ document.getElementById("nextDay").addEventListener("click", () => {
 
 document.getElementById("confirmBtn").addEventListener("click", confirm)
 document.getElementById("cancelBtn").addEventListener("click", cancel)
+
+document.addEventListener("DOMContentLoaded", () => {
+  State.set({ user_name: getCurrentUserName() })
+})
