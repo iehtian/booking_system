@@ -22,6 +22,16 @@
   user-select: none;
 }
 
+.week-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  overflow: hidden;
+  background-color: white;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 header.navbar .logo:focus-visible {
   border-radius: 4px;
   outline: 2px solid #0991b2;

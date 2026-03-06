@@ -113,6 +113,72 @@ footer a:hover {
   box-shadow: 0 0 0 3px rgb(74 144 226 / 30%);
 }
 
+/* 仪器预约页背景相关样式（从 instruments.css 抽离） */
+.selected-day-group {
+  background: #fff;
+}
+
+.selected-time-chip {
+  background: #edf4fb;
+}
+
+.slot-item.available {
+  background: white;
+  background-color: #effaf3;
+}
+
+.slot-item:has(input[type="checkbox"]:checked) {
+  background: #3273dc;
+}
+
+.slot-item.selected {
+  background-color: #3273dc;
+}
+
+.slot-item.available:hover {
+  background-color: #3bb666;
+}
+
+.slot-item.disabled {
+  background-color: #f3f4f6;
+}
+
+.grid-embedded-btn {
+  background: #f0f0f0;
+}
+
+.grid-embedded-btn:hover {
+  background: #e8e8e8;
+}
+
+.mobile-slot-item.available {
+  background-color: #effaf3;
+}
+
+.mobile-slot-item.available:active {
+  background-color: #48c774;
+}
+
+.mobile-slot-item.booked {
+  background-color: #feecf0;
+}
+
+.mobile-slot-item.disabled {
+  background-color: #f3f4f6;
+}
+
+.mobile-slot-item.selected {
+  background-color: #3273dc;
+}
+
+.mobile-toggle-btn {
+  background: #f0f0f0;
+}
+
+.mobile-toggle-btn:active {
+  background: #e8e8e8;
+}
+
 @media (width <= 640px) {
   .date-controls {
     position: sticky;
