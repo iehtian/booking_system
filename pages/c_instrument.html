@@ -12,7 +12,6 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
     />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="../assert/css/background.css" />
     <link rel="stylesheet" href="../assert/css/header.css" />
     <link rel="stylesheet" href="../assert/css/instruments.css" />
@@ -22,8 +21,10 @@
     <header class="navbar">
       <div class="logo">实验平台</div>
     </header>
-    <div class="container">
-      <div class="box">
+
+    <section class="container booking-outer-card">
+      <h1 class="booking-page-title">时间段预约</h1>
+      <div class="box booking-inner-card">
         <!-- 桌面端日期控制 -->
         <div
           id="desktop-date-controls"
@@ -84,7 +85,7 @@
           <p id="bookingDetails"></p>
         </div>
       </div>
-    </div>
+    </section>
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
