@@ -187,18 +187,27 @@ body {
 
 .slot-item {
   position: relative;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   height: 34px;
   padding: 0.25rem 0.35rem;
   margin: 0;
   overflow: hidden;
-  font-size: 0.8rem;
-  line-height: 34px;
+  font-size: 0.92rem;
+  line-height: 1.2;
   text-align: center;
   border: 1px solid transparent;
   border-radius: 0;
   transition: all 0.2s;
   cursor: pointer;
+}
+
+#timeColumn  .slot-item {
+  color: #1f4b7b;
+  background-color: #eaf2ff;
+  border-color: #cbd5e0;
+  cursor: default;
 }
 
 /* 未选中状态 */
@@ -214,7 +223,11 @@ body {
 
 .slot-time {
   display: block;
+  width: 100%;
   overflow: hidden;
+  font-size: 0.94rem;
+  font-weight: 500;
+  text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
