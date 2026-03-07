@@ -129,7 +129,7 @@
           >
             <p id="mobileSelectedInfo"></p>
             <button
-              class="button is-success  is-fullwidth mt-3"
+              class="button is-success is-fullwidth mt-3"
               id="mobileConfirmBtn"
             >
               提交预约
@@ -144,26 +144,27 @@
         </div>
 
         <!-- 选择信息（桌面端） -->
-        <div class="desktop-only">
-          <div
-            class="notification is-light mt-4"
-            id="selectionInfo"
-            style="display: none"
-          >
+        <div
+          class="desktop-only desktop-selection-bar"
+          id="desktopSelectionBar"
+          style="display: none"
+        >
+          <div class="notification is-light" id="selectionInfo">
             <p id="selectedInfo"></p>
           </div>
-          <div class="buttons is-centered mt-4">
+          <div
+            class="buttons desktop-selection-actions"
+            id="desktopSelectionActions"
+          >
             <button
-              class="button is-success"
+              class="button is-success desktop-selection-button"
               id="confirmBtn"
-              style="display: none"
             >
               提交预约
             </button>
             <button
-              class="button is-danger "
+              class="button is-danger desktop-selection-button"
               id="cancelBtn"
-              style="display: none"
             >
               取消预约
             </button>

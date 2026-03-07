@@ -205,15 +205,10 @@ function isPastSlot(dateKey, slotId) {
 function updateDesktopSelectionUI() {
   const selectedRes = State.get().selectedRes
   const hasSelection = selectedRes.length > 0
-  document.getElementById("selectionInfo").style.display = hasSelection
-    ? "block"
-    : "none"
-  document.getElementById("confirmBtn").style.display = hasSelection
-    ? "inline-flex"
-    : "none"
-  document.getElementById("cancelBtn").style.display = hasSelection
-    ? "inline-flex"
-    : "none"
+  const desktopSelectionBar = document.getElementById("desktopSelectionBar")
+  if (desktopSelectionBar) {
+    desktopSelectionBar.style.display = hasSelection ? "flex" : "none"
+  }
   setSelectedText(document.getElementById("selectedInfo"), selectedRes)
 }
 
@@ -303,13 +298,11 @@ function clearAllSelectedState() {
 // 初始化页面
 async function init(selectedDate) {
   State.set({ selectedWeek: getWeek(selectedDate) })
-  console.log("selectedWeek:", State.get().selectedWeek)
-
   const pormise_week = []
-
   for (const date of State.get().selectedWeek) {
     pormise_week.push(getBookings(instrument_id, fmt(date)))
   }
+  
   const week_bookings = Promise.all(pormise_week)
   const container = document.getElementById("weeklyView")
   const selectedKey = fmt(selectedDate)
@@ -321,6 +314,7 @@ async function init(selectedDate) {
   console.log("State bookinged_slots:", State.get().bookinged_slots)
 
   disabledSlotwithDate()
+  renderMobileSlots()
   State.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
     renderBookedGroups(dayBookings, dayIdx, container, State.get().user_name)
   })
@@ -461,6 +455,7 @@ function renderMobileSlots() {
   const container = document.getElementById("mobileSlots")
   const key = fmt(mobileSelectedDate)
   const { weekData } = State.get()
+    console.log("Rendering mobile slots for date:", key, "with weekData:", weekData)
   const daySlots = weekData
   const myName = State.get().user_name
   const dayBookings = getBookingsByDateKey(key)
@@ -722,7 +717,6 @@ function disabledSlotwithDate() {
 buildWeeklySkeletonDOM()
 addslotselectorHandlers()
 init(new Date()).then(() => {
-  renderMobileSlots()
   updateDesktopSelectionUI()
   updateMobileSelectionUI()
 })
