@@ -15,6 +15,58 @@ let slots = generateTimeIntervalsSimple().map((time, index) => ({
 }))
 console.log(slots)
 
+function getSlotHideClass(slotId) {
+  if (slotId <= 15) return "hidden-slot-logic-early Early"
+  if (slotId >= 45) return "hidden-slot-logic-late Late"
+  return ""
+}
+
+function buildWeeklySkeletonDOM() {
+  const timeColumn = document.getElementById("timeColumn")
+  if (timeColumn && timeColumn.children.length === 0) {
+    const timeFragment = document.createDocumentFragment()
+    slots.forEach(({ id, time }) => {
+      const label = document.createElement("label")
+      label.className = ["slot-item", getSlotHideClass(id)]
+        .filter(Boolean)
+        .join(" ")
+      const span = document.createElement("span")
+      span.className = "slot-time"
+      span.textContent = time
+      label.appendChild(span)
+      timeFragment.appendChild(label)
+    })
+    timeColumn.appendChild(timeFragment)
+  }
+
+  const dayColumns = document.querySelectorAll("#weeklyView .day-column")
+  dayColumns.forEach((dayColumn) => {
+    if (dayColumn.children.length > 0) return
+
+    const dayFragment = document.createDocumentFragment()
+    slots.forEach((slot, idx2) => {
+      const label = document.createElement("label")
+      label.className = ["slot-item", "available", getSlotHideClass(slot.id)]
+        .filter(Boolean)
+        .join(" ")
+      label.dataset.idx = idx2
+
+      const input = document.createElement("input")
+      input.type = "checkbox"
+      input.name = "timeslot"
+      input.dataset.slotid = slot.id
+      input.disabled = false
+      label.appendChild(input)
+
+      const span = document.createElement("span")
+      span.className = "slot-time"
+      label.appendChild(span)
+      dayFragment.appendChild(label)
+    })
+    dayColumn.appendChild(dayFragment)
+  })
+}
+
 function createState(initialState) {
   let state = { ...initialState }
   const listeners = new Set()
@@ -165,41 +217,10 @@ function updateDesktopSelectionUI() {
   setSelectedText(document.getElementById("selectedInfo"), selectedRes)
 }
 
-function ensureMobileSelectionPanel() {
-  let panel = document.getElementById("mobileSelectionInfo")
-  if (panel) return panel
-
-  panel = document.createElement("div")
-  panel.className = "notification is-light mt-4"
-  panel.id = "mobileSelectionInfo"
-
-  const info = document.createElement("p")
-  info.id = "mobileSelectedInfo"
-
-  const confirmBtn = document.createElement("button")
-  confirmBtn.className = "button is-success is-fullwidth mt-3"
-  confirmBtn.id = "mobileConfirmBtn"
-  confirmBtn.textContent = "提交预约"
-  confirmBtn.addEventListener("click", confirm)
-
-  const cancelBtn = document.createElement("button")
-  cancelBtn.className = "button is-danger is-fullwidth mt-2"
-  cancelBtn.id = "mobileCancelBtn"
-  cancelBtn.textContent = "取消预约"
-  cancelBtn.addEventListener("click", cancel)
-
-  panel.appendChild(info)
-  panel.appendChild(confirmBtn)
-  panel.appendChild(cancelBtn)
-  document
-    .getElementById("mobileSlots")
-    .insertAdjacentElement("afterend", panel)
-  return panel
-}
-
 function updateMobileSelectionUI() {
   const selectedRes = State.get().selectedRes
-  const panel = ensureMobileSelectionPanel()
+  const panel = document.getElementById("mobileSelectionInfo")
+  if (!panel) return
   if (selectedRes.length === 0) {
     panel.style.display = "none"
     return
@@ -207,6 +228,57 @@ function updateMobileSelectionUI() {
 
   panel.style.display = "block"
   setSelectedText(document.getElementById("mobileSelectedInfo"), selectedRes)
+}
+
+function updateWeekHeaders(week, selectedKey) {
+  const headers = document.querySelectorAll("#weeklyView .week-header")
+  headers.forEach((header, idx) => {
+    if (idx === 0) return
+    const date = week[idx - 1]
+    const key = fmt(date)
+    const strong = header.querySelector("strong")
+
+    header.dataset.date = key
+    strong.textContent = display(date)
+    header.style.borderBottom = `2px solid ${key === selectedKey ? "#3273dc" : "#dbdbdb"}`
+    strong.classList.toggle("has-text-info", key === selectedKey)
+  })
+}
+
+function resetWeekColumns(week) {
+  const columns = document.querySelectorAll("#weeklyView .day-column")
+  columns.forEach((col, idx) => {
+    const date = week[idx]
+    const key = fmt(date)
+    col.dataset.date = key
+
+    const labels = col.querySelectorAll("label.slot-item")
+    labels.forEach((label, i) => {
+      const slot = slots[i]
+      label.style.backgroundColor = ""
+      label.dataset.time = slot.time
+      label.dataset.slotid = slot.id
+      label.dataset.date = key
+
+      label.classList.remove("disabled", "selected", "available")
+      label.classList.add("available")
+
+      const input = label.querySelector("input[type=checkbox]")
+      if (input) {
+        input.disabled = false
+        input.checked = false
+        input.value = `${key}-${slot.id}`
+      }
+
+      const span = label.querySelector("span.slot-time")
+      if (span) {
+        span.classList.remove("weekly-text")
+        span.style.whiteSpace = ""
+        span.textContent = ""
+        delete span.dataset.first
+      }
+    })
+  })
 }
 
 function clearAllSelectedState() {
@@ -230,7 +302,6 @@ function clearAllSelectedState() {
 
 // 初始化页面
 async function init(selectedDate) {
-  // 生成主结构
   State.set({ selectedWeek: getWeek(selectedDate) })
   console.log("selectedWeek:", State.get().selectedWeek)
 
@@ -240,117 +311,10 @@ async function init(selectedDate) {
     pormise_week.push(getBookings(instrument_id, fmt(date)))
   }
   const week_bookings = Promise.all(pormise_week)
-
   const container = document.getElementById("weeklyView")
-  container.innerHTML = ""
-  const fragment = document.createDocumentFragment()
-  const grid = document.createElement("div")
-  grid.className = "weekly-grid"
-
-  // 时间头部
-  const timeHeader = document.createElement("div")
-  timeHeader.className = "has-text-centered mb-2 pb-2 week-header"
-  timeHeader.style.borderBottom = "2px solid #dbdbdb"
-  const timeStrong = document.createElement("strong")
-  timeStrong.className = "has-text-info"
-  timeStrong.textContent = "时间"
-  timeHeader.appendChild(timeStrong)
-  grid.appendChild(timeHeader)
-
-  // 日期头部
-  State.get().selectedWeek.forEach((date) => {
-    const key = fmt(date)
-    const header = document.createElement("div")
-    header.className = "has-text-centered mb-2 pb-2 week-header"
-    header.style.borderBottom = `2px solid ${key === fmt(selectedDate) ? "#3273dc" : "#dbdbdb"}`
-    header.dataset.date = key
-    const strong = document.createElement("strong")
-    strong.textContent = display(date)
-    header.appendChild(strong)
-    grid.appendChild(header)
-    header
-      .querySelector("strong")
-      .classList.toggle("has-text-info", key === fmt(selectedDate))
-  })
-
-  // 深夜展开按钮
-  const earlyBtn = document.createElement("div")
-  earlyBtn.className = "grid-embedded-btn"
-  earlyBtn.id = "toggleEarlyBtn"
-  earlyBtn.textContent = "展开深夜 (00:00-08:00) ↓"
-  earlyBtn.addEventListener("click", () => toggleEarly(earlyBtn))
-  grid.appendChild(earlyBtn)
-
-  // 时间列
-  const timeColumn = document.createElement("div")
-  timeColumn.className = "time-column"
-  slots.forEach(({ id, time }) => {
-    let hideCls = ""
-    if (id <= 15) hideCls = "hidden-slot-logic-early Early"
-    if (id >= 45) hideCls = "hidden-slot-logic-late Late"
-    const label = document.createElement("label")
-    label.className = ["slot-item", hideCls].filter(Boolean).join(" ")
-    const span = document.createElement("span")
-    span.className = "slot-time"
-    span.textContent = time
-    label.appendChild(span)
-    timeColumn.appendChild(label)
-  })
-  grid.appendChild(timeColumn)
-
-  // 日期列（每列一个div，内部slot-item）
-  State.get().selectedWeek.forEach((date, idx) => {
-    const key = fmt(date)
-    const dayColumn = document.createElement("div")
-    dayColumn.className = "day-column"
-    dayColumn.dataset.idx = idx
-    dayColumn.dataset.date = key
-    const { weekData } = State.get()
-    const daySlots = weekData
-
-    daySlots.forEach((slot, idx2) => {
-      let hideCls = ""
-      if (slot.id <= 15) hideCls = "hidden-slot-logic-early Early"
-      if (slot.id >= 45) hideCls = "hidden-slot-logic-late Late"
-      const available = true
-      const label = document.createElement("label")
-      label.className = [
-        "slot-item",
-        available ? "available" : "disabled",
-        hideCls,
-      ]
-        .filter(Boolean)
-        .join(" ")
-      label.dataset.idx = idx2
-      label.dataset.date = key
-      // input
-      const input = document.createElement("input")
-      input.type = "checkbox"
-      input.name = "timeslot"
-      input.value = `${key}-${slot.id}`
-      input.dataset.slotid = slot.id
-      input.disabled = !available
-      label.appendChild(input)
-      // span
-      const span = document.createElement("span")
-      span.className = "slot-time"
-      // span.textContent = slot.time
-      label.appendChild(span)
-      dayColumn.appendChild(label)
-    })
-    grid.appendChild(dayColumn)
-  })
-
-  // 晚间展开按钮
-  const lateBtn = document.createElement("div")
-  lateBtn.className = "grid-embedded-btn"
-  lateBtn.id = "toggleLateBtn"
-  lateBtn.textContent = "展开晚间 (22:00-24:00) ↓"
-  lateBtn.addEventListener("click", () => toggleLate(lateBtn))
-  grid.appendChild(lateBtn)
-
-  fragment.appendChild(grid)
-  container.appendChild(fragment)
+  const selectedKey = fmt(selectedDate)
+  updateWeekHeaders(State.get().selectedWeek, selectedKey)
+  resetWeekColumns(State.get().selectedWeek)
 
   const data = await week_bookings
   State.set({ bookinged_slots: data })
@@ -425,23 +389,9 @@ async function weekChangeDay(selectedDate) {
   let week = State.get().selectedWeek
   const selectedKey = fmt(selectedDate)
   const inWeek = week.some((d) => fmt(d) === selectedKey)
-  const updateHeaders = () => {
-    const headers = document.querySelectorAll("#weeklyView .week-header")
-    headers.forEach((header, idx) => {
-      if (idx === 0) return // 跳过时间头部
-      const date = week[idx - 1]
-      const key = fmt(date)
-      header.dataset.date = key
-      header.querySelector("strong").textContent = display(date)
-      header.style.borderBottom = `2px solid ${key === selectedKey ? "#3273dc" : "#dbdbdb"}`
-      header
-        .querySelector("strong")
-        .classList.toggle("has-text-info", key === selectedKey)
-    })
-  }
 
   if (inWeek) {
-    updateHeaders()
+    updateWeekHeaders(week, selectedKey)
     updateDesktopSelectionUI()
     updateMobileSelectionUI()
     return
@@ -462,37 +412,10 @@ async function weekChangeDay(selectedDate) {
   }
 
   // 更新日期头部
-  updateHeaders()
+  updateWeekHeaders(week, selectedKey)
   console.log("Headers updated for new week")
   // 更新每一列的slot
-  const columns = document.querySelectorAll("#weeklyView .day-column")
-  columns.forEach((col, idx) => {
-    const date = week[idx]
-    const key = fmt(date)
-    col.dataset.date = key
-    const { weekData } = State.get()
-    const daySlots = weekData
-    const labels = col.querySelectorAll("label.slot-item")
-    labels.forEach((label, i) => {
-      label.style.backgroundColor = ""
-      const slot = daySlots[i]
-      label.dataset.time = slot.time
-      label.dataset.slotid = slot.id
-      label.dataset.date = key
-      // 更新可用状态
-      label.classList.remove("disabled", "selected", "available")
-      label.classList.add("available")
-      // input
-      const input = label.querySelector("input[type=checkbox]")
-      if (input) input.disabled = false
-      input.checked = false
-      const spans = label.querySelectorAll("span")
-      spans.forEach((span) => {
-        span.classList.remove("weekly-text")
-        span.textContent = ""
-      })
-    })
-  })
+  resetWeekColumns(week)
   const week_bookings = await Promise.all(pormise_week)
   State.set({ bookinged_slots: week_bookings })
   const container = document.getElementById("weeklyView")
@@ -796,12 +719,13 @@ function disabledSlotwithDate() {
   })
 }
 
+buildWeeklySkeletonDOM()
+addslotselectorHandlers()
 init(new Date()).then(() => {
   renderMobileSlots()
   updateDesktopSelectionUI()
   updateMobileSelectionUI()
 })
-addslotselectorHandlers()
 
 document.getElementById("prevDay").addEventListener("click", () => {
   changeDay(-1)
@@ -813,6 +737,14 @@ document.getElementById("nextDay").addEventListener("click", () => {
 
 document.getElementById("confirmBtn").addEventListener("click", confirm)
 document.getElementById("cancelBtn").addEventListener("click", cancel)
+document.getElementById("mobileConfirmBtn").addEventListener("click", confirm)
+document.getElementById("mobileCancelBtn").addEventListener("click", cancel)
+document
+  .getElementById("toggleEarlyBtn")
+  .addEventListener("click", (e) => toggleEarly(e.currentTarget))
+document
+  .getElementById("toggleLateBtn")
+  .addEventListener("click", (e) => toggleLate(e.currentTarget))
 
 document.addEventListener("DOMContentLoaded", () => {
   State.set({ user_name: getCurrentUserName() })

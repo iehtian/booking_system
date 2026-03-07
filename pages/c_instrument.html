@@ -40,12 +40,106 @@
           </p>
         </div>
 
-        <!-- 桌面端周视图 -->
-        <div id="weeklyView" class="desktop-only"></div>
+        <!-- 桌面端周视图骨架 -->
+        <div id="weeklyView" class="desktop-only">
+          <div class="weekly-grid" id="weeklyGrid">
+            <div
+              class="has-text-centered mb-2 pb-2 week-header"
+              style="border-bottom: 2px solid #dbdbdb"
+            >
+              <strong class="has-text-info">时间</strong>
+            </div>
+            <div
+              class="has-text-centered mb-2 pb-2 week-header"
+              data-day-header="0"
+              style="border-bottom: 2px solid #dbdbdb"
+            >
+              <strong>-</strong>
+            </div>
+            <div
+              class="has-text-centered mb-2 pb-2 week-header"
+              data-day-header="1"
+              style="border-bottom: 2px solid #dbdbdb"
+            >
+              <strong>-</strong>
+            </div>
+            <div
+              class="has-text-centered mb-2 pb-2 week-header"
+              data-day-header="2"
+              style="border-bottom: 2px solid #dbdbdb"
+            >
+              <strong>-</strong>
+            </div>
+            <div
+              class="has-text-centered mb-2 pb-2 week-header"
+              data-day-header="3"
+              style="border-bottom: 2px solid #dbdbdb"
+            >
+              <strong>-</strong>
+            </div>
+            <div
+              class="has-text-centered mb-2 pb-2 week-header"
+              data-day-header="4"
+              style="border-bottom: 2px solid #dbdbdb"
+            >
+              <strong>-</strong>
+            </div>
+            <div
+              class="has-text-centered mb-2 pb-2 week-header"
+              data-day-header="5"
+              style="border-bottom: 2px solid #dbdbdb"
+            >
+              <strong>-</strong>
+            </div>
+            <div
+              class="has-text-centered mb-2 pb-2 week-header"
+              data-day-header="6"
+              style="border-bottom: 2px solid #dbdbdb"
+            >
+              <strong>-</strong>
+            </div>
+
+            <div class="grid-embedded-btn" id="toggleEarlyBtn">
+              展开深夜 (00:00-08:00) ↓
+            </div>
+
+            <div class="time-column" id="timeColumn"></div>
+            <div class="day-column" data-idx="0"></div>
+            <div class="day-column" data-idx="1"></div>
+            <div class="day-column" data-idx="2"></div>
+            <div class="day-column" data-idx="3"></div>
+            <div class="day-column" data-idx="4"></div>
+            <div class="day-column" data-idx="5"></div>
+            <div class="day-column" data-idx="6"></div>
+
+            <div class="grid-embedded-btn" id="toggleLateBtn">
+              展开晚间 (22:00-24:00) ↓
+            </div>
+          </div>
+        </div>
 
         <!-- 移动端 -->
         <div class="mobile-only">
           <div id="mobileSlots"></div>
+          <div
+            class="notification is-light mt-4"
+            id="mobileSelectionInfo"
+            style="display: none"
+          >
+            <p id="mobileSelectedInfo"></p>
+            <button
+              class="button is-success is-fullwidth mt-3"
+              id="mobileConfirmBtn"
+            >
+              提交预约
+            </button>
+            <button
+              class="button is-danger is-fullwidth mt-2"
+              id="mobileCancelBtn"
+            >
+              取消预约
+            </button>
+          </div>
         </div>
 
         <!-- 选择信息（桌面端） -->
