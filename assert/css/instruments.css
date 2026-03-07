@@ -1,7 +1,8 @@
 html,
 body {
-  height: 100vh; /* 改为固定高度 */
-  overflow: hidden; /* 禁止页面滚动 */
+  height: auto;
+  min-height: 100vh;
+  overflow: auto hidden;
 }
 
 body {
@@ -25,7 +26,7 @@ body {
 
 .booking-outer-card {
   width: 100%;
-  padding: 0.9rem 1.2rem 1.25rem;
+  padding: 0.7rem 1rem 0.9rem;
   margin-top: 0.35rem;
   background: linear-gradient(
     135deg,
@@ -39,9 +40,10 @@ body {
 }
 
 .booking-page-title {
-  margin: 0 0 0.65rem;
-  font-size: clamp(1.5rem, 2vw, 2rem);
+  margin-bottom: 0.4rem;
+  font-size: clamp(0.95rem, 1.25vw, 1.3rem);
   font-weight: 700;
+  line-height: 1.15;
   letter-spacing: 0.03em;
   text-align: center;
   color: transparent;
@@ -63,7 +65,7 @@ body {
 }
 
 .booking-inner-card {
-  padding: 0.95rem 1rem 1.1rem;
+  padding: 0.72rem 0.8rem 0.82rem;
   margin: 0;
   background: linear-gradient(180deg, #fff, #f9fcff);
   border: 1px solid #dbe4ef;
@@ -72,8 +74,31 @@ body {
 }
 
 .box {
-  max-height: calc(100vh - 2rem);
+  /* 预留标题和外层内边距空间，避免底部操作按钮被裁切 */
+  max-height: calc(100vh - 7.5rem);
   overflow-y: auto;
+}
+
+#desktop-date-controls {
+  margin-bottom: 0.55rem !important;
+}
+
+#desktop-date-controls .button,
+#desktop-date-controls .input {
+  height: 2.1rem;
+  font-size: 0.92rem;
+}
+
+[id="weeklyView"] .week-header {
+  padding-bottom: 0.3rem !important;
+  margin-bottom: 0.3rem !important;
+}
+
+.booking-inner-card .desktop-only .buttons.is-centered {
+  position: static;
+  padding-top: 0.4rem;
+  margin-top: 0.5rem !important;
+  background: transparent;
 }
 
 [id="selectionInfo"] {
@@ -146,12 +171,12 @@ body {
 .slot-item {
   position: relative;
   display: block;
-  height: 40px;
-  padding: 0.5rem;
+  height: 34px;
+  padding: 0.25rem 0.35rem;
   margin: 0;
   overflow: hidden;
-  font-size: 0.85rem;
-  line-height: 40px;
+  font-size: 0.8rem;
+  line-height: 34px;
   text-align: center;
   border: 1px solid transparent;
   border-radius: 0;
@@ -179,10 +204,10 @@ body {
 
 .weekly-grid {
   display: grid;
-  max-height: 70vh;
+  max-height: 58vh;
   overflow-y: auto;
   grid-template-columns: repeat(8, 1fr);
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
 
 .weekly-grid > div {
@@ -235,9 +260,9 @@ body {
 }
 
 .grid-embedded-btn {
-  padding: 4px;
-  margin-bottom: 0.5rem;
-  font-size: 0.75rem;
+  padding: 3px;
+  margin-bottom: 0.35rem;
+  font-size: 0.72rem;
   text-align: center;
   color: #7a7a7a;
   border: 1px dashed #dbdbdb;
