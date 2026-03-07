@@ -77,8 +77,8 @@ body {
 }
 
 [id="selectionInfo"] {
-  max-height: 11rem;
-  padding: 0.6rem 0.7rem;
+  max-height: 10rem;
+  padding: 0.5rem 0.6rem;
   margin-top: 0.75rem !important;
   overflow-y: auto;
 }
@@ -95,26 +95,33 @@ body {
 
 .selected-summary-list {
   display: flex;
-  margin-top: 0.35rem;
+  margin-top: 0.3rem;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.3rem;
 }
 
 .selected-day-group {
+  display: grid;
+  align-items: center;
   padding: 0.4rem 0.5rem;
   border: 1px solid #d5e3f6;
   border-radius: 6px;
+  column-gap: 0.4rem;
+  grid-template-columns: 5.6rem minmax(0, 1fr);
 }
 
 .selected-day-date {
-  margin-bottom: 0.3rem;
+  margin-bottom: 0;
   font-size: 0.84rem;
   font-weight: 700;
   color: #1f4b7b;
+  white-space: nowrap;
 }
 
 .selected-day-times {
   display: flex;
+  align-items: center;
+  min-width: 0;
   flex-wrap: wrap;
   gap: 0.25rem;
 }
@@ -353,6 +360,14 @@ body {
   .booking-inner-card {
     padding: 0.7rem;
     border-radius: 10px;
+  }
+
+  .selected-day-group {
+    display: block;
+  }
+
+  .selected-day-date {
+    margin-bottom: 0.22rem;
   }
 
   .box {
