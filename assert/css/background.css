@@ -171,14 +171,6 @@ footer a:hover {
   background-color: #3273dc;
 }
 
-.mobile-toggle-btn {
-  background: #f0f0f0;
-}
-
-.mobile-toggle-btn:active {
-  background: #e8e8e8;
-}
-
 @media (width <= 640px) {
   .date-controls {
     position: sticky;
