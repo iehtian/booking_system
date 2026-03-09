@@ -87,7 +87,7 @@ body {
   margin-bottom: 0.55rem !important;
 }
 
-#weeklyView {
+[id="weeklyView"] {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
@@ -216,7 +216,7 @@ body {
   cursor: pointer;
 }
 
-#timeColumn .slot-item {
+[id="timeColumn"] .slot-item {
   color: #1f4b7b;
   background-color: #eaf2ff;
   border-color: #cbd5e0;
@@ -451,7 +451,7 @@ body {
     margin-bottom: 0.22rem;
   }
 
-  #weeklyView,
+  [id="weeklyView"],
   .booking-inner-card {
     overflow: visible;
   }
