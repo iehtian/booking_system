@@ -102,6 +102,14 @@ const State = createState({
 let booking = null
 let selected = null
 
+function pickStickerByTime(timeText, index) {
+  const stickers = ["⭐", "🍀", "🧪", "🌈", "💫", "🍓"]
+  const [start] = String(timeText).split("-")
+  const hour = Number.parseInt((start || "").split(":")[0], 10)
+  const safeHour = Number.isNaN(hour) ? 0 : hour
+  return stickers[(safeHour + index) % stickers.length]
+}
+
 function setSelectedText(target, selectedRes) {
   const processedRes = processSchedule(selectedRes)
   target.textContent = ""
@@ -149,6 +157,7 @@ function setSelectedText(target, selectedRes) {
     times.forEach((time) => {
       const chip = document.createElement("span")
       chip.className = "selected-time-chip"
+      chip.dataset.sticker = pickStickerByTime(time, timeLine.children.length)
       chip.textContent = time
       timeLine.appendChild(chip)
     })
@@ -302,7 +311,7 @@ async function init(selectedDate) {
   for (const date of State.get().selectedWeek) {
     pormise_week.push(getBookings(instrument_id, fmt(date)))
   }
-  
+
   const week_bookings = Promise.all(pormise_week)
   const container = document.getElementById("weeklyView")
   const selectedKey = fmt(selectedDate)
@@ -455,7 +464,12 @@ function renderMobileSlots() {
   const container = document.getElementById("mobileSlots")
   const key = fmt(mobileSelectedDate)
   const { weekData } = State.get()
-    console.log("Rendering mobile slots for date:", key, "with weekData:", weekData)
+  console.log(
+    "Rendering mobile slots for date:",
+    key,
+    "with weekData:",
+    weekData
+  )
   const daySlots = weekData
   const myName = State.get().user_name
   const dayBookings = getBookingsByDateKey(key)
