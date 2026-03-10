@@ -1,0 +1,204 @@
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=ZCOOL+KuaiLe&display=swap");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css");
+
+:root {
+  --tp-cute-mint: #7ed6b5;
+  --tp-cute-pink: #f8a8c5;
+  --tp-cute-sky: #87bfff;
+  --tp-cute-cream: #fffdf8;
+  --tp-cute-shadow: rgb(69 110 138 / 22%);
+}
+
+body {
+  background-image:
+    radial-gradient(
+      circle at 10% 8%,
+      rgb(255 218 232 / 42%) 0,
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 88% 12%,
+      rgb(195 243 226 / 45%) 0,
+      transparent 36%
+    ),
+    radial-gradient(
+      circle at 72% 88%,
+      rgb(205 227 255 / 42%) 0,
+      transparent 38%
+    ),
+    linear-gradient(150deg, #f8fffc 0%, #eefbff 54%, #fef4ff 100%),
+    url("https://www.transparenttextures.com/patterns/food.png");
+  background-position: center, center, center, center, center;
+  background-size:
+    auto,
+    auto,
+    auto,
+    cover,
+    260px 260px;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+}
+
+.booking-outer-card {
+  position: relative;
+  border: 1px solid rgb(255 255 255 / 66%);
+  box-shadow:
+    0 16px 32px -16px var(--tp-cute-shadow),
+    inset 0 1px 0 rgb(255 255 255 / 78%);
+}
+
+.booking-outer-card::before,
+.booking-outer-card::after {
+  position: absolute;
+  z-index: 1;
+  font-size: clamp(1rem, 1.8vw, 1.35rem);
+  opacity: 0.78;
+  pointer-events: none;
+  content: "";
+}
+
+.booking-outer-card::before {
+  top: 0.55rem;
+  right: 0.9rem;
+  content: "🍓";
+  animation: pulse 2.6s ease-in-out infinite;
+}
+
+.booking-outer-card::after {
+  bottom: 0.65rem;
+  left: 1rem;
+  content: "🍀";
+  animation: heartBeat 2.4s ease-in-out infinite;
+}
+
+.booking-page-title {
+  position: relative;
+  font-family: "ZCOOL KuaiLe", "Baloo 2", "Microsoft YaHei", sans-serif;
+  letter-spacing: 0.04em;
+  text-shadow: 0 3px 8px rgb(64 105 148 / 18%);
+}
+
+.booking-page-title::before,
+.booking-page-title::after {
+  font-size: 0.8em;
+  color: #f5b8cf;
+  vertical-align: middle;
+  content: "";
+}
+
+.booking-page-title::before {
+  margin-right: 0.42rem;
+  content: "✿";
+}
+
+.booking-page-title::after {
+  margin-left: 0.42rem;
+  content: "✿";
+}
+
+.button,
+.grid-embedded-btn,
+.mobile-slot-item {
+  border-radius: 999px;
+}
+
+.desktop-selection-bar {
+  background: linear-gradient(180deg, #f2fcff, #eef8ff 56%, #f5f6ff);
+  border: 1px solid #cfe4f6;
+}
+
+[id="selectionInfo"],
+[id="mobileSelectionInfo"] {
+  background: linear-gradient(180deg, #f8fdff, #f0f9ff 58%, #f7f4ff);
+  border: 1px solid #d8e9f7;
+}
+
+[id="selectedInfo"],
+[id="mobileSelectedInfo"],
+[id="selectedInfo"] strong,
+[id="mobileSelectedInfo"] strong {
+  color: #375774;
+}
+
+.selected-day-group {
+  background: linear-gradient(135deg, #f3fcff, #eaf6ff 68%, #f4f4ff);
+  border: 1px dashed #bdd9ef;
+  box-shadow: 0 5px 10px -8px rgb(65 116 156 / 30%);
+}
+
+#desktop-date-controls .button,
+[id="confirmBtn"],
+[id="cancelBtn"],
+[id="mobileConfirmBtn"],
+[id="mobileCancelBtn"],
+[id="prevDay"],
+[id="nextDay"] {
+  font-family: "Baloo 2", "Microsoft YaHei", sans-serif;
+  font-weight: 700;
+}
+
+#desktop-date-controls .button,
+[id="prevDay"],
+[id="nextDay"] {
+  color: #1f5878;
+  background: linear-gradient(135deg, #fff, #f3fcff 55%, #f6fff9);
+  border: 1px solid #b9dff0;
+  box-shadow: 0 6px 14px -10px rgb(24 92 126 / 70%);
+}
+
+#desktop-date-controls .button:hover,
+[id="prevDay"]:hover,
+[id="nextDay"]:hover {
+  animation: tada 0.85s both;
+  transform: translateY(-1px);
+}
+
+[id="confirmBtn"],
+[id="mobileConfirmBtn"] {
+  color: #104632;
+  background: linear-gradient(135deg, #9ce8c8, #7ed6b5 54%, #6fcfb2);
+  border-color: #68b596;
+  box-shadow: 0 8px 14px -10px rgb(46 133 103 / 70%);
+}
+
+[id="cancelBtn"],
+[id="mobileCancelBtn"] {
+  color: #6c2140;
+  background: linear-gradient(135deg, #ffd0e1, #f8a8c5 52%, #ec96b8);
+  border-color: #e08caf;
+  box-shadow: 0 8px 14px -10px rgb(174 73 116 / 65%);
+}
+
+[id="confirmBtn"]:hover,
+[id="cancelBtn"]:hover,
+[id="mobileConfirmBtn"]:hover,
+[id="mobileCancelBtn"]:hover {
+  filter: saturate(108%);
+  transform: translateY(-1px);
+}
+
+.selected-time-chip {
+  font-family: "Baloo 2", "Microsoft YaHei", sans-serif;
+  color: #7c5a1f;
+  background: linear-gradient(120deg, #fffef1, #fff3c8 72%);
+  border: 1px solid #e7c97d;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px -5px rgb(155 116 43 / 56%);
+}
+
+@media (width <= 768px) {
+  .booking-outer-card::before,
+  .booking-outer-card::after {
+    font-size: 1rem;
+    opacity: 0.62;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .booking-outer-card::before,
+  .booking-outer-card::after,
+  #desktop-date-controls .button:hover,
+  [id="prevDay"]:hover,
+  [id="nextDay"]:hover {
+    animation: none;
+  }
+}

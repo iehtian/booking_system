@@ -21,8 +21,27 @@ body {
 }
 
 body {
-  /* 与 b_instrument 页面保持一致的背景表现 */
-  background: linear-gradient(135deg, #74ebd5, #acb6e5);
+  /* 轻薄薄荷+蜜桃+天蓝的多层背景，整体更清新可爱 */
+  background-color: #f4fffb;
+  background-image:
+    radial-gradient(
+      circle at 12% 14%,
+      rgb(254 206 224 / 45%) 0,
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 84% 16%,
+      rgb(176 240 230 / 42%) 0,
+      transparent 36%
+    ),
+    radial-gradient(
+      circle at 68% 84%,
+      rgb(183 214 255 / 40%) 0,
+      transparent 40%
+    ),
+    linear-gradient(145deg, #f4fffb 0%, #ecfbff 52%, #f7f1ff 100%);
+  background-position: center;
+  background-size: auto, auto, auto, cover;
   background-repeat: no-repeat;
   cursor: var(--cursor-default);
   background-attachment: fixed;
