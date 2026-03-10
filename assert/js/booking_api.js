@@ -1,5 +1,6 @@
 import { host } from "./config.js"
 import axios from "axios"
+import Swal from "sweetalert2"
 async function getBookings(instrument, date) {
   try {
     const response = await axios.get(
@@ -59,7 +60,7 @@ async function submitBookings(instrument, submitData) {
   } catch (error) {
     // Axios 的错误处理更丰富
     // 如果服务器返回了 4xx/5xx 错误，会进入这里
-    alert("提交预约失败，请重试")
+    Swal.fire("提交预约失败", "请重试", "error")
 
     if (error.response) {
       // 请求已发出，服务器响应了状态码
@@ -121,7 +122,7 @@ async function cancelBookings(instrument, cancelData) {
   } catch (error) {
     // Axios 的错误处理更丰富
     // 如果服务器返回了 4xx/5xx 错误，会进入这里
-    alert("取消预约失败，请重试")
+    Swal.fire("取消预约失败", "请重试", "error")
 
     if (error.response) {
       // 请求已发出，服务器响应了状态码

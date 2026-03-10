@@ -609,19 +609,34 @@ function confirm() {
     slots: selectionSnapshot.map((s) => s.id),
   }
   const instrument_id = State.get().instrument_id
-  submitBookings(instrument_id, submitData).then((success) => {
-    if (success) {
-      alert("预约成功")
-      // 重置选择
-      State.set({ selectedRes: [] })
-      selected = null
-      updateDesktopSelectionUI()
-      updateMobileSelectionUI()
-      weekChangeDay(selectedDate)
-      renderMobileSlots()
-      window.location.reload() // 刷新页面以获取最新预约状态
-    }
-  })
+  submitBookings(instrument_id, submitData)
+    .then((success) => {
+      if (success) {
+        Swal.fire({
+          icon: "success",
+          title: "预约成功",
+          showConfirmButton: false,
+          timer: 1000,
+          timerProgressBar: true,
+        }).then(() => {
+          clearAllSelectedState()
+          init(selectedDate)
+        })
+      }
+    })
+    .catch((error) => {
+      console.error("预约失败:", error)
+      Swal.fire({
+        icon: "error",
+        title: "预约失败",
+        text: "请重试",
+        timer: 1000,
+        timerProgressBar: true,
+      }).then(() => {
+        clearAllSelectedState()
+        init(selectedDate)
+      })
+    })
 }
 
 function cancel() {
@@ -639,19 +654,34 @@ function cancel() {
     slots: selectionSnapshot.map((s) => s.id),
   }
   const instrument_id = State.get().instrument_id
-  cancelBookings(instrument_id, cancelData).then((success) => {
-    if (success) {
-      alert("取消预约成功")
-      // 重置选择
-      State.set({ selectedRes: [] })
-      selected = null
-      updateDesktopSelectionUI()
-      updateMobileSelectionUI()
-      weekChangeDay(selectedDate)
-      renderMobileSlots()
-      window.location.reload() // 刷新页面以获取最新预约状态
-    }
-  })
+  cancelBookings(instrument_id, cancelData)
+    .then((success) => {
+      if (success) {
+        Swal.fire({
+          icon: "success",
+          title: "取消成功",
+          showConfirmButton: false,
+          timer: 1000,
+          timerProgressBar: true,
+        }).then(() => {
+          clearAllSelectedState()
+          init(selectedDate)
+        })
+      }
+    })
+    .catch((error) => {
+      console.error("取消预约失败:", error)
+      Swal.fire({
+        icon: "error",
+        title: "取消预约失败",
+        text: "请重试",
+        timer: 1000,
+        timerProgressBar: true,
+      }).then(() => {
+        clearAllSelectedState()
+        init(selectedDate)
+      })
+    })
 }
 
 // Allow inline mobile confirmation button to call confirm()
@@ -799,7 +829,7 @@ document.getElementById("toggleLateBtn")?.addEventListener("click", (e) => {
   }
 })
 
-document.addEventListener("load", () => {
+window.addEventListener("load", () => {
   try {
     const title = document.title
     const { id, slotType } = instruments_map[title]
