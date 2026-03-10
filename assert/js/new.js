@@ -1,19 +1,13 @@
 let selectedDate = new Date()
 let mobileSelectedDate = new Date()
-let instrument_id = "c_instrument" // 示例仪器 ID
 import { getBookings, submitBookings, cancelBookings } from "./booking_api.js"
+import { instruments_map } from "./instruments.js"
 import {
   mergeBookings,
   generateTimeIntervalsSimple,
   processSchedule,
   fmt,
 } from "./utils/slots.js"
-
-let slots = generateTimeIntervalsSimple().map((time, index) => ({
-  id: index,
-  time: time,
-}))
-console.log(slots)
 
 function getSlotHideClass(slotId) {
   if (slotId <= 15) return "hidden-slot-logic-early Early"
@@ -23,11 +17,14 @@ function getSlotHideClass(slotId) {
 
 function buildWeeklySkeletonDOM() {
   const timeColumn = document.getElementById("timeColumn")
+  const slots = State.get().weekData
+  console.log("构建时间列，使用 slots:", slots)
+  const isNeedhidden = State.get().isNeedhidden
   if (timeColumn && timeColumn.children.length === 0) {
     const timeFragment = document.createDocumentFragment()
     slots.forEach(({ id, time }) => {
       const label = document.createElement("label")
-      label.className = ["slot-item", getSlotHideClass(id)]
+      label.className = ["slot-item", isNeedhidden ? getSlotHideClass(id) : ""]
         .filter(Boolean)
         .join(" ")
       const span = document.createElement("span")
@@ -46,7 +43,11 @@ function buildWeeklySkeletonDOM() {
     const dayFragment = document.createDocumentFragment()
     slots.forEach((slot, idx2) => {
       const label = document.createElement("label")
-      label.className = ["slot-item", "available", getSlotHideClass(slot.id)]
+      label.className = [
+        "slot-item",
+        "available",
+        isNeedhidden ? getSlotHideClass(slot.id) : "",
+      ]
         .filter(Boolean)
         .join(" ")
       label.dataset.idx = idx2
@@ -93,7 +94,6 @@ function createState(initialState) {
 
 const State = createState({
   user_name: null,
-  weekData: slots,
   selectedRes: [],
   selectedWeek: null,
   bookinged_slots: [],
@@ -251,6 +251,7 @@ function updateWeekHeaders(week, selectedKey) {
 
 function resetWeekColumns(week) {
   const columns = document.querySelectorAll("#weeklyView .day-column")
+  const slots = State.get().weekData
   columns.forEach((col, idx) => {
     const date = week[idx]
     const key = fmt(date)
@@ -307,6 +308,7 @@ function clearAllSelectedState() {
 // 初始化页面
 async function init(selectedDate) {
   State.set({ selectedWeek: getWeek(selectedDate) })
+  const instrument_id = State.get().instrument_id
   const pormise_week = []
   for (const date of State.get().selectedWeek) {
     pormise_week.push(getBookings(instrument_id, fmt(date)))
@@ -392,7 +394,7 @@ async function weekChangeDay(selectedDate) {
   let week = State.get().selectedWeek
   const selectedKey = fmt(selectedDate)
   const inWeek = week.some((d) => fmt(d) === selectedKey)
-
+  const instrument_id = State.get().instrument_id
   if (inWeek) {
     updateWeekHeaders(week, selectedKey)
     updateDesktopSelectionUI()
@@ -604,6 +606,7 @@ function confirm() {
     date: selectionSnapshot[0].date,
     slots: selectionSnapshot.map((s) => s.id),
   }
+  const instrument_id = State.get().instrument_id
   submitBookings(instrument_id, submitData).then((success) => {
     if (success) {
       alert("预约成功")
@@ -632,6 +635,7 @@ function cancel() {
     date: selectionSnapshot[0].date,
     slots: selectionSnapshot.map((s) => s.id),
   }
+  const instrument_id = State.get().instrument_id
   cancelBookings(instrument_id, cancelData).then((success) => {
     if (success) {
       alert("取消预约成功")
@@ -728,32 +732,131 @@ function disabledSlotwithDate() {
   })
 }
 
-buildWeeklySkeletonDOM()
-addslotselectorHandlers()
-init(new Date()).then(() => {
-  updateDesktopSelectionUI()
-  updateMobileSelectionUI()
-})
+try {
+  document.getElementById("prevDay")?.addEventListener("click", () => {
+    try {
+      changeDay(-1)
+    } catch (err) {
+      console.error("切换上一天失败:", err)
+      alert("操作失败，请重试")
+    }
+  })
+} catch (err) {
+  console.error("绑定 prevDay 事件失败:", err)
+}
 
-document.getElementById("prevDay").addEventListener("click", () => {
-  changeDay(-1)
-})
+try {
+  document.getElementById("nextDay")?.addEventListener("click", () => {
+    try {
+      changeDay(1)
+    } catch (err) {
+      console.error("切换下一天失败:", err)
+      alert("操作失败，请重试")
+    }
+  })
+} catch (err) {
+  console.error("绑定 nextDay 事件失败:", err)
+}
 
-document.getElementById("nextDay").addEventListener("click", () => {
-  changeDay(1)
-})
+try {
+  document.getElementById("confirmBtn")?.addEventListener("click", () => {
+    try {
+      confirm()
+    } catch (err) {
+      console.error("确认预约失败:", err)
+      alert("操作失败，请重试")
+    }
+  })
+} catch (err) {
+  console.error("绑定 confirmBtn 事件失败:", err)
+}
 
-document.getElementById("confirmBtn").addEventListener("click", confirm)
-document.getElementById("cancelBtn").addEventListener("click", cancel)
-document.getElementById("mobileConfirmBtn").addEventListener("click", confirm)
-document.getElementById("mobileCancelBtn").addEventListener("click", cancel)
-document
-  .getElementById("toggleEarlyBtn")
-  .addEventListener("click", (e) => toggleEarly(e.currentTarget))
-document
-  .getElementById("toggleLateBtn")
-  .addEventListener("click", (e) => toggleLate(e.currentTarget))
+try {
+  document.getElementById("cancelBtn")?.addEventListener("click", () => {
+    try {
+      cancel()
+    } catch (err) {
+      console.error("取消预约失败:", err)
+      alert("操作失败，请重试")
+    }
+  })
+} catch (err) {
+  console.error("绑定 cancelBtn 事件失败:", err)
+}
+
+try {
+  document.getElementById("mobileConfirmBtn")?.addEventListener("click", () => {
+    try {
+      confirm()
+    } catch (err) {
+      console.error("移动端确认预约失败:", err)
+      alert("操作失败，请重试")
+    }
+  })
+} catch (err) {
+  console.error("绑定 mobileConfirmBtn 事件失败:", err)
+}
+
+try {
+  document.getElementById("mobileCancelBtn")?.addEventListener("click", () => {
+    try {
+      cancel()
+    } catch (err) {
+      console.error("移动端取消预约失败:", err)
+      alert("操作失败，请重试")
+    }
+  })
+} catch (err) {
+  console.error("绑定 mobileCancelBtn 事件失败:", err)
+}
+
+try {
+  document.getElementById("toggleEarlyBtn")?.addEventListener("click", (e) => {
+    try {
+      toggleEarly(e.currentTarget)
+    } catch (err) {
+      console.error("展开/收起深夜时段失败:", err)
+    }
+  })
+} catch (err) {
+  console.error("绑定 toggleEarlyBtn 事件失败:", err)
+}
+
+try {
+  document.getElementById("toggleLateBtn")?.addEventListener("click", (e) => {
+    try {
+      toggleLate(e.currentTarget)
+    } catch (err) {
+      console.error("展开/收起晚间时段失败:", err)
+    }
+  })
+} catch (err) {
+  console.error("绑定 toggleLateBtn 事件失败:", err)
+}
 
 document.addEventListener("DOMContentLoaded", () => {
-  State.set({ user_name: getCurrentUserName() })
+  try {
+    const title = document.title
+    console.log("页面信息", instruments_map[title])
+    const { id, slotType } = instruments_map[title]
+    console.log("仪器 ID:", id, "时间段类型:", slotType)
+    const sliceNum = slotType === 0 ? 48 : 24
+    const isNeedhidden = slotType === 0 ? true : false
+    console.log("构建时间列", generateTimeIntervalsSimple(sliceNum))
+    State.set({ weekData: generateTimeIntervalsSimple(sliceNum) })
+    State.set({
+      instrument_id: id,
+      isNeedhidden,
+      user_name: getCurrentUserName(),
+    })
+
+    buildWeeklySkeletonDOM()
+    addslotselectorHandlers()
+    init(new Date()).then(() => {
+      updateDesktopSelectionUI()
+      updateMobileSelectionUI()
+    })
+  } catch (err) {
+    console.error("初始化用户信息失败:", err)
+  }
 })
