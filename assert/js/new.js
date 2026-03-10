@@ -334,6 +334,7 @@ async function init(selectedDate) {
 const renderBookedGroups = (dayBookings, dayIdx, container, my_name) => {
   const booked_groups = mergeBookings(dayBookings)
   console.log("dayIdx:", dayIdx, "booked_groups:", booked_groups)
+  const slots = State.get().weekData
   booked_groups.forEach((group) => {
     const { firstSlot, lastSlot, user_name, color } = group
     console.log(
@@ -843,7 +844,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const sliceNum = slotType === 0 ? 48 : 24
     const isNeedhidden = slotType === 0 ? true : false
     console.log("构建时间列", generateTimeIntervalsSimple(sliceNum))
-    State.set({ weekData: generateTimeIntervalsSimple(sliceNum) })
+    State.set({
+      weekData: generateTimeIntervalsSimple().map((time, index) => ({
+        id: index,
+        time: time,
+      })),
+    })
     State.set({
       instrument_id: id,
       isNeedhidden,
