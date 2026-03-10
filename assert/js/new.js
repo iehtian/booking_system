@@ -8,6 +8,7 @@ import {
   processSchedule,
   fmt,
 } from "./utils/slots.js"
+import Swal from "sweetalert2"
 
 function getSlotHideClass(slotId) {
   if (slotId <= 15) return "hidden-slot-logic-early Early"
@@ -618,6 +619,7 @@ function confirm() {
       updateMobileSelectionUI()
       weekChangeDay(selectedDate)
       renderMobileSlots()
+      window.location.reload() // 刷新页面以获取最新预约状态
     }
   })
 }
@@ -647,6 +649,7 @@ function cancel() {
       updateMobileSelectionUI()
       weekChangeDay(selectedDate)
       renderMobileSlots()
+      window.location.reload() // 刷新页面以获取最新预约状态
     }
   })
 }
@@ -655,35 +658,20 @@ function cancel() {
 window.confirm = confirm
 window.cancel = cancel
 
-// 桌面端日期切换
+// 日期切换
 function changeDay(delta) {
   selectedDate.setDate(selectedDate.getDate() + delta)
   mobileSelectedDate = new Date(selectedDate)
   if (window.matchMedia("(max-width: 768px)").matches) {
     clearAllSelectedState()
   }
-  fp.setDate(selectedDate, false)
+  const fpInstance = flatpickr("#dateInput")
+  if (fpInstance) {
+    fpInstance.setDate(selectedDate, false)
+  }
   weekChangeDay(selectedDate)
   renderMobileSlots()
 }
-
-const fp = flatpickr("#dateInput", {
-  locale: {
-    ...flatpickr.l10ns.zh,
-    firstDayOfWeek: 1, // 0=周日, 1=周一
-  },
-  dateFormat: "Y-m-d",
-  defaultDate: selectedDate,
-  onChange: (d) => {
-    selectedDate = d[0]
-    mobileSelectedDate = new Date(selectedDate)
-    if (window.matchMedia("(max-width: 768px)").matches) {
-      clearAllSelectedState()
-    }
-    weekChangeDay(selectedDate)
-    renderMobileSlots()
-  },
-})
 
 function disabledSlotwithDate() {
   const now = new Date()
@@ -759,101 +747,87 @@ try {
   console.error("绑定 nextDay 事件失败:", err)
 }
 
-try {
-  document.getElementById("confirmBtn")?.addEventListener("click", () => {
-    try {
-      confirm()
-    } catch (err) {
-      console.error("确认预约失败:", err)
-      alert("操作失败，请重试")
-    }
-  })
-} catch (err) {
-  console.error("绑定 confirmBtn 事件失败:", err)
-}
+document.getElementById("confirmBtn")?.addEventListener("click", () => {
+  try {
+    confirm()
+  } catch (err) {
+    console.error("确认预约失败:", err)
+    alert("操作失败，请重试")
+  }
+})
 
-try {
-  document.getElementById("cancelBtn")?.addEventListener("click", () => {
-    try {
-      cancel()
-    } catch (err) {
-      console.error("取消预约失败:", err)
-      alert("操作失败，请重试")
-    }
-  })
-} catch (err) {
-  console.error("绑定 cancelBtn 事件失败:", err)
-}
+document.getElementById("cancelBtn")?.addEventListener("click", () => {
+  try {
+    cancel()
+  } catch (err) {
+    console.error("取消预约失败:", err)
+    alert("操作失败，请重试")
+  }
+})
 
-try {
-  document.getElementById("mobileConfirmBtn")?.addEventListener("click", () => {
-    try {
-      confirm()
-    } catch (err) {
-      console.error("移动端确认预约失败:", err)
-      alert("操作失败，请重试")
-    }
-  })
-} catch (err) {
-  console.error("绑定 mobileConfirmBtn 事件失败:", err)
-}
+document.getElementById("mobileConfirmBtn")?.addEventListener("click", () => {
+  try {
+    confirm()
+  } catch (err) {
+    console.error("移动端确认预约失败:", err)
+    alert("操作失败，请重试")
+  }
+})
 
-try {
-  document.getElementById("mobileCancelBtn")?.addEventListener("click", () => {
-    try {
-      cancel()
-    } catch (err) {
-      console.error("移动端取消预约失败:", err)
-      alert("操作失败，请重试")
-    }
-  })
-} catch (err) {
-  console.error("绑定 mobileCancelBtn 事件失败:", err)
-}
+document.getElementById("mobileCancelBtn")?.addEventListener("click", () => {
+  try {
+    cancel()
+  } catch (err) {
+    console.error("移动端取消预约失败:", err)
+    alert("操作失败，请重试")
+  }
+})
 
-try {
-  document.getElementById("toggleEarlyBtn")?.addEventListener("click", (e) => {
-    try {
-      toggleEarly(e.currentTarget)
-    } catch (err) {
-      console.error("展开/收起深夜时段失败:", err)
-    }
-  })
-} catch (err) {
-  console.error("绑定 toggleEarlyBtn 事件失败:", err)
-}
+document.getElementById("toggleEarlyBtn")?.addEventListener("click", (e) => {
+  try {
+    toggleEarly(e.currentTarget)
+  } catch (err) {
+    console.error("展开/收起深夜时段失败:", err)
+  }
+})
 
-try {
-  document.getElementById("toggleLateBtn")?.addEventListener("click", (e) => {
-    try {
-      toggleLate(e.currentTarget)
-    } catch (err) {
-      console.error("展开/收起晚间时段失败:", err)
-    }
-  })
-} catch (err) {
-  console.error("绑定 toggleLateBtn 事件失败:", err)
-}
+document.getElementById("toggleLateBtn")?.addEventListener("click", (e) => {
+  try {
+    toggleLate(e.currentTarget)
+  } catch (err) {
+    console.error("展开/收起晚间时段失败:", err)
+  }
+})
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("load", () => {
   try {
     const title = document.title
-    console.log("页面信息", instruments_map[title])
     const { id, slotType } = instruments_map[title]
-    console.log("仪器 ID:", id, "时间段类型:", slotType)
     const sliceNum = slotType === 0 ? 48 : 24
     const isNeedhidden = slotType === 0 ? true : false
-    console.log("构建时间列", generateTimeIntervalsSimple(sliceNum))
-    State.set({
-      weekData: generateTimeIntervalsSimple().map((time, index) => ({
-        id: index,
-        time: time,
-      })),
-    })
+    State.set({ weekData: generateTimeIntervalsSimple(sliceNum) })
     State.set({
       instrument_id: id,
       isNeedhidden,
       user_name: getCurrentUserName(),
+    })
+
+    flatpickr("#dateInput", {
+      locale: {
+        ...flatpickr.l10ns.zh,
+        firstDayOfWeek: 1, // 0=周日, 1=周一
+      },
+      dateFormat: "Y-m-d",
+      defaultDate: selectedDate,
+      onChange: (d) => {
+        selectedDate = d[0]
+        mobileSelectedDate = new Date(selectedDate)
+        if (window.matchMedia("(max-width: 768px)").matches) {
+          clearAllSelectedState()
+        }
+        weekChangeDay(selectedDate)
+        renderMobileSlots()
+      },
     })
 
     buildWeeklySkeletonDOM()

@@ -60,7 +60,10 @@ function generateTimeIntervalsSimple(slices = 48) {
   for (let i = 0; i < intervals.length - 1; i++) {
     timeSlots.push(intervals[i] + "-" + intervals[i + 1])
   }
-  return timeSlots
+  return timeSlots.map((time, index) => ({
+    id: index,
+    time: time,
+  }))
 }
 
 const processSchedule = (list) => {
@@ -105,4 +108,4 @@ function fmt(date) {
   return `${y}-${m}-${d}`
 }
 
-export { mergeBookings,generateTimeIntervalsSimple,processSchedule,fmt }
+export { mergeBookings, generateTimeIntervalsSimple, processSchedule, fmt }
