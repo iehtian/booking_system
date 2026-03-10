@@ -1,7 +1,7 @@
 import psycopg2
 from contextlib import contextmanager
 import logging
-from datetime import datetime
+from log_config import logger
 
 
 DB_CONFIG = {
@@ -63,7 +63,7 @@ def create_user_index():
                 f"CREATE INDEX IF NOT EXISTS idx_{USER_TABLE}_user_name ON {USER_TABLE}(user_name)"
             )
             conn.commit()
-    print(f"Table '{USER_TABLE}' ensured.")
+        logger.info(f"Table '{USER_TABLE}' ensured.")
 
 
 def upsert_user(user_name, password=None, color=None, email=None, phone=None):
@@ -113,7 +113,7 @@ def upsert_user(user_name, password=None, color=None, email=None, phone=None):
             user_id = cur.fetchone()[0]
             conn.commit()
 
-    print(f"Upserted user '{user_name}' (id={user_id})")
+    logger.info(f"Upserted user '{user_name}' (id={user_id})")
     return user_id
 
 
@@ -195,7 +195,7 @@ def create_booking_index():
                 f"CREATE INDEX IF NOT EXISTS idx_{BOOKING_TABLE}_instrument_date ON {BOOKING_TABLE}(instrument_id, booking_date)"
             )
             conn.commit()
-    print(f"Table '{BOOKING_TABLE}' ensured.")
+    logger.info(f"Table '{BOOKING_TABLE}' ensured.")
 
 
 def upsert_booking(user_name, instrument_id, date, time_slot_id):
@@ -230,7 +230,7 @@ def upsert_booking(user_name, instrument_id, date, time_slot_id):
             booking_id = cur.fetchone()[0]
             conn.commit()
 
-    print(
+    logger.info(
         f"Created booking id={booking_id} -> "
         f"{{'user_name': {user_name}, 'user_id': {user_id}, "
         f"'instrument_id': {instrument_id}, 'date': {date}, "
@@ -295,7 +295,7 @@ def search_booking_by_user_and_date(user_id, date):
         with conn.cursor() as cur:
             cur.execute(sql, (user_id, date))
             rows = cur.fetchall()
-            print(rows)
+            logger.info(f"Found bookings for user_id={user_id}, date={date}: {rows}")
     return [_row_to_booking(row) for row in rows]
 
 
@@ -306,7 +306,7 @@ def delete_booking_by_id(booking_id):
         with conn.cursor() as cur:
             cur.execute(sql, (booking_id,))
             conn.commit()
-    print(f"Deleted booking id={booking_id}")
+    logger.info(f"Deleted booking id={booking_id}")
 
 
 def delete_bookings_by_dates(instrument_id, date_list):
@@ -316,7 +316,9 @@ def delete_bookings_by_dates(instrument_id, date_list):
         with conn.cursor() as cur:
             cur.execute(sql, (instrument_id, date_list))
             conn.commit()
-    print(f"Deleted bookings for instrument_id={instrument_id} on dates={date_list}")
+    logger.info(
+        f"Deleted bookings for instrument_id={instrument_id} on dates={date_list}"
+    )
 
 
 def delete_bookings_by_slots(instrument_id, date, slots):
@@ -337,7 +339,7 @@ def delete_bookings_by_slots(instrument_id, date, slots):
             deleted = cur.rowcount
             conn.commit()
 
-    print(
+    logger.info(
         f"Deleted {deleted} bookings for instrument_id={instrument_id} on date={date} slots={slots}"
     )
     return deleted
@@ -350,12 +352,12 @@ def initialize_database():
         create_booking_index()
         return True
     except Exception as e:
-        print(f"数据库初始化失败: {e}")
+        logger.error(f"数据库初始化失败: {e}")
         return False
 
 
 if __name__ == "__main__":
     if initialize_database():
-        print("数据库初始化成功")
+        logger.info("数据库初始化成功")
     else:
-        print("数据库初始化失败")
+        logger.error("数据库初始化失败")
