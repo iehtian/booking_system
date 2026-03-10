@@ -114,7 +114,12 @@ body {
   flex: 0 0 auto;
   align-items: stretch;
   justify-content: space-between;
+  padding: 0.28rem;
   margin-top: 0.38rem;
+  background: linear-gradient(180deg, #effaff, #f5fdff);
+  border: 1px solid #cbeaf4;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px -14px rgb(24 89 112 / 45%);
   gap: 0.45rem;
 }
 
@@ -124,8 +129,8 @@ body {
   padding: 0.35rem 0.45rem;
   margin: 0;
   overflow-y: auto;
-  background: linear-gradient(180deg, #fffaf0, #fffdf6);
-  border: 1px solid #ffe7b3;
+  background: linear-gradient(180deg, #f6fdff, #effbff);
+  border: 1px solid #d3ecf7;
 }
 
 .desktop-selection-actions {
@@ -148,12 +153,18 @@ body {
 [id="mobileSelectedInfo"] {
   margin: 0;
   line-height: 1.2;
+  color: #123f63;
+}
+
+[id="selectedInfo"] strong,
+[id="mobileSelectedInfo"] strong {
+  color: #0f3a5b;
 }
 
 [id="mobileSelectionInfo"] {
   padding: 0.6rem 0.7rem;
-  background: linear-gradient(180deg, #fffaf0, #fffdf6);
-  border: 1px solid #ffe7b3;
+  background: linear-gradient(180deg, #f6fdff, #effbff);
+  border: 1px solid #d3ecf7;
 }
 
 .selected-summary-list {
@@ -167,10 +178,10 @@ body {
   display: grid;
   align-items: center;
   padding: 0.3rem 0.38rem;
-  background: linear-gradient(135deg, #fffdfa, #fff5df 70%);
-  border: 1px dashed #ffd27c;
+  background: linear-gradient(135deg, #f7fdff, #eefdff 70%);
+  border: 1px dashed #a8d8ea;
   border-radius: 10px;
-  box-shadow: 0 4px 10px -8px rgb(98 69 13 / 55%);
+  box-shadow: 0 4px 10px -8px rgb(20 100 128 / 38%);
   column-gap: 0.32rem;
   grid-template-columns: 5rem minmax(0, 1fr);
 }
@@ -179,7 +190,7 @@ body {
   margin-bottom: 0;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #1f4b7b;
+  color: #0f4065;
   white-space: nowrap;
 }
 
@@ -197,11 +208,11 @@ body {
   font-size: 0.78rem;
   font-weight: 600;
   line-height: 1.1;
-  color: #2f4a6d;
-  background: linear-gradient(120deg, #fffaf1, #ffeecb);
-  border: 1px solid #ffd9a1;
+  color: #0f4165;
+  background: linear-gradient(120deg, #fcfeff, #eaf7ff);
+  border: 1px solid #9fd1e6;
   border-radius: 999px;
-  box-shadow: 0 2px 6px -5px rgb(66 27 0 / 75%);
+  box-shadow: 0 2px 6px -5px rgb(12 71 95 / 55%);
   animation: sticker-float 2.6s ease-in-out infinite;
 }
 
@@ -210,13 +221,13 @@ body {
 }
 
 .selected-day-times .selected-time-chip:nth-child(2n) {
-  background: linear-gradient(120deg, #f2f9ff, #dff0ff);
-  border-color: #b8ddff;
+  background: linear-gradient(120deg, #f7feff, #e3f8fb);
+  border-color: #96d5db;
 }
 
 .selected-day-times .selected-time-chip:nth-child(3n) {
-  background: linear-gradient(120deg, #f4fff4, #dcf9e0);
-  border-color: #bfecc6;
+  background: linear-gradient(120deg, #f8fcff, #e8f1fd);
+  border-color: #aac8ea;
 }
 
 @keyframes sticker-float {
