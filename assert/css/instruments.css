@@ -515,9 +515,14 @@ body {
 /* 移动端样式 */
 .mobile-slots-grid {
   display: grid;
-  margin-top: 1rem;
+  padding: 0.65rem 0.5rem;
+  margin-top: 0.85rem;
+  background: linear-gradient(180deg, #f8fdff, #f0f9ff 58%, #f7f4ff);
+  border: 1px solid #d8e9f7;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px -8px rgb(65 116 156 / 30%);
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
 .mobile-slot-item {
@@ -525,8 +530,10 @@ body {
   font-size: 0.78rem;
   line-height: 1.2;
   text-align: center;
+  background: linear-gradient(135deg, #fff, #f3fcff 55%, #f6fff9);
   border: 2px solid transparent;
   border-radius: 999px;
+  box-shadow: 0 4px 8px -6px rgb(24 92 126 / 40%);
   transition: all 0.2s;
   cursor: var(--cursor-pointer);
 }
@@ -537,18 +544,34 @@ body {
 
 .mobile-slot-item.available:active {
   color: white;
+  background: linear-gradient(135deg, #48c774, #3abb68 54%, #3ec676);
 }
 
 .mobile-slot-item.booked {
+  background: linear-gradient(135deg, #fff5f6, #ffe0e6 55%, #fff0f2);
   border-color: #f14668;
   opacity: 0.7;
   cursor: var(--cursor-not-allowed);
 }
 
 .mobile-slot-item.disabled {
+  background: linear-gradient(135deg, #f5f5f5, #ebebeb 55%, #f0f0f0);
   border-color: #cbd5e0;
   opacity: 0.9;
   cursor: var(--cursor-not-allowed);
+}
+
+.mobile-slot-item.selected {
+  color: white;
+  background: linear-gradient(135deg, #5a9ef5, #4b8fe8 54%, #3d82dc);
+  border-color: #3273dc;
+  box-shadow: 0 6px 12px -8px rgb(50 115 220 / 50%);
+}
+
+.mobile-slot-item.mine {
+  color: white;
+  background: linear-gradient(135deg, #b8f5d8, #9ef5c4 54%, #8af5b4);
+  border-color: transparent;
 }
 
 button,
@@ -563,16 +586,6 @@ input[type="checkbox"] + .slot-time {
 label.slot-item.disabled,
 .slot-item.disabled input[type="checkbox"] {
   cursor: var(--cursor-not-allowed);
-}
-
-.mobile-slot-item.mine {
-  color: white;
-  border-color: transparent;
-}
-
-.mobile-slot-item.selected {
-  color: white;
-  border-color: #3273dc;
 }
 
 /* 默认显示桌面端，隐藏移动端，避免媒体查询失效时双显示 */
@@ -596,6 +609,19 @@ label.slot-item.disabled,
 
   #desktop-date-controls.desktop-only {
     display: flex;
+    margin-bottom: 0.55rem !important;
+  }
+
+  #desktop-date-controls .button {
+    height: 2.2rem;
+    font-size: 0.88rem;
+    border-radius: 8px;
+  }
+
+  #desktop-date-controls .input {
+    height: 2.2rem;
+    font-size: 0.9rem;
+    border-radius: 8px;
   }
 
   .mobile-only {
@@ -631,12 +657,25 @@ label.slot-item.disabled,
   }
 
   .booking-inner-card {
-    padding: 0.7rem;
-    border-radius: 10px;
+    padding: 0.85rem 0.75rem;
+    background: linear-gradient(180deg, #fff, #f8fcff);
+    border: 1px solid #dbe4ef;
+    border-radius: 14px;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 70%);
   }
 
   .selected-day-group {
     display: block;
+  }
+
+  /* 移动端选择信息面板优化 */
+  [id="mobileSelectionInfo"] {
+    padding: 0.7rem 0.65rem;
+    margin-top: 0.85rem;
+    background: linear-gradient(180deg, #f2fcff, #eef8ff 56%, #f5f6ff);
+    border: 1px solid #cfe4f6;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px -14px rgb(24 89 112 / 45%);
   }
 
   .desktop-selection-bar {
