@@ -1,3 +1,6 @@
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=ZCOOL+KuaiLe&display=swap");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css");
+
 html,
 body {
   height: 100%;
@@ -6,6 +9,7 @@ body {
 }
 
 :root {
+  --tp-cute-shadow: rgb(69 110 138 / 22%);
   --cursor-default:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 32 32'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Ccircle cx='16' cy='16' r='10.5' fill='%23f7fff8' stroke='%237ecfa6' stroke-width='2'/%3E%3Ccircle cx='12.5' cy='13' r='1.6' fill='%235aa57d'/%3E%3Ccircle cx='19.5' cy='13' r='1.6' fill='%235aa57d'/%3E%3Cpath d='M11.2 18.2c1.1 2 2.8 2.9 4.8 2.9 2 0 3.7-.9 4.8-2.9' stroke='%235aa57d' stroke-width='1.8' stroke-linecap='round'/%3E%3Cpath d='M22.8 7.6l1.6-2 1.5 1.3-1.7 2.1' fill='%23ffcee0'/%3E%3C/g%3E%3C/svg%3E")
       3 3,
@@ -21,29 +25,40 @@ body {
 }
 
 body {
-  /* 轻薄薄荷+蜜桃+天蓝的多层背景，整体更清新可爱 */
-  background-color: #f4fffb;
+  background-color: #f8fffc;
   background-image:
+    url("https://www.transparenttextures.com/patterns/food.png"),
     radial-gradient(
-      circle at 12% 14%,
-      rgb(254 206 224 / 45%) 0,
-      transparent 38%
+      circle at 10% 8%,
+      rgb(255 218 232 / 42%) 0,
+      transparent 34%
     ),
     radial-gradient(
-      circle at 84% 16%,
-      rgb(176 240 230 / 42%) 0,
+      circle at 88% 12%,
+      rgb(195 243 226 / 45%) 0,
       transparent 36%
     ),
     radial-gradient(
-      circle at 68% 84%,
-      rgb(183 214 255 / 40%) 0,
-      transparent 40%
+      circle at 72% 88%,
+      rgb(205 227 255 / 42%) 0,
+      transparent 38%
     ),
-    linear-gradient(145deg, #f4fffb 0%, #ecfbff 52%, #f7f1ff 100%);
-  background-position: center;
-  background-size: auto, auto, auto, cover;
-  background-repeat: no-repeat;
+    linear-gradient(
+      150deg,
+      rgb(248 255 252 / 90%) 0%,
+      rgb(238 251 255 / 90%) 54%,
+      rgb(254 244 255 / 90%) 100%
+    );
+  background-position: center, center, center, center, center;
+  background-size:
+    auto,
+    auto,
+    auto,
+    cover,
+    260px 260px;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat;
   cursor: var(--cursor-default);
+  background-blend-mode: soft-light, normal, normal, normal, normal;
   background-attachment: fixed;
 }
 
@@ -56,6 +71,7 @@ body {
 }
 
 .booking-outer-card {
+  position: relative;
   display: flex;
   width: 100%;
   height: calc(100dvh - var(--nav-h) - 0.8rem);
@@ -67,25 +83,72 @@ body {
     rgb(255 255 255 / 90%),
     rgb(255 255 255 / 84%)
   );
-  border: 1px solid rgb(255 255 255 / 45%);
+  border: 1px solid rgb(255 255 255 / 66%);
   border-radius: 20px;
-  box-shadow: 0 12px 28px -8px rgb(0 0 0 / 22%);
+  box-shadow:
+    0 16px 32px -16px var(--tp-cute-shadow),
+    inset 0 1px 0 rgb(255 255 255 / 78%);
   backdrop-filter: saturate(150%) blur(5px);
   flex-direction: column;
 }
 
+.booking-outer-card::before,
+.booking-outer-card::after {
+  position: absolute;
+  z-index: 1;
+  font-size: clamp(1rem, 1.8vw, 1.35rem);
+  opacity: 0.78;
+  pointer-events: none;
+  content: "";
+}
+
+.booking-outer-card::before {
+  top: 0.55rem;
+  right: 0.9rem;
+  content: "🍓";
+  animation: pulse-soft 2.6s ease-in-out infinite;
+}
+
+.booking-outer-card::after {
+  bottom: 0.65rem;
+  left: 1rem;
+  content: "🍀";
+  animation: heart-beat-soft 2.4s ease-in-out infinite;
+}
+
 .booking-page-title {
+  position: relative;
   margin-bottom: 0.4rem;
+  font-family: "ZCOOL KuaiLe", "Baloo 2", "Microsoft YaHei", sans-serif;
   font-size: clamp(0.95rem, 1.25vw, 1.3rem);
   font-weight: 700;
   line-height: 1.15;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   text-align: center;
   color: transparent;
   background: linear-gradient(90deg, #2b6cb0, #2db7c3 55%, #2b6cb0);
   background-size: 200% 200%;
   background-clip: text;
+  text-shadow: 0 3px 8px rgb(64 105 148 / 18%);
   animation: booking-title-glow 6s ease-in-out infinite;
+}
+
+.booking-page-title::before,
+.booking-page-title::after {
+  font-size: 0.8em;
+  color: #f5b8cf;
+  vertical-align: middle;
+  content: "";
+}
+
+.booking-page-title::before {
+  margin-right: 0.42rem;
+  content: "✿";
+}
+
+.booking-page-title::after {
+  margin-left: 0.42rem;
+  content: "✿";
 }
 
 @keyframes booking-title-glow {
@@ -151,8 +214,8 @@ body {
   justify-content: space-between;
   padding: 0.28rem;
   margin-top: 0.38rem;
-  background: linear-gradient(180deg, #effaff, #f5fdff);
-  border: 1px solid #cbeaf4;
+  background: linear-gradient(180deg, #f2fcff, #eef8ff 56%, #f5f6ff);
+  border: 1px solid #cfe4f6;
   border-radius: 12px;
   box-shadow: 0 8px 16px -14px rgb(24 89 112 / 45%);
   gap: 0.45rem;
@@ -164,8 +227,8 @@ body {
   padding: 0.35rem 0.45rem;
   margin: 0;
   overflow-y: auto;
-  background: linear-gradient(180deg, #f6fdff, #effbff);
-  border: 1px solid #d3ecf7;
+  background: linear-gradient(180deg, #f8fdff, #f0f9ff 58%, #f7f4ff);
+  border: 1px solid #d8e9f7;
 }
 
 .desktop-selection-actions {
@@ -184,22 +247,128 @@ body {
   padding-inline: 0.7rem;
 }
 
+#desktop-date-controls .button,
+[id="confirmBtn"],
+[id="cancelBtn"],
+[id="mobileConfirmBtn"],
+[id="mobileCancelBtn"],
+[id="prevDay"],
+[id="nextDay"] {
+  font-family: "Baloo 2", "Microsoft YaHei", sans-serif;
+  font-weight: 700;
+}
+
+#desktop-date-controls .button,
+[id="prevDay"],
+[id="nextDay"] {
+  color: #1f5878;
+  background: linear-gradient(135deg, #fff, #f3fcff 55%, #f6fff9);
+  border: 1px solid #b9dff0;
+  box-shadow: 0 6px 14px -10px rgb(24 92 126 / 70%);
+}
+
+#desktop-date-controls .button:hover,
+[id="prevDay"]:hover,
+[id="nextDay"]:hover {
+  animation: tada-soft 0.85s both;
+  transform: translateY(-1px);
+}
+
+[id="confirmBtn"],
+[id="mobileConfirmBtn"] {
+  color: #104632;
+  background: linear-gradient(135deg, #9ce8c8, #7ed6b5 54%, #6fcfb2);
+  border-color: #68b596;
+  box-shadow: 0 8px 14px -10px rgb(46 133 103 / 70%);
+}
+
+[id="cancelBtn"],
+[id="mobileCancelBtn"] {
+  color: #6c2140;
+  background: linear-gradient(135deg, #ffd0e1, #f8a8c5 52%, #ec96b8);
+  border-color: #e08caf;
+  box-shadow: 0 8px 14px -10px rgb(174 73 116 / 65%);
+}
+
+[id="confirmBtn"]:hover,
+[id="cancelBtn"]:hover,
+[id="mobileConfirmBtn"]:hover,
+[id="mobileCancelBtn"]:hover {
+  animation: tada-soft 0.85s both;
+  filter: saturate(108%);
+  transform: translateY(-1px);
+}
+
+/* Fallback keyframes in case animate.css fails to load */
+@keyframes pulse-soft {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes heart-beat-soft {
+  0%,
+  28%,
+  70%,
+  100% {
+    transform: scale(1);
+  }
+
+  14%,
+  42% {
+    transform: scale(1.12);
+  }
+}
+
+@keyframes tada-soft {
+  0% {
+    transform: scaleX(1);
+  }
+
+  10%,
+  20% {
+    transform: scale3d(0.95, 0.95, 0.95) rotate(-2deg);
+  }
+
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: scale3d(1.02, 1.02, 1.02) rotate(2deg);
+  }
+
+  40%,
+  60%,
+  80% {
+    transform: scale3d(1.02, 1.02, 1.02) rotate(-2deg);
+  }
+
+  100% {
+    transform: scaleX(1);
+  }
+}
+
 [id="selectedInfo"],
 [id="mobileSelectedInfo"] {
   margin: 0;
   line-height: 1.2;
-  color: #123f63;
+  color: #375774;
 }
 
 [id="selectedInfo"] strong,
 [id="mobileSelectedInfo"] strong {
-  color: #0f3a5b;
+  color: #375774;
 }
 
 [id="mobileSelectionInfo"] {
   padding: 0.6rem 0.7rem;
-  background: linear-gradient(180deg, #f6fdff, #effbff);
-  border: 1px solid #d3ecf7;
+  background: linear-gradient(180deg, #f8fdff, #f0f9ff 58%, #f7f4ff);
+  border: 1px solid #d8e9f7;
 }
 
 .selected-summary-list {
@@ -213,10 +382,10 @@ body {
   display: grid;
   align-items: center;
   padding: 0.3rem 0.38rem;
-  background: linear-gradient(135deg, #f7fdff, #eefdff 70%);
-  border: 1px dashed #a8d8ea;
+  background: linear-gradient(135deg, #f3fcff, #eaf6ff 68%, #f4f4ff);
+  border: 1px dashed #bdd9ef;
   border-radius: 10px;
-  box-shadow: 0 4px 10px -8px rgb(20 100 128 / 38%);
+  box-shadow: 0 5px 10px -8px rgb(65 116 156 / 30%);
   column-gap: 0.32rem;
   grid-template-columns: 5rem minmax(0, 1fr);
 }
@@ -240,29 +409,20 @@ body {
 .selected-time-chip {
   display: inline-block;
   padding: 0.15rem 0.45rem;
+  font-family: "Baloo 2", "Microsoft YaHei", sans-serif;
   font-size: 0.78rem;
   font-weight: 600;
   line-height: 1.1;
-  color: #0f4165;
-  background: linear-gradient(120deg, #fcfeff, #eaf7ff);
-  border: 1px solid #9fd1e6;
+  color: #7c5a1f;
+  background: linear-gradient(120deg, #fffef1, #fff3c8 72%);
+  border: 1px solid #e7c97d;
   border-radius: 999px;
-  box-shadow: 0 2px 6px -5px rgb(12 71 95 / 55%);
+  box-shadow: 0 2px 6px -5px rgb(155 116 43 / 56%);
   animation: sticker-float 2.6s ease-in-out infinite;
 }
 
 .selected-time-chip::before {
   content: attr(data-sticker) " ";
-}
-
-.selected-day-times .selected-time-chip:nth-child(2n) {
-  background: linear-gradient(120deg, #f7feff, #e3f8fb);
-  border-color: #96d5db;
-}
-
-.selected-day-times .selected-time-chip:nth-child(3n) {
-  background: linear-gradient(120deg, #f8fcff, #e8f1fd);
-  border-color: #aac8ea;
 }
 
 @keyframes sticker-float {
@@ -277,6 +437,11 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .booking-outer-card::before,
+  .booking-outer-card::after,
+  #desktop-date-controls .button:hover,
+  [id="prevDay"]:hover,
+  [id="nextDay"]:hover,
   .selected-time-chip {
     animation: none;
   }
@@ -381,7 +546,7 @@ body {
   text-align: center;
   color: #7a7a7a;
   border: 1px dashed #dbdbdb;
-  border-radius: 4px;
+  border-radius: 999px;
   cursor: var(--cursor-pointer);
   grid-column: 1 / span 8;
 }
@@ -404,7 +569,7 @@ body {
   line-height: 1.2;
   text-align: center;
   border: 2px solid transparent;
-  border-radius: 4px;
+  border-radius: 999px;
   transition: all 0.2s;
   cursor: var(--cursor-pointer);
 }
@@ -500,6 +665,12 @@ label.slot-item.disabled,
   .booking-page-title {
     margin-bottom: 0.5rem;
     font-size: 1.25rem;
+  }
+
+  .booking-outer-card::before,
+  .booking-outer-card::after {
+    font-size: 1rem;
+    opacity: 0.62;
   }
 
   .booking-inner-card {
