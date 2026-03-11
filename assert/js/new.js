@@ -829,7 +829,7 @@ document.getElementById("toggleLateBtn")?.addEventListener("click", (e) => {
   }
 })
 
-window.addEventListener("load", () => {
+document.addEventListener("DOMContentLoaded", () => {
   try {
     const title = document.title
     const { id, slotType } = instruments_map[title]
