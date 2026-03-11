@@ -51,14 +51,14 @@ body {
     );
   background-position: center, center, center, center, center;
   background-size:
-    auto,
+    220px 220px,
     auto,
     auto,
     cover,
     260px 260px;
-  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat, repeat;
   cursor: var(--cursor-default);
-  background-blend-mode: soft-light, normal, normal, normal, normal;
+  background-blend-mode: multiply, normal, normal, normal, normal;
   background-attachment: fixed;
 }
 
