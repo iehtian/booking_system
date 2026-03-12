@@ -432,11 +432,11 @@ async function init() {
   const isYesterday = selDate.getTime() === yesterday.getTime()
 
   // If the selected date is yesterday, skip evaluateYesterdayPlan to avoid unnecessary evaluation
+  const allPromise = fetchAllPlans(dateStr)
   const disableToday = isYesterday
     ? false
     : await evaluateYesterdayPlan(selectedDate, userAuth)
-  const all = await fetchAllPlans(dateStr)
-
+  const all = await allPromise
   if (userAuth && userAuth.logged_in) {
     const currentUserName = userAuth.user.user_name
     const currentUser = all.find((u) => u.user === currentUserName)
