@@ -1,7 +1,6 @@
 let selectedDate = new Date()
 let mobileSelectedDate = new Date()
 import { getBookings, submitBookings, cancelBookings } from "./booking_api.js"
-import { instruments_map } from "./instruments.js"
 import {
   mergeBookings,
   generateTimeIntervalsSimple,
@@ -837,6 +836,11 @@ document.getElementById("toggleLateBtn")?.addEventListener("click", (e) => {
 
 document.addEventListener("DOMContentLoaded", () => {
   try {
+    const instruments_map = {
+      细胞房: { id: "a_instrument", slotType: 0 },
+      液相: { id: "b_instrument", slotType: 1 },
+    }
+
     const title = document.title
     const { id, slotType } = instruments_map[title]
     const sliceNum = slotType === 0 ? 48 : 24
