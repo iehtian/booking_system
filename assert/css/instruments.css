@@ -51,7 +51,7 @@ body {
     );
   background-position: center, center, center, center, center;
   background-size:
-    220px 220px,
+    auto,
     auto,
     auto,
     cover,
