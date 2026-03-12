@@ -9,12 +9,52 @@ import {
 } from "./utils/slots.js"
 import Swal from "sweetalert2"
 
+/**
+ * @typedef {Object} Slot
+ * @property {number} id 时间段编号。
+ * @property {string} time 时间段文本，例如 08:00-08:30。
+ */
+
+/**
+ * @typedef {Object} SelectedReservation
+ * @property {string} date 预约日期，格式为 YYYY-MM-DD。
+ * @property {number} id 时间段编号。
+ * @property {string} time 时间段文本。
+ */
+
+/**
+ * @typedef {Object.<number, { user_name: string, color: string }>} DayBookings
+ */
+
+/**
+ * @typedef {Object} AppState
+ * @property {string | null} user_name 当前登录用户名。
+ * @property {SelectedReservation[]} selectedRes 当前选中的时间段。
+ * @property {Date[] | null} selectedWeek 当前选中日期所在周。
+ * @property {DayBookings[]} bookinged_slots 当前周的预约数据。
+ * @property {Slot[]=} weekData 当前页面使用的时间段定义。
+ * @property {string=} instrument_id 仪器 ID。
+ * @property {boolean=} isNeedhidden 是否默认隐藏深夜和晚间时段。
+ */
+
+/**
+ * 根据时间段编号返回需要附加的隐藏样式类。
+ *
+ * @param {number} slotId 时间段编号。
+ * @returns {string} 对应的样式类名；如果无需隐藏则返回空字符串。
+ */
 function getSlotHideClass(slotId) {
   if (slotId <= 15) return "hidden-slot-logic-early Early"
   if (slotId >= 45) return "hidden-slot-logic-late Late"
   return ""
 }
 
+/**
+ * 按当前状态构建周视图的静态 DOM 骨架。
+ * 该方法只在容器为空时创建时间列与每日列，后续周切换只更新内容。
+ *
+ * @returns {void}
+ */
 function buildWeeklySkeletonDOM() {
   const timeColumn = document.getElementById("timeColumn")
   const slots = State.get().weekData
@@ -68,6 +108,18 @@ function buildWeeklySkeletonDOM() {
   })
 }
 
+/**
+ * 创建一个简单的可订阅状态容器。
+ *
+ * @template T
+ * @param {T} initialState 初始状态。
+ * @returns {{
+ *   get: () => T,
+ *   set: (patch: Partial<T>) => void,
+ *   update: (updater: (state: T) => T) => void,
+ *   subscribe: (listener: (state: T) => void) => () => boolean
+ * }} 状态读写与订阅接口。
+ */
 function createState(initialState) {
   let state = { ...initialState }
   const listeners = new Set()
@@ -92,6 +144,7 @@ function createState(initialState) {
   }
 }
 
+/** @type {{ get: () => AppState, set: (patch: Partial<AppState>) => void, update: (updater: (state: AppState) => AppState) => void, subscribe: (listener: (state: AppState) => void) => () => boolean }} */
 const State = createState({
   user_name: null,
   selectedRes: [],
@@ -102,6 +155,13 @@ const State = createState({
 let booking = null
 let selected = null
 
+/**
+ * 根据时间文本和索引选择一个装饰贴纸。
+ *
+ * @param {string} timeText 时间文本。
+ * @param {number} index 当前序号。
+ * @returns {string} 贴纸字符。
+ */
 function pickStickerByTime(timeText, index) {
   const stickers = ["⭐", "🍀", "🧪", "🌈", "💫", "🍓"]
   const [start] = String(timeText).split("-")
@@ -110,7 +170,15 @@ function pickStickerByTime(timeText, index) {
   return stickers[(safeHour + index) % stickers.length]
 }
 
+/**
+ * 将已选时间段渲染为汇总文本。
+ *
+ * @param {HTMLElement | null} target 目标容器。
+ * @param {SelectedReservation[]} selectedRes 已选时间段列表。
+ * @returns {void}
+ */
 function setSelectedText(target, selectedRes) {
+  if (!target) return
   const processedRes = processSchedule(selectedRes)
   target.textContent = ""
   const strong = document.createElement("strong")
@@ -170,6 +238,12 @@ function setSelectedText(target, selectedRes) {
   target.appendChild(list)
 }
 
+/**
+ * 计算给定日期所在周的 7 天，按周一到周日返回。
+ *
+ * @param {Date} selectedDate 基准日期。
+ * @returns {Date[]} 当前周的日期数组。
+ */
 function getWeek(selectedDate) {
   const day = selectedDate.getDay()
   const monday = new Date(selectedDate)
@@ -181,27 +255,57 @@ function getWeek(selectedDate) {
   })
 }
 
+/**
+ * 将日期对象格式化为周视图标题文本。
+ *
+ * @param {Date} date 日期对象。
+ * @returns {string} 形如 3/12 周四 的文本。
+ */
 function display(date) {
   const days = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
   return `${date.getMonth() + 1}/${date.getDate()} ${days[date.getDay()]}`
 }
 
+/**
+ * 从会话存储中读取当前用户名。
+ *
+ * @returns {string | null} 用户名，不存在时返回 null。
+ */
 function getCurrentUserName() {
   const result = JSON.parse(sessionStorage.getItem("userAuth") || "null")
   return result?.user?.user_name || null
 }
 
+/**
+ * 根据日期键找到该日期在当前周中的索引。
+ *
+ * @param {string} dateKey 日期键，格式为 YYYY-MM-DD。
+ * @returns {number} 匹配到的索引，未找到时返回 -1。
+ */
 function getWeekIndexByDateKey(dateKey) {
   const week = State.get().selectedWeek || []
   return week.findIndex((d) => fmt(d) === dateKey)
 }
 
+/**
+ * 获取某一天的预约映射。
+ *
+ * @param {string} dateKey 日期键，格式为 YYYY-MM-DD。
+ * @returns {DayBookings | null} 当天预约数据；不在当前周时返回 null。
+ */
 function getBookingsByDateKey(dateKey) {
   const idx = getWeekIndexByDateKey(dateKey)
   if (idx < 0) return null
   return State.get().bookinged_slots[idx] || {}
 }
 
+/**
+ * 判断某个时间段是否已经过去。
+ *
+ * @param {string} dateKey 日期键，格式为 YYYY-MM-DD。
+ * @param {number} slotId 时间段编号。
+ * @returns {boolean} 已经过期返回 true。
+ */
 function isPastSlot(dateKey, slotId) {
   const now = new Date()
   const todayKey = fmt(now)
@@ -211,6 +315,11 @@ function isPastSlot(dateKey, slotId) {
   return slotId * 30 < currentMinutes
 }
 
+/**
+ * 刷新桌面端已选信息栏。
+ *
+ * @returns {void}
+ */
 function updateDesktopSelectionUI() {
   const selectedRes = State.get().selectedRes
   const hasSelection = selectedRes.length > 0
@@ -221,6 +330,11 @@ function updateDesktopSelectionUI() {
   setSelectedText(document.getElementById("selectedInfo"), selectedRes)
 }
 
+/**
+ * 刷新移动端已选信息面板。
+ *
+ * @returns {void}
+ */
 function updateMobileSelectionUI() {
   const selectedRes = State.get().selectedRes
   const panel = document.getElementById("mobileSelectionInfo")
@@ -234,6 +348,13 @@ function updateMobileSelectionUI() {
   setSelectedText(document.getElementById("mobileSelectedInfo"), selectedRes)
 }
 
+/**
+ * 更新周视图顶部表头及选中列样式。
+ *
+ * @param {Date[]} week 当前周日期数组。
+ * @param {string} selectedKey 当前选中日期键。
+ * @returns {void}
+ */
 function updateWeekHeaders(week, selectedKey) {
   const headers = document.querySelectorAll("#weeklyView .week-header")
   const dayColumns = document.querySelectorAll("#weeklyView .day-column")
@@ -255,6 +376,12 @@ function updateWeekHeaders(week, selectedKey) {
   })
 }
 
+/**
+ * 重置周视图中所有时间格的显示与状态。
+ *
+ * @param {Date[]} week 当前周日期数组。
+ * @returns {void}
+ */
 function resetWeekColumns(week) {
   const columns = document.querySelectorAll("#weeklyView .day-column")
   const slots = State.get().weekData
@@ -292,6 +419,11 @@ function resetWeekColumns(week) {
   })
 }
 
+/**
+ * 清空当前所有选中状态，并恢复对应的 UI。
+ *
+ * @returns {void}
+ */
 function clearAllSelectedState() {
   State.set({ selectedRes: [] })
   selected = null
@@ -312,6 +444,12 @@ function clearAllSelectedState() {
 }
 
 // 初始化页面
+/**
+ * 初始化当前选中日期所在周的数据与界面。
+ *
+ * @param {Date} selectedDate 当前选中日期。
+ * @returns {Promise<void>}
+ */
 async function init(selectedDate) {
   State.set({ selectedWeek: getWeek(selectedDate) })
   const instrument_id = State.get().instrument_id
@@ -337,6 +475,15 @@ async function init(selectedDate) {
   })
 }
 
+/**
+ * 将某一天的预约记录渲染到周视图列中。
+ *
+ * @param {DayBookings} dayBookings 单日预约数据。
+ * @param {number} dayIdx 当前日期在周中的索引。
+ * @param {HTMLElement} container 周视图容器。
+ * @param {string | null} my_name 当前用户名。
+ * @returns {void}
+ */
 const renderBookedGroups = (dayBookings, dayIdx, container, my_name) => {
   const booked_groups = mergeBookings(dayBookings)
   console.log("dayIdx:", dayIdx, "booked_groups:", booked_groups)
@@ -383,6 +530,11 @@ const renderBookedGroups = (dayBookings, dayIdx, container, my_name) => {
   })
 }
 
+/**
+ * 为周视图中的复选框绑定选择事件。
+ *
+ * @returns {void}
+ */
 function addslotselectorHandlers() {
   const checkboxes = document.querySelectorAll(
     "#weeklyView .day-column input[type=checkbox]"
@@ -397,6 +549,12 @@ function addslotselectorHandlers() {
 }
 
 // 只更新一周的属性和文字，不重建结构
+/**
+ * 根据新日期切换当前周数据；若仍在同一周内，则仅刷新表头与选择态。
+ *
+ * @param {Date} selectedDate 当前选中日期。
+ * @returns {Promise<void>}
+ */
 async function weekChangeDay(selectedDate) {
   let week = State.get().selectedWeek
   const selectedKey = fmt(selectedDate)
@@ -438,6 +596,12 @@ async function weekChangeDay(selectedDate) {
   })
 }
 
+/**
+ * 切换深夜时段显示状态。
+ *
+ * @param {HTMLButtonElement | null} btn 触发按钮。
+ * @returns {void}
+ */
 const toggleEarly = function (btn) {
   const earlys = document.querySelectorAll(".Early")
 
@@ -454,6 +618,12 @@ const toggleEarly = function (btn) {
   }
 }
 
+/**
+ * 切换晚间时段显示状态。
+ *
+ * @param {HTMLButtonElement | null} btn 触发按钮。
+ * @returns {void}
+ */
 const toggleLate = function (btn) {
   const lates = document.querySelectorAll(".Late")
 
@@ -469,6 +639,11 @@ const toggleLate = function (btn) {
   }
 }
 
+/**
+ * 渲染移动端当前选中日期的时间格。
+ *
+ * @returns {void}
+ */
 function renderMobileSlots() {
   const container = document.getElementById("mobileSlots")
   const key = fmt(mobileSelectedDate)
@@ -534,6 +709,13 @@ function renderMobileSlots() {
   updateMobileSelectionUI()
 }
 
+/**
+ * 切换移动端某个时间段的选中状态。
+ *
+ * @param {string} date 日期键，格式为 YYYY-MM-DD。
+ * @param {number} id 时间段编号。
+ * @returns {void}
+ */
 window.mobileSelect = function (date, id) {
   if (booking) return
   const { weekData, selectedRes } = State.get()
@@ -559,6 +741,13 @@ window.mobileSelect = function (date, id) {
   renderMobileSlots()
 }
 
+/**
+ * 处理桌面端时间段勾选逻辑。
+ *
+ * @param {string} date 日期键，格式为 YYYY-MM-DD。
+ * @param {Event} event 复选框 change 事件。
+ * @returns {void}
+ */
 function select(date, event) {
   const { weekData, selectedRes } = State.get()
   let id = parseInt(event.target.dataset.slotid, 10)
@@ -599,6 +788,11 @@ function select(date, event) {
 // Expose to inline handlers in module scope
 window.select = select
 
+/**
+ * 提交当前选中的预约。
+ *
+ * @returns {void}
+ */
 function confirm() {
   const { selectedRes } = State.get()
   if (!selectedRes || selectedRes.length === 0) {
@@ -644,6 +838,11 @@ function confirm() {
     })
 }
 
+/**
+ * 取消当前选中的预约。
+ *
+ * @returns {void}
+ */
 function cancel() {
   const { selectedRes } = State.get()
   if (!selectedRes || selectedRes.length === 0) {
@@ -689,11 +888,13 @@ function cancel() {
     })
 }
 
-// Allow inline mobile confirmation button to call confirm()
-window.confirm = confirm
-window.cancel = cancel
-
 // 日期切换
+/**
+ * 按天偏移切换当前日期，并刷新对应视图。
+ *
+ * @param {number} delta 日期偏移量，单位为天。
+ * @returns {void}
+ */
 function changeDay(delta) {
   selectedDate.setDate(selectedDate.getDate() + delta)
   mobileSelectedDate = new Date(selectedDate)
@@ -708,6 +909,11 @@ function changeDay(delta) {
   renderMobileSlots()
 }
 
+/**
+ * 按当前时间禁用不可预约的历史日期和过期时间段。
+ *
+ * @returns {void}
+ */
 function disabledSlotwithDate() {
   const now = new Date()
   const todayKey = fmt(now)
