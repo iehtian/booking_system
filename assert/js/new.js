@@ -34,6 +34,7 @@ import Swal from "sweetalert2"
  * @property {DayBookings[]} bookinged_slots 当前周的预约数据。
  * @property {Slot[]=} weekData 当前页面使用的时间段定义。
  * @property {string=} instrument_id 仪器 ID。
+ * @property {number=} slotDurationMinutes 每个 slot 对应的分钟数。
  * @property {boolean=} isNeedhidden 是否默认隐藏深夜和晚间时段。
  */
 
@@ -300,6 +301,15 @@ function getBookingsByDateKey(dateKey) {
 }
 
 /**
+ * 获取当前仪器每个 slot 的分钟数。
+ *
+ * @returns {number} slot 分钟数。
+ */
+function getSlotDurationMinutes() {
+  return State.get().slotDurationMinutes || 30
+}
+
+/**
  * 判断某个时间段是否已经过去。
  *
  * @param {string} dateKey 日期键，格式为 YYYY-MM-DD。
@@ -312,7 +322,7 @@ function isPastSlot(dateKey, slotId) {
   if (dateKey < todayKey) return true
   if (dateKey > todayKey) return false
   const currentMinutes = now.getHours() * 60 + now.getMinutes()
-  return slotId * 30 < currentMinutes
+  return slotId * getSlotDurationMinutes() < currentMinutes
 }
 
 /**
@@ -918,6 +928,7 @@ function disabledSlotwithDate() {
   const now = new Date()
   const todayKey = fmt(now)
   const currentMinutes = now.getHours() * 60 + now.getMinutes()
+  const slotDurationMinutes = getSlotDurationMinutes()
 
   const container = document.getElementById("weeklyView")
   const columns = container.querySelectorAll(".day-column")
@@ -937,7 +948,6 @@ function disabledSlotwithDate() {
       })
       return
     }
-
     // 今天：只禁用已过去的 slot
     if (dateKey === todayKey) {
       col.querySelectorAll("label.slot-item").forEach((label) => {
@@ -945,8 +955,8 @@ function disabledSlotwithDate() {
         if (!input) return
 
         const slotId = parseInt(input.dataset.slotid, 10)
-        // slot 的开始时间（分钟）：每个 slot 30 分钟，slot 0 = 00:00
-        const slotStartMinutes = slotId * 30
+        // slot 的开始时间（分钟）：slot 0 = 00:00
+        const slotStartMinutes = slotId * slotDurationMinutes
 
         // 当前所在 slot 不禁用，只禁用开始时间严格早于现在的
         if (slotStartMinutes < currentMinutes) {
@@ -1050,10 +1060,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const title = document.title
     const { id, slotType } = instruments_map[title]
     const sliceNum = slotType === 0 ? 48 : 24
+    const slotDurationMinutes = slotType === 0 ? 30 : 60
     const isNeedhidden = slotType === 0 ? true : false
     State.set({ weekData: generateTimeIntervalsSimple(sliceNum) })
     State.set({
       instrument_id: id,
+      slotDurationMinutes,
       isNeedhidden,
       user_name: getCurrentUserName(),
     })
