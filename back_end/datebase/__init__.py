@@ -7,7 +7,6 @@ from .pgsql_client import (
     get_db_connection,
     upsert_user,
     search_user_by_name,
-    search_all_users,
     create_user_index,
     upsert_booking,
     search_booking_by_date,
@@ -18,6 +17,7 @@ from .pgsql_client import (
     delete_bookings_by_slots,
     upsert_plan_field,
     get_dateinfo,
+    get_all_dateinfo_by_date,
 )
 
 # 包版本信息
@@ -45,7 +45,6 @@ def initialize_database():
 __all__ = [
     "upsert_user",
     "search_user_by_name",
-    "search_all_users",
     "upsert_booking",
     "search_booking_by_date",
     "search_booking_by_user_and_date",
@@ -56,4 +55,5 @@ __all__ = [
     "get_db_connection",
     "upsert_plan_field",
     "get_dateinfo",
+    "get_all_dateinfo_by_date",
 ]

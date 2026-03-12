@@ -148,20 +148,6 @@ def search_user_by_name(user_name):
     return _row_to_user(row) if row else None
 
 
-def search_all_users():
-    """查询所有用户"""
-    sql = f"""
-        SELECT id, user_name, password, color, email, phone, created_at
-        FROM {USER_TABLE}
-        ORDER BY user_name
-    """
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(sql)
-            rows = cur.fetchall()
-    return [_row_to_user(row) for row in rows]
-
-
 # -------- 预约相关 --------
 def create_booking_index():
     with get_connection() as conn:
@@ -394,6 +380,39 @@ def get_dateinfo(user_name: str, date: str) -> list[tuple]:
     logger.debug(
         "查询每日计划 | user_name=%s, date=%s, count=%d", user_name, date, len(results)
     )
+    return results
+
+
+def get_all_dateinfo_by_date(date: str, skip_names=None) -> list[dict]:
+    """按日期查询所有用户每日计划，返回结构与接口层一致。"""
+    sql = f"""
+        SELECT u.user_name, dp.plan, dp.status, dp.remark
+        FROM {USER_TABLE} u
+        LEFT JOIN {PLANS_TABLE} dp
+          ON dp.user_id = u.id
+         AND dp.date = %s
+        ORDER BY u.user_name
+    """
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, (date,))
+            rows = cur.fetchall()
+
+    skip_set = set(skip_names or [])
+    grouped = {}
+    for user_name, plan, status, remark in rows:
+        if user_name in skip_set:
+            continue
+
+        if user_name not in grouped:
+            grouped[user_name] = {"user": user_name, "info": []}
+
+        if plan is not None or status is not None or remark is not None:
+            grouped[user_name]["info"].append((plan, status, remark))
+
+    results = list(grouped.values())
+    logger.debug("查询所有用户每日计划 | date=%s, users=%d", date, len(results))
     return results
 
 

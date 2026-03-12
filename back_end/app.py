@@ -543,14 +543,7 @@ def get_all_daily_plans():
         if not date:
             return jsonify({"error": "Date parameter is required"}), 400
 
-        data = db_api.search_all_users()
-        res = []
-        for user in data:
-            user_name = user.get("user_name")
-            if user_name and user_name in SKIP_NAMES:
-                continue
-            info = db_api.get_dateinfo(user_name, date)
-            res.append({"user": user_name, "info": info})
+        res = db_api.get_all_dateinfo_by_date(date, SKIP_NAMES)
 
         logger.debug("查询所有用户每日计划 | 日期: %s | 共 %d 条", date, len(res))
         return jsonify({"success": True, "data": res})
