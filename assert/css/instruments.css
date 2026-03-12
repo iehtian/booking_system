@@ -476,6 +476,12 @@ body {
   color: white;
 }
 
+[id="weeklyView"]
+  .day-column.selected-date-column
+  .slot-item.available:not(:has(input[type="checkbox"]:checked)) {
+  background-color: #f7fbff;
+}
+
 .slot-item.disabled {
   border-color: #cbd5e0;
   opacity: 0.9;

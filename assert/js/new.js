@@ -237,6 +237,7 @@ function updateMobileSelectionUI() {
 
 function updateWeekHeaders(week, selectedKey) {
   const headers = document.querySelectorAll("#weeklyView .week-header")
+  const dayColumns = document.querySelectorAll("#weeklyView .day-column")
   headers.forEach((header, idx) => {
     if (idx === 0) return
     const date = week[idx - 1]
@@ -247,6 +248,11 @@ function updateWeekHeaders(week, selectedKey) {
     strong.textContent = display(date)
     header.style.borderBottom = `2px solid ${key === selectedKey ? "#3273dc" : "#dbdbdb"}`
     strong.classList.toggle("has-text-info", key === selectedKey)
+
+    const dayColumn = dayColumns[idx - 1]
+    if (dayColumn) {
+      dayColumn.classList.toggle("selected-date-column", key === selectedKey)
+    }
   })
 }
 
