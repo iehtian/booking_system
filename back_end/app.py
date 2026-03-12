@@ -280,14 +280,12 @@ def update_daily_plan():
 
         field_key_map = {"plan": "plan", "status": "status", "remark": "remark"}
 
-        db = db_api.connect_to_database()
         updated = []
         for payload_key, db_field in field_key_map.items():
             value = data.get(payload_key)
             if value is not None and value != "":
-                db_api.upsert_plan_field(db, user_name, date, db_field, value)
+                db_api.upsert_plan_field(user_name, date, db_field, value)
                 updated.append(db_field)
-        db.close()
 
         if not updated:
             logger.warning("用户 [%s] 更新每日计划失败 - 无有效字段", user_name)
@@ -527,9 +525,7 @@ def get_daily_plan():
         if not user_name or not date:
             return jsonify({"error": "Missing required fields: user_name, date"}), 400
 
-        db = db_api.connect_to_database()
-        info = db_api.get_dateinfo(db, user_name, date)
-        db.close()
+        info = db_api.get_dateinfo(user_name, date)
 
         logger.debug("查询每日计划 | 用户: [%s] | 日期: %s", user_name, date)
         return jsonify({"success": True, "info": info})
@@ -547,16 +543,14 @@ def get_all_daily_plans():
         if not date:
             return jsonify({"error": "Date parameter is required"}), 400
 
-        db = db_api.connect_to_database()
         data = db_api.search_all_users()
         res = []
         for user in data:
             user_name = user.get("user_name")
             if user_name and user_name in SKIP_NAMES:
                 continue
-            info = db_api.get_dateinfo(db, user_name, date)
+            info = db_api.get_dateinfo(user_name, date)
             res.append({"user": user_name, "info": info})
-        db.close()
 
         logger.debug("查询所有用户每日计划 | 日期: %s | 共 %d 条", date, len(res))
         return jsonify({"success": True, "data": res})

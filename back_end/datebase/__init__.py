@@ -17,7 +17,7 @@ from .pgsql_client import (
 )
 
 from .mysql_client import (
-    connect_to_database,
+    get_db_connection,
     upsert_plan_field,
     get_dateinfo,
 )
@@ -33,7 +33,8 @@ def initialize_database():
     try:
         create_user_index()
         create_booking_index()
-        connect_to_database()
+        conn = get_db_connection()
+        conn.close()
         print("📊 Database indexes initialized successfully!")
         return True
     except Exception as e:
@@ -44,18 +45,15 @@ def initialize_database():
 # 导出所有公共接口
 __all__ = [
     "upsert_user",
-    "search_user_by_ID",
+    "search_user_by_name",
     "search_all_users",
     "upsert_booking",
     "search_booking_by_date",
     "search_booking_by_user_and_date",
-    "delete_booking",
     "delete_bookings_by_dates",
     "delete_bookings_by_slots",
     "initialize_database",
-    "connect_to_database",
+    "get_db_connection",
     "upsert_plan_field",
     "get_dateinfo",
-    "search_user_by_name",
-    "search_all_bookings",
 ]
