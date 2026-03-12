@@ -4,6 +4,7 @@ This package now uses PostgreSQL for users and bookings to replace Redis.
 """
 
 from .pgsql_client import (
+    get_db_connection,
     upsert_user,
     search_user_by_name,
     search_all_users,
@@ -12,12 +13,9 @@ from .pgsql_client import (
     search_booking_by_date,
     search_booking_by_user_and_date,
     create_booking_index,
+    create_date_plan_index,
     delete_bookings_by_dates,
     delete_bookings_by_slots,
-)
-
-from .mysql_client import (
-    get_db_connection,
     upsert_plan_field,
     get_dateinfo,
 )
@@ -33,6 +31,7 @@ def initialize_database():
     try:
         create_user_index()
         create_booking_index()
+        create_date_plan_index()
         conn = get_db_connection()
         conn.close()
         print("📊 Database indexes initialized successfully!")
@@ -52,6 +51,7 @@ __all__ = [
     "search_booking_by_user_and_date",
     "delete_bookings_by_dates",
     "delete_bookings_by_slots",
+    "create_date_plan_index",
     "initialize_database",
     "get_db_connection",
     "upsert_plan_field",

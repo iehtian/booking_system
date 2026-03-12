@@ -14,6 +14,7 @@ DB_CONFIG = {
 
 USER_TABLE = "users"
 BOOKING_TABLE = "bookings"
+PLANS_TABLE = "date_plans"
 
 
 def get_db_connection():
@@ -345,11 +346,134 @@ def delete_bookings_by_slots(instrument_id, date, slots):
     return deleted
 
 
+# -------- 每日计划相关 --------
+def create_date_plan_index():
+    """创建每日计划表与索引"""
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                f"""
+                CREATE TABLE IF NOT EXISTS {PLANS_TABLE} (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
+                    date DATE NOT NULL,
+                    plan TEXT,
+                    status INTEGER DEFAULT 0,
+                    remark TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    CONSTRAINT fk_user
+                        FOREIGN KEY (user_id)
+                        REFERENCES {USER_TABLE}(id)
+                        ON DELETE CASCADE
+                )
+                """
+            )
+
+            # 优化按用户+日期查询，并保证同一用户同一天只有一条记录
+            cur.execute(
+                f"CREATE UNIQUE INDEX IF NOT EXISTS idx_{PLANS_TABLE}_user_date ON {PLANS_TABLE}(user_id, date)"
+            )
+            conn.commit()
+    logger.info(f"Table '{PLANS_TABLE}' ensured.")
+
+
+def get_dateinfo(user_name: str, date: str) -> list[tuple]:
+    """根据 user_name 和 date 查询 plan / status / remark"""
+    sql = f"""
+        SELECT dp.plan, dp.status, dp.remark
+        FROM {PLANS_TABLE} dp
+        JOIN {USER_TABLE} u ON dp.user_id = u.id
+        WHERE u.user_name = %s AND dp.date = %s
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, (user_name, date))
+            results = cur.fetchall()
+
+    logger.debug(
+        "查询每日计划 | user_name=%s, date=%s, count=%d", user_name, date, len(results)
+    )
+    return results
+
+
+def upsert_plan_field(user_name: str, date: str, field: str, value) -> None:
+    """根据是否已有记录插入或更新指定字段。"""
+    allowed_fields = {"plan", "status", "remark"}
+    if field not in allowed_fields:
+        raise ValueError(f"不支持的字段: {field}")
+
+    if field == "status":
+        if isinstance(value, bool):
+            value = 1 if value else 0
+        if isinstance(value, str):
+            value = value.strip()
+        if value not in {0, 1, 2, "0", "1", "2"}:
+            raise ValueError(f"status 只能是 0、1 或 2，收到: {value}")
+        value = int(value)
+
+    get_user_sql = f"SELECT id FROM {USER_TABLE} WHERE user_name = %s"
+
+    check_sql = f"""
+        SELECT dp.id FROM {PLANS_TABLE} dp
+        JOIN {USER_TABLE} u ON dp.user_id = u.id
+        WHERE u.user_name = %s AND dp.date = %s
+    """
+
+    update_sql = f"""
+        UPDATE {PLANS_TABLE}
+        SET {field} = %s,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = %s
+    """
+
+    insert_sql = f"""
+        INSERT INTO {PLANS_TABLE} (user_id, date, {field})
+        VALUES (%s, %s, %s)
+    """
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(get_user_sql, (user_name,))
+            row = cur.fetchone()
+            if row is None:
+                raise ValueError(f"用户 '{user_name}' 不存在")
+            user_id = row[0]
+
+            cur.execute(check_sql, (user_name, date))
+            existing = cur.fetchone()
+
+            if existing:
+                cur.execute(update_sql, (value, existing[0]))
+            else:
+                cur.execute(insert_sql, (user_id, date, value))
+
+            conn.commit()
+
+    logger.info(
+        "每日计划更新成功 | user_name=%s, date=%s, field=%s", user_name, date, field
+    )
+
+
+def delete_user_data(user_name: str) -> None:
+    """删除某用户的全部 date_plans 记录"""
+    sql = f"""
+        DELETE FROM {PLANS_TABLE}
+        WHERE user_id = (SELECT id FROM {USER_TABLE} WHERE user_name = %s)
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, (user_name,))
+            conn.commit()
+    logger.info("user_name=%s 的每日计划数据已删除", user_name)
+
+
 # -------- 初始化 --------
 def initialize_database():
     try:
         create_user_index()
         create_booking_index()
+        create_date_plan_index()
         return True
     except Exception as e:
         logger.error(f"数据库初始化失败: {e}")

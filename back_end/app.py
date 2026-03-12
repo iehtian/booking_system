@@ -726,7 +726,7 @@ def is_email_configured():
 
 if __name__ == "__main__":
     if db_api.initialize_database():
-        logger.info("数据库初始化完成，系统已准备好运行")
+        logger.info("数据库初始化完成（users/bookings/date_plans），系统已准备好运行")
     else:
         logger.error("数据库初始化失败，请检查错误日志")
     app.run(host="0.0.0.0", port=5000, debug=True)
