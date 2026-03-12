@@ -1,5 +1,5 @@
 import { host } from "./config.js"
-import { isRestDay } from "./holidays.js"
+import { isRestDay } from "./utils/holidays.js"
 import Swal from "sweetalert2"
 
 // 使用本地时区处理日期，避免 UTC 偏移导致的前后一天问题
@@ -470,5 +470,4 @@ async function init() {
     all.forEach((u) => renderOtherUserRow(u, currentUserName))
   }
 }
-
-window.onload = init
+document.addEventListener("DOMContentLoaded", init)
