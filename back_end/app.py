@@ -10,7 +10,7 @@ import bcrypt
 import random
 from pathlib import Path
 from config import Config, SKIP_NAMES
-import datebase as db_api
+import database as db_api
 import verify_code
 from log_config import logger
 
