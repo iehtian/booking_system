@@ -526,9 +526,17 @@ body {
 }
 
 .mobile-slot-item {
-  padding: 0.55rem 0.25rem;
-  font-size: 0.78rem;
-  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.55rem;
+  min-height: 2.55rem;
+  max-height: 2.55rem;
+  padding: 0 0.25rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  font-size: 0.76rem;
+  line-height: 1.15;
   text-align: center;
   background: linear-gradient(135deg, #fff, #f3fcff 55%, #f6fff9);
   border: 2px solid transparent;
@@ -536,6 +544,8 @@ body {
   box-shadow: 0 4px 8px -6px rgb(24 92 126 / 40%);
   transition: all 0.2s;
   cursor: var(--cursor-pointer);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .mobile-slot-item.available {
