@@ -1,5 +1,6 @@
 import { host } from "./config.js"
 import { isRestDay } from "./utils/holidays.js"
+import { pinyin } from "pinyin-pro"
 import Swal from "sweetalert2"
 
 // 使用本地时区处理日期，避免 UTC 偏移导致的前后一天问题
@@ -78,7 +79,17 @@ async function fetchAllPlans(date) {
     credentials: "include",
   })
   const data = await res.json()
-  if (data.success) return data.data || []
+  console.log("[DatePlan] 获取所有用户计划数据:", data.data)
+  if (data.success) {
+    const sortedData = data.data.sort((a, b) => {
+      const nameA = a.user || ""
+      const nameB = b.user || ""
+      const pinyinA = pinyin(nameA, { toneType: "none", type: "string" })
+      const pinyinB = pinyin(nameB, { toneType: "none", type: "string" })
+      return pinyinA.localeCompare(pinyinB)
+    })
+    return sortedData
+  }
   return []
 }
 
