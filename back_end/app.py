@@ -515,26 +515,6 @@ def refresh():
         return jsonify({"success": False, "message": "Token refresh failed"}), 500
 
 
-@app.route("/api/daily_plan/get", methods=["GET"])
-def get_daily_plan():
-    """获取用户每日计划"""
-    try:
-        user_name = request.args.get("user_name")
-        date = request.args.get("date")
-
-        if not user_name or not date:
-            return jsonify({"error": "Missing required fields: user_name, date"}), 400
-
-        info = db_api.get_dateinfo(user_name, date)
-
-        logger.debug("查询每日计划 | 用户: [%s] | 日期: %s", user_name, date)
-        return jsonify({"success": True, "info": info})
-
-    except Exception as e:
-        logger.error("获取每日计划时发生异常: %s", e, exc_info=True)
-        return jsonify({"error": "Internal server error"}), 500
-
-
 @app.route("/api/daily_plan/all", methods=["GET"])
 def get_all_daily_plans():
     """获取所有用户某日的每日计划"""

@@ -45,20 +45,6 @@ document
   .querySelector("#appointment-date")
   .addEventListener("change", () => init())
 
-async function fetchCurrentUserPlan(username, date) {
-  const res = await fetch(
-    `${host}/api/daily_plan/get?date=${date}&&user_name=${username}`,
-    {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-    }
-  )
-  const data = await res.json()
-  if (data.success) return data.info || []
-  return []
-}
-
 async function update_info(
   user_name,
   date,
@@ -449,10 +435,12 @@ async function init() {
   const disableToday = isYesterday
     ? false
     : await evaluateYesterdayPlan(selectedDate, userAuth)
+  const all = await fetchAllPlans(dateStr)
 
   if (userAuth && userAuth.logged_in) {
     const currentUserName = userAuth.user.user_name
-    const currentPlanInfo = await fetchCurrentUserPlan(currentUserName, dateStr)
+    const currentUser = all.find((u) => u.user === currentUserName)
+    const currentPlanInfo = currentUser?.info || []
     // 调试输出当前用户信息与计划数据
     console.log("[DatePlan] 当前用户认证信息:", userAuth)
     console.log("[DatePlan] 当前用户计划信息:", currentPlanInfo)
@@ -475,13 +463,10 @@ async function init() {
         }
       })
     }
-
-    const all = await fetchAllPlans(dateStr)
     all.forEach((u) => renderOtherUserRow(u, currentUserName))
   } else {
     // 未登录则仅展示所有用户的计划，隐藏当前用户行
     const currentUserName = null
-    const all = await fetchAllPlans(dateStr)
     all.forEach((u) => renderOtherUserRow(u, currentUserName))
   }
 }
