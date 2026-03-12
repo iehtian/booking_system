@@ -479,7 +479,7 @@ body {
 [id="weeklyView"]
   .day-column.selected-date-column
   .slot-item.available:not(:has(input[type="checkbox"]:checked)) {
-  background-color: #f7fbff;
+  background-color: #f3f0ff;
 }
 
 .slot-item.disabled {
