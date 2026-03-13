@@ -16,6 +16,7 @@ const registerItem = document.querySelector("#menu-register")
 const resetPasswordItem = document.querySelector("#menu-reset-password")
 const logoutItem = document.querySelector("#menu-logout")
 const UpdateProfileItem = document.querySelector("#menu-update-profile")
+const UpdatePasswordItem = document.querySelector("#menu-update-password")
 const deleteAccountItem = document.querySelector("#menu-delete-account")
 
 loginItem?.addEventListener("click", (event) => {
@@ -48,6 +49,11 @@ logoutItem?.addEventListener("click", (event) => {
 UpdateProfileItem?.addEventListener("click", (event) => {
   event.preventDefault()
   handleUpdateProfile().catch(console.error)
+})
+
+UpdatePasswordItem?.addEventListener("click", (event) => {
+  event.preventDefault()
+  handleUpdatePassword().catch(console.error)
 })
 
 deleteAccountItem?.addEventListener("click", (event) => {
@@ -515,6 +521,88 @@ async function handleUpdateProfile() {
       timerProgressBar: true,
       showConfirmButton: false,
     })
+  }
+}
+
+async function handleUpdatePassword() {
+  const result = await Swal.fire({
+    title: "更新密码",
+    html: `
+      <div style="font-size: 14px; color: #888; margin-bottom: 15px;">
+        请输入新密码
+      </div>
+      <input id="newpassword" type="password" class="swal2-input" placeholder="新密码" autocomplete="new-password">
+      <input id="confirmnewpassword" type="password" class="swal2-input" placeholder="确认新密码" autocomplete="new-password">
+    `,
+    confirmButtonText: "确认更新密码",
+    showCancelButton: true,
+    cancelButtonText: "取消",
+    showLoaderOnConfirm: true,
+    allowOutsideClick: () => !Swal.isLoading(),
+    preConfirm: async () => {
+      const showTempValidationMessage = (message) => {
+        Swal.showValidationMessage(message)
+        setTimeout(() => {
+          Swal.resetValidationMessage()
+        }, 3000)
+      }
+
+      const auth = JSON.parse(sessionStorage.getItem("userAuth") || "null")
+      const userId = auth?.user?.ID ?? auth?.user?.id ?? auth?.user?.username
+
+      if (!userId) {
+        showTempValidationMessage("未能获取当前用户 ID，请重新登录后再试")
+        return false
+      }
+
+      const newPassword = document.getElementById("newpassword").value.trim()
+      const confirmNewPassword = document
+        .getElementById("confirmnewpassword")
+        .value.trim()
+
+      if (!newPassword) {
+        showTempValidationMessage("请输入新密码")
+        return false
+      }
+
+      if (newPassword.length < 6) {
+        showTempValidationMessage("新密码长度不能少于 6 位")
+        return false
+      }
+
+      if (newPassword !== confirmNewPassword) {
+        showTempValidationMessage("两次输入的新密码不一致")
+        return false
+      }
+
+      try {
+        const res = await updateProfile(userId, newPassword, null, null)
+
+        if (!res.success) {
+          showTempValidationMessage(res.message || "密码更新失败，请稍后再试")
+          return false
+        }
+
+        return { success: true } // 成功后才关闭对话框
+      } catch (error) {
+        console.error("更新密码错误:", error)
+        showTempValidationMessage("密码更新过程中出现错误，请稍后再试")
+        return false
+      }
+    },
+  })
+
+  if (result.isConfirmed) {
+    await Swal.fire({
+      icon: "success",
+      title: "密码更新成功",
+      text: "请使用新密码重新登录。",
+      timer: 1500,
+      timerProgressBar: true,
+      showConfirmButton: false,
+    })
+    await logout()
+    window.location.reload()
   }
 }
 
