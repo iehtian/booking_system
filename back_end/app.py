@@ -559,6 +559,16 @@ def update_password():
         new_password = data.get("new_password")
         new_email = data.get("new_email")
         new_phone = data.get("new_phone")
+        verification_code = data.get("verify_code")
+
+        if not verification_code:
+            return jsonify({"error": "Verification code is required"}), 400
+        if not verify_code.verify_reset_code(current_user_name, verification_code):
+            logger.warning(
+                "更新信息失败 - 用户 [%s] 提供的验证码无效或已过期",
+                current_user_name,
+            )
+            return jsonify({"error": "Invalid or expired reset code"}), 400
 
         hashed_password = (
             hash_password(new_password) if new_password else user.get("password")
