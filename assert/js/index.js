@@ -137,13 +137,35 @@ async function openLoginModal() {
 
   if (!result.isConfirmed) return
 
-  await checkAuthStatus()
-  await Swal.fire({
-    icon: "success",
-    title: "登录成功",
-    timer: 1200,
+  Swal.fire({
+    title: "登录中",
+    text: "正在同步登录状态...",
+    allowOutsideClick: false,
+    allowEscapeKey: false,
     showConfirmButton: false,
+    didOpen: () => {
+      Swal.showLoading()
+    },
   })
+
+  try {
+    await checkAuthStatus()
+    await Swal.fire({
+      icon: "success",
+      title: "登录成功",
+      timer: 1200,
+      showConfirmButton: false,
+    })
+  } catch (error) {
+    await Swal.fire({
+      icon: "error",
+      title: "登录状态刷新失败",
+      text: "请稍后重试或手动刷新页面。",
+      confirmButtonText: "知道了",
+    })
+    throw error
+  }
+
   window.location.reload()
 }
 
