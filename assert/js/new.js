@@ -972,31 +972,41 @@ function disabledSlotwithDate() {
   })
 }
 
-try {
-  document.getElementById("prevDay")?.addEventListener("click", () => {
-    try {
-      changeDay(-1)
-    } catch (err) {
-      console.error("切换上一天失败:", err)
-      alert("操作失败，请重试")
-    }
-  })
-} catch (err) {
-  console.error("绑定 prevDay 事件失败:", err)
-}
+document.getElementById("prevWeek")?.addEventListener("click", () => {
+  try {
+    changeDay(-7)
+  } catch (err) {
+    console.error("切换上一周失败:", err)
+    alert("操作失败，请重试")
+  }
+})
 
-try {
-  document.getElementById("nextDay")?.addEventListener("click", () => {
-    try {
-      changeDay(1)
-    } catch (err) {
-      console.error("切换下一天失败:", err)
-      alert("操作失败，请重试")
-    }
-  })
-} catch (err) {
-  console.error("绑定 nextDay 事件失败:", err)
-}
+document.getElementById("nextWeek")?.addEventListener("click", () => {
+  try {
+    changeDay(7)
+  } catch (err) {
+    console.error("切换下一周失败:", err)
+    alert("操作失败，请重试")
+  }
+})
+
+document.getElementById("prevDay")?.addEventListener("click", () => {
+  try {
+    changeDay(-1)
+  } catch (err) {
+    console.error("切换上一天失败:", err)
+    alert("操作失败，请重试")
+  }
+})
+
+document.getElementById("nextDay")?.addEventListener("click", () => {
+  try {
+    changeDay(1)
+  } catch (err) {
+    console.error("切换下一天失败:", err)
+    alert("操作失败，请重试")
+  }
+})
 
 document.getElementById("confirmBtn")?.addEventListener("click", () => {
   try {

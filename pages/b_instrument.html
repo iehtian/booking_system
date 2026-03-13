@@ -27,16 +27,18 @@
         <!-- 桌面端日期控制 -->
         <div
           id="desktop-date-controls"
-          class="field has-addons is-justify-content-center mb-4 desktop-only"
+          class="field has-addons is-justify-content-center mb-4"
         >
           <p class="control">
-            <button class="button" id="prevDay">◀ 前一天</button>
+            <button class="button desktop-only" id="prevWeek">◀ 前一周</button>
+            <button class="button mobile-only" id="prevDay">◀ 上一天</button>
           </p>
           <p class="control is-expanded">
             <input class="input has-text-centered" id="dateInput" />
           </p>
           <p class="control">
-            <button class="button" id="nextDay">后一天 ▶</button>
+            <button class="button desktop-only" id="nextWeek">后一周 ▶</button>
+            <button class="button mobile-only" id="nextDay">下一天 ▶</button>
           </p>
         </div>
 

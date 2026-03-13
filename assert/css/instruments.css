@@ -623,7 +623,7 @@ label.slot-item.disabled,
     display: none;
   }
 
-  #desktop-date-controls.desktop-only {
+  #desktop-date-controls {
     display: flex;
     margin-bottom: 0.55rem !important;
   }
