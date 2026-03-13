@@ -101,6 +101,86 @@ function setupUserMenuAria() {
   menu.addEventListener("mouseleave", () => setExpanded(false))
 }
 
+function getVerificationModalStyleBlock() {
+  return `
+    <style>
+      .verification-container {
+        padding: 0 20px;
+      }
+      .verification-form-group {
+        margin-bottom: 12px;
+        text-align: center;
+      }
+      .verification-radio-group {
+        display: flex;
+        gap: 32px;
+        justify-content: center;
+        align-items: center;
+      }
+      .verification-radio-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #666;
+      }
+      .verification-radio-label input[type="radio"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+      }
+      .verification-code-group {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        max-width: 100%;
+      }
+      .verification-code-input {
+        flex: 1;
+        margin: 0 !important;
+        height: 42px !important;
+        box-sizing: border-box !important;
+      }
+      .verification-send-btn {
+        padding: 0 20px !important;
+        margin: 0 !important;
+        font-size: 14px !important;
+        white-space: nowrap;
+        height: 42px !important;
+        border-radius: 6px !important;
+        flex-shrink: 0;
+        line-height: 1 !important;
+      }
+      .verification-status {
+        margin: 6px 0 0;
+        font-size: 13px;
+        min-height: 16px;
+        text-align: center;
+      }
+      .swal2-input {
+        border: 1px solid #ddd !important;
+        border-radius: 6px !important;
+        padding: 10px 14px !important;
+        font-size: 14px !important;
+        transition: border-color 0.3s ease !important;
+        height: 42px !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        margin: 0 !important;
+      }
+      .swal2-input:focus {
+        border-color: #3085d6 !important;
+        box-shadow: 0 0 0 3px rgba(48, 133, 214, 0.1) !important;
+      }
+      .swal2-html-container {
+        margin: 0 !important;
+        padding: 15px 0 !important;
+      }
+    </style>
+  `
+}
+
 async function openLoginModal() {
   const result = await Swal.fire({
     title: "登录",
@@ -228,101 +308,27 @@ async function openResetPasswordModal() {
   const result = await Swal.fire({
     title: "重置密码",
     html: `
-      <style>
-        .reset-container {
-          padding: 0 20px;
-        }
-        .reset-form-group {
-          margin-bottom: 12px;
-          text-align: center;
-        }
-        .reset-radio-group {
-          display: flex;
-          gap: 32px;
-          justify-content: center;
-          align-items: center;
-        }
-        .reset-radio-label {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          cursor: pointer;
-          font-size: 14px;
-          color: #666;
-        }
-        .reset-radio-label input[type="radio"] {
-          width: 16px;
-          height: 16px;
-          cursor: pointer;
-        }
-        .reset-code-group {
-          display: flex;
-          gap: 10px;
-          align-items: center;
-          max-width: 100%;
-        }
-        .reset-code-input {
-          flex: 1;
-          margin: 0 !important;
-          height: 42px !important;
-          box-sizing: border-box !important;
-        }
-        .reset-send-btn {
-          padding: 0 20px !important;
-          margin: 0 !important;
-          font-size: 14px !important;
-          white-space: nowrap;
-          height: 42px !important;
-          border-radius: 6px !important;
-          flex-shrink: 0;
-          line-height: 1 !important;
-        }
-        .reset-status {
-          margin: 6px 0 0;
-          font-size: 13px;
-          min-height: 16px;
-          text-align: center;
-        }
-        .swal2-input {
-          border: 1px solid #ddd !important;
-          border-radius: 6px !important;
-          padding: 10px 14px !important;
-          font-size: 14px !important;
-          transition: border-color 0.3s ease !important;
-          height: 42px !important;
-          box-sizing: border-box !important;
-          width: 100% !important;
-          margin: 0 !important;
-        }
-        .swal2-input:focus {
-          border-color: #3085d6 !important;
-          box-shadow: 0 0 0 3px rgba(48, 133, 214, 0.1) !important;
-        }
-        .swal2-html-container {
-          margin: 0 !important;
-          padding: 15px 0 !important;
-        }
-      </style>
-      <div class="reset-container">
-        <div class="reset-form-group">
+      ${getVerificationModalStyleBlock()}
+      <div class="verification-container">
+        <div class="verification-form-group">
           <input id="sw-user_name" class="swal2-input" placeholder="姓名" />
         </div>
-        <div class="reset-form-group">
-          <div class="reset-radio-group">
-            <label class="reset-radio-label">
+        <div class="verification-form-group">
+          <div class="verification-radio-group">
+            <label class="verification-radio-label">
               <input type="radio" name="sw-method" value="email"  checked/> 邮箱
             </label>
 
           </div>
         </div>
-        <div class="reset-form-group">
-          <div class="reset-code-group">
-            <input id="sw-code" class="swal2-input reset-code-input" placeholder="验证码" />
-            <button type="button" id="sw-send-code" class="swal2-confirm swal2-styled reset-send-btn">发送验证码</button>
+        <div class="verification-form-group">
+          <div class="verification-code-group">
+            <input id="sw-code" class="swal2-input verification-code-input" placeholder="验证码" />
+            <button type="button" id="sw-send-code" class="swal2-confirm swal2-styled verification-send-btn">发送验证码</button>
           </div>
-          <div id="sw-code-status" class="reset-status"></div>
+          <div id="sw-code-status" class="verification-status"></div>
         </div>
-        <div class="reset-form-group">
+        <div class="verification-form-group">
           <input id="sw-new-password" type="password" class="swal2-input" placeholder="新密码" />
         </div>
       </div>
@@ -550,11 +556,25 @@ async function handleUpdatePassword() {
   const result = await Swal.fire({
     title: "更新密码",
     html: `
-      <div style="font-size: 14px; color: #888; margin-bottom: 15px;">
-        请输入新密码
+      ${getVerificationModalStyleBlock()}
+      <div class="verification-container">
+        <div style="font-size: 14px; color: #888; margin-bottom: 12px; text-align: center;">
+          将向已绑定邮箱发送验证码
+        </div>
+        <div class="verification-form-group">
+          <div class="verification-code-group">
+            <input id="sw-update-password-code" class="swal2-input verification-code-input" placeholder="验证码" />
+            <button type="button" id="sw-update-password-send-code" class="swal2-confirm swal2-styled verification-send-btn">发送验证码</button>
+          </div>
+          <div id="sw-update-password-code-status" class="verification-status"></div>
+        </div>
+        <div class="verification-form-group">
+          <input id="newpassword" type="password" class="swal2-input" placeholder="新密码" autocomplete="new-password">
+        </div>
+        <div class="verification-form-group">
+          <input id="confirmnewpassword" type="password" class="swal2-input" placeholder="确认新密码" autocomplete="new-password">
+        </div>
       </div>
-      <input id="newpassword" type="password" class="swal2-input" placeholder="新密码" autocomplete="new-password">
-      <input id="confirmnewpassword" type="password" class="swal2-input" placeholder="确认新密码" autocomplete="new-password">
     `,
     confirmButtonText: "确认更新密码",
     showCancelButton: true,
@@ -577,10 +597,24 @@ async function handleUpdatePassword() {
         return false
       }
 
+      const userName = auth?.user?.user_name
+      if (!userName) {
+        showTempValidationMessage("未能获取当前用户名，请重新登录后再试")
+        return false
+      }
+
+      const code = document
+        .getElementById("sw-update-password-code")
+        .value.trim()
       const newPassword = document.getElementById("newpassword").value.trim()
       const confirmNewPassword = document
         .getElementById("confirmnewpassword")
         .value.trim()
+
+      if (!code) {
+        showTempValidationMessage("请填写验证码")
+        return false
+      }
 
       if (!newPassword) {
         showTempValidationMessage("请输入新密码")
@@ -598,10 +632,12 @@ async function handleUpdatePassword() {
       }
 
       try {
-        const res = await updateProfile(userId, newPassword, null, null)
+        const res = await resetPassword(userName, code, newPassword)
 
         if (!res.success) {
-          showTempValidationMessage(res.message || "密码更新失败，请稍后再试")
+          showTempValidationMessage(
+            res.message || res.error || "密码更新失败，请稍后再试"
+          )
           return false
         }
 
@@ -611,6 +647,62 @@ async function handleUpdatePassword() {
         showTempValidationMessage("密码更新过程中出现错误，请稍后再试")
         return false
       }
+    },
+    didOpen: () => {
+      const sendBtn = document.getElementById("sw-update-password-send-code")
+      const statusEl = document.getElementById("sw-update-password-code-status")
+      const codeInput = document.getElementById("sw-update-password-code")
+
+      const showStatus = (text, isError = false) => {
+        if (!statusEl) return
+        statusEl.textContent = text
+        statusEl.style.color = isError ? "#d33" : "#3085d6"
+      }
+
+      const sendCode = async () => {
+        const auth = JSON.parse(sessionStorage.getItem("userAuth") || "null")
+        const userName = auth?.user?.user_name
+
+        if (!userName) {
+          showStatus("未获取到当前用户名，请重新登录", true)
+          return
+        }
+
+        sendBtn.disabled = true
+        const originalText = sendBtn.textContent
+        sendBtn.textContent = "发送中..."
+
+        try {
+          const res = await sendResetCode(userName, "email")
+          if (res.success) {
+            showStatus("验证码已发送，请查收邮箱")
+            codeInput.focus()
+
+            let countdown = 60
+            const timer = setInterval(() => {
+              countdown--
+              if (countdown > 0) {
+                sendBtn.textContent = `${countdown}秒后重发`
+              } else {
+                clearInterval(timer)
+                sendBtn.disabled = false
+                sendBtn.textContent = originalText
+              }
+            }, 1000)
+          } else {
+            showStatus(res.message || res.error || "发送失败，请稍后再试", true)
+            sendBtn.disabled = false
+            sendBtn.textContent = originalText
+          }
+        } catch (error) {
+          console.error("发送更新密码验证码错误:", error)
+          showStatus("发送请求出错", true)
+          sendBtn.disabled = false
+          sendBtn.textContent = originalText
+        }
+      }
+
+      sendBtn?.addEventListener("click", sendCode)
     },
   })
 
