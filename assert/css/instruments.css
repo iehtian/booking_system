@@ -631,13 +631,13 @@ label.slot-item.disabled,
   #desktop-date-controls .button {
     height: 2.2rem;
     font-size: 0.88rem;
-    border-radius: 8px;
+    border-radius: 3px;
   }
 
   #desktop-date-controls .input {
     height: 2.2rem;
     font-size: 0.9rem;
-    border-radius: 8px;
+    border-radius: 3px;
   }
 
   .mobile-only {
