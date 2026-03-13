@@ -78,11 +78,27 @@ header.navbar .logo:focus-visible {
   pointer-events: none;
 }
 
-.user-menu:hover .user-menu-panel,
-.user-menu.is-open .user-menu-panel {
+.user-menu-panel::before {
+  position: absolute;
+  top: -0.5rem;
+  right: 0;
+  left: 0;
+  height: 0.5rem;
+  content: "";
+}
+
+.user-menu.is-pinned .user-menu-panel {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .user-menu:hover .user-menu-panel {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
 }
 
 .menu-group {

@@ -5,7 +5,6 @@ import {
   checkAuthStatus,
   updateProfile,
   sendResetCode,
-  resetPassword,
 } from "./user_manager.js"
 import { marked } from "marked"
 import { host } from "./config.js"
