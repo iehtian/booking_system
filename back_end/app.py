@@ -543,9 +543,9 @@ def serve_changelog_md():
     return send_from_directory(changelog_path.parent, changelog_path.name)
 
 
-@app.route("/api/update_password", methods=["POST"])
+@app.route("/api/update_profile", methods=["POST"])
 @jwt_required()
-def update_password():
+def update_profile():
     """更新当前用户的个人信息"""
     try:
         current_user_name = get_jwt_identity()
@@ -642,68 +642,6 @@ def send_reset_code():
 
     except Exception as e:
         logger.error("发送重置验证码时发生异常: %s", e, exc_info=True)
-        return jsonify({"error": "Internal server error"}), 500
-
-
-@app.route("/api/reset_password", methods=["POST"])
-def reset_password():
-    """使用验证码重置密码"""
-    try:
-        data = request.get_json()
-        user_name = data.get("user_name")
-        code = data.get("code")
-        new_password = data.get("new_password")
-
-        if not user_name or not code or not new_password:
-            return jsonify({"error": "Missing required fields"}), 400
-
-        if not verify_code.verify_reset_code(user_name, code):
-            logger.warning(
-                "密码重置失败 - 用户 [%s] 提供的验证码无效或已过期", user_name
-            )
-            return jsonify({"error": "Invalid or expired reset code"}), 400
-
-        hashed_password = hash_password(new_password)
-        user = db_api.search_user_by_name(user_name)
-        if not user:
-            logger.warning("密码重置失败 - 用户 [%s] 不存在", user_name)
-            return jsonify({"error": "User not found"}), 404
-
-        db_api.upsert_user(
-            user_name,
-            hashed_password,
-            user.get("color", None),
-            user.get("email"),
-            user.get("phone"),
-        )
-
-        logger.info("用户 [%s] 通过验证码重置密码成功", user_name)
-        return jsonify({"success": True, "message": "Password has been reset"})
-
-    except Exception as e:
-        logger.error("重置密码时发生异常: %s", e, exc_info=True)
-        return jsonify({"error": "Internal server error"}), 500
-
-
-@app.route("/api/is_email_configured", methods=["GET"])
-def is_email_configured():
-    """检查用户是否已绑定邮箱"""
-    try:
-        user_name = request.args.get("user_name")
-        if not user_name:
-            return jsonify({"error": "User name is required"}), 400
-
-        user = db_api.search_user_by_name(user_name)
-        if not user:
-            logger.warning("检查邮箱配置失败 - 用户 [%s] 不存在", user_name)
-            return jsonify({"error": "User not found"}), 404
-
-        is_configured = bool(user.get("email"))
-        logger.debug("用户 [%s] 邮箱配置状态: %s", user_name, is_configured)
-        return jsonify({"is_email_configured": is_configured})
-
-    except Exception as e:
-        logger.error("检查邮箱配置时发生异常: %s", e, exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
 
 

@@ -223,7 +223,7 @@ async function updateProfile(
     if (!token) {
       return { success: false, message: "未登录" }
     }
-    const res = await fetch(`${host}/api/update_password`, {
+    const res = await fetch(`${host}/api/update_profile`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
