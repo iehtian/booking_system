@@ -8,6 +8,9 @@ import {
   fmt,
 } from "./utils/slots.js"
 import Swal from "sweetalert2"
+import flatpickr from "flatpickr"
+import "flatpickr/dist/flatpickr.min.css"
+import "flatpickr/dist/l10n/zh.js"
 
 /**
  * @typedef {Object} Slot
@@ -895,7 +898,7 @@ function changeDay(delta) {
   if (window.matchMedia("(max-width: 768px)").matches) {
     clearAllSelectedState()
   }
-  const fpInstance = flatpickr("#dateInput")
+  const fpInstance = document.getElementById("dateInput")?._flatpickr
   if (fpInstance) {
     fpInstance.setDate(selectedDate, false)
   }
