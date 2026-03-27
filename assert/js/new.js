@@ -157,21 +157,6 @@ let booking = null
 let selected = null
 
 /**
- * 根据时间文本和索引选择一个装饰贴纸。
- *
- * @param {string} timeText 时间文本。
- * @param {number} index 当前序号。
- * @returns {string} 贴纸字符。
- */
-function pickStickerByTime(timeText, index) {
-  const stickers = ["⭐", "🍀", "🧪", "🌈", "💫", "🍓"]
-  const [start] = String(timeText).split("-")
-  const hour = Number.parseInt((start || "").split(":")[0], 10)
-  const safeHour = Number.isNaN(hour) ? 0 : hour
-  return stickers[(safeHour + index) % stickers.length]
-}
-
-/**
  * 将已选时间段渲染为汇总文本。
  *
  * @param {HTMLElement | null} target 目标容器。
@@ -226,7 +211,6 @@ function setSelectedText(target, selectedRes) {
     times.forEach((time) => {
       const chip = document.createElement("span")
       chip.className = "selected-time-chip"
-      chip.dataset.sticker = pickStickerByTime(time, timeLine.children.length)
       chip.textContent = time
       timeLine.appendChild(chip)
     })
