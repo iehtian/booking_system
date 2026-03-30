@@ -527,7 +527,7 @@ body {
   border-radius: 12px;
   box-shadow: 0 4px 12px -8px rgb(65 116 156 / 30%);
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.45rem;
+  gap: 0.25rem;
 }
 
 .mobile-slot-item {
@@ -535,13 +535,13 @@ body {
   align-items: center;
   justify-content: center;
   min-width: 0;
-  height: 2.55rem;
-  min-height: 2.55rem;
-  max-height: 2.55rem;
+  height: 3.2rem;
+  min-height: 3.2rem;
+  max-height: 3.2rem;
   padding: 0 0.25rem;
   box-sizing: border-box;
   overflow: hidden;
-  font-size: 0.76rem;
+  font-size: 0.92rem;
   line-height: 1.15;
   text-align: center;
   background: linear-gradient(135deg, #fff, #f3fcff 55%, #f6fff9);
@@ -730,16 +730,16 @@ label.slot-item.disabled,
 @media (width <= 359px) {
   .mobile-slots-grid {
     padding: 0.5rem 0.4rem;
-    gap: 0.35rem;
+    gap: 0.2rem;
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .mobile-slot-item {
-    height: 2.2rem;
-    min-height: 2.2rem;
-    max-height: 2.2rem;
+    height: 2.8rem;
+    min-height: 2.8rem;
+    max-height: 2.8rem;
     padding: 0 0.15rem;
-    font-size: 0.65rem;
+    font-size: 0.82rem;
     white-space: nowrap;
   }
 }
@@ -747,7 +747,7 @@ label.slot-item.disabled,
 /* 小屏幕优化 (360px-400px) */
 @media (width >= 360px) and (width <= 400px) {
   .mobile-slot-item {
-    font-size: 0.7rem;
+    font-size: 0.88rem;
     white-space: nowrap;
   }
 }
