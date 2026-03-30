@@ -550,11 +550,13 @@ body {
   box-shadow: 0 4px 8px -6px rgb(24 92 126 / 40%);
   transition: all 0.2s;
   cursor: var(--cursor-pointer);
+  white-space: nowrap;
 }
 
 .mobile-slot-item > span,
 .mobile-slot-item-text {
   display: block;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -738,6 +740,7 @@ label.slot-item.disabled,
     max-height: 2.2rem;
     padding: 0 0.15rem;
     font-size: 0.65rem;
+    white-space: nowrap;
   }
 }
 
@@ -745,5 +748,6 @@ label.slot-item.disabled,
 @media (width >= 360px) and (width <= 400px) {
   .mobile-slot-item {
     font-size: 0.7rem;
+    white-space: nowrap;
   }
 }
