@@ -747,7 +747,7 @@ label.slot-item.disabled,
 /* 小屏幕优化 (360px-400px) */
 @media (width >= 360px) and (width <= 400px) {
   .mobile-slot-item {
-    font-size: 0.8rem;
+    font-size: 0.77rem;
     white-space: nowrap;
   }
 }
