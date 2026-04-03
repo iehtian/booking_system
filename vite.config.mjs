@@ -2,10 +2,26 @@ import { resolve } from "path"
 import { defineConfig } from "vite"
 import basicSsl from "@vitejs/plugin-basic-ssl"
 
+// 构建时配置：维护模式，设为 true 时页面显示"正在更新，暂不可用"
+const MAINTENANCE = false
+
 // 多页面构建：将根 index.html 与 pages 目录下的各页面作为入口
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   appType: "mpa",
-  plugins: [basicSsl()],
+  plugins: [
+    basicSsl(),
+    // 注入构建时配置到前端
+    {
+      name: "inject-config",
+      config() {
+        return {
+          define: {
+            __MAINTENANCE__: JSON.stringify(MAINTENANCE),
+          },
+        }
+      },
+    },
+  ],
   server: {
     https: true, // ✅ 启用 https
     port: 5173, // 可选：指定端口
@@ -37,4 +53,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))

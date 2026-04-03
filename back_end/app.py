@@ -645,35 +645,6 @@ def send_reset_code():
         return jsonify({"error": "Internal server error"}), 500
 
 
-# ──────────────────────────────────────────────
-# 维护模式开关（配置在 config.py 中）
-# ──────────────────────────────────────────────
-@app.route("/api/maintenance", methods=["GET"])
-def get_maintenance_status():
-    """获取维护模式状态（无需认证）"""
-    return jsonify({"maintenance": Config.MAINTENANCE})
-
-
-@app.route("/api/maintenance", methods=["POST"])
-@jwt_required()
-def set_maintenance_status():
-    """设置维护模式状态（需要管理员认证）- 暂不支持运行时修改，仅供查询"""
-    return jsonify({"error": "维护模式须在 config.py 中配置修改"}), 405
-
-
-@app.before_request
-def check_maintenance():
-    """所有 /api/* 请求前检查维护模式"""
-    if request.path.startswith("/api/") and request.endpoint not in [
-        "get_maintenance_status",
-        "set_maintenance_status",
-    ]:
-        if Config.MAINTENANCE:
-            return jsonify(
-                {"error": "System is under maintenance", "maintenance": True}
-            ), 503
-
-
 if __name__ == "__main__":
     if db_api.initialize_database():
         logger.info("数据库初始化完成（users/bookings/date_plans），系统已准备好运行")
