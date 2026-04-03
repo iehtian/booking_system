@@ -10,6 +10,12 @@ import { marked } from "marked"
 import { host } from "./config.js"
 import Swal from "sweetalert2"
 
+// 包装 Swal.fire 以打印调试调用栈
+const debugSwal = async (...args) => {
+  console.trace("Swal.fire 调用栈")
+  return Swal.fire(...args)
+}
+
 const loginItem = document.querySelector("#menu-login")
 const registerItem = document.querySelector("#menu-register")
 const resetPasswordItem = document.querySelector("#menu-reset-password")
@@ -180,7 +186,7 @@ function getVerificationModalStyleBlock() {
 }
 
 async function openLoginModal() {
-  const result = await Swal.fire({
+  const result = await debugSwal({
     title: "登录",
     html: `
       <input id="sw-login-username" class="swal2-input" placeholder="姓名" autocomplete="username" />
@@ -215,7 +221,7 @@ async function openLoginModal() {
 
   if (!result.isConfirmed) return
 
-  Swal.fire({
+  debugSwal({
     title: "登录中",
     text: "正在同步登录状态...",
     allowOutsideClick: false,
@@ -228,14 +234,14 @@ async function openLoginModal() {
 
   try {
     await checkAuthStatus()
-    await Swal.fire({
+    await debugSwal({
       icon: "success",
       title: "登录成功",
       timer: 1200,
       showConfirmButton: false,
     })
   } catch (error) {
-    await Swal.fire({
+    await debugSwal({
       icon: "error",
       title: "登录状态刷新失败",
       text: "请稍后重试或手动刷新页面。",
@@ -248,7 +254,7 @@ async function openLoginModal() {
 }
 
 async function openRegisterModal() {
-  const result = await Swal.fire({
+  const result = await debugSwal({
     title: "注册",
     html: `
       <input id="sw-register-username" class="swal2-input" placeholder="姓名" />
@@ -292,7 +298,7 @@ async function openRegisterModal() {
   if (!result.isConfirmed) return
 
   await checkAuthStatus()
-  await Swal.fire({
+  await debugSwal({
     icon: "success",
     title: "注册成功",
     text: "已自动登录，如未登录请再试一次。",
@@ -303,7 +309,7 @@ async function openRegisterModal() {
 }
 
 async function openResetPasswordModal() {
-  const result = await Swal.fire({
+  const result = await debugSwal({
     title: "重置密码",
     html: `
       ${getVerificationModalStyleBlock()}
@@ -454,7 +460,7 @@ async function openResetPasswordModal() {
   })
 
   if (result.isConfirmed) {
-    await Swal.fire({
+    await debugSwal({
       icon: "success",
       title: "密码重置成功",
       text: "请使用新密码重新登录。",
@@ -467,7 +473,7 @@ async function openResetPasswordModal() {
 }
 
 async function handleUpdatePassword() {
-  const result = await Swal.fire({
+  const result = await debugSwal({
     title: "更新密码",
     html: `
       ${getVerificationModalStyleBlock()}
@@ -621,7 +627,7 @@ async function handleUpdatePassword() {
   })
 
   if (result.isConfirmed) {
-    await Swal.fire({
+    await debugSwal({
       icon: "success",
       title: "密码更新成功",
       text: "请使用新密码重新登录。",
@@ -635,7 +641,7 @@ async function handleUpdatePassword() {
 }
 
 async function handleUpdateEmail() {
-  const result = await Swal.fire({
+  const result = await debugSwal({
     title: "更新邮箱",
     html: `
       ${getVerificationModalStyleBlock()}
@@ -781,7 +787,7 @@ async function handleUpdateEmail() {
   })
 
   if (result.isConfirmed) {
-    await Swal.fire({
+    await debugSwal({
       icon: "success",
       title: "邮箱更新成功",
       text: "新邮箱已保存。",
