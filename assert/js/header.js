@@ -48,6 +48,38 @@ function synchronizeNavHeightVar() {
   window.addEventListener("resize", apply)
 }
 
+async function checkMaintenance() {
+  try {
+    const res = await fetch(`/api/maintenance`)
+    const data = await res.json()
+    if (data.maintenance) {
+      document.body.innerHTML = `
+        <div style="
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          background: #f5f5f5;
+        ">
+          <div style="
+            text-align: center;
+            padding: 40px;
+          ">
+            <h1 style="color: #e74c3c; font-size: 32px; margin-bottom: 20px;">
+              正在更新，暂不可用
+            </h1>
+            <p style="color: #666; font-size: 18px;">
+              系统正在维护中，请稍后再试...
+            </p>
+          </div>
+        </div>
+      `
+    }
+  } catch (e) {
+    console.error("检查维护状态失败:", e)
+  }
+}
+
 function wireUserMenu() {
   const menu = document.querySelector(".user-menu")
   const trigger = menu?.querySelector(".user-menu-trigger")
@@ -96,13 +128,14 @@ function wireUserMenu() {
   syncExpanded()
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const header = document.querySelector("header.navbar")
   if (!header) {
     console.warn("header.navbar not found; header behaviors skipped.")
     return
   }
 
+  await checkMaintenance().catch(console.error)
   wireLogoNavigation()
   wireUserMenu()
   synchronizeNavHeightVar()
