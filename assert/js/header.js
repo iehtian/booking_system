@@ -75,6 +75,7 @@ function checkMaintenance() {
       </div>
     `
   }
+  return Promise.resolve()
 }
 
 function wireUserMenu() {
