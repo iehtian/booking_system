@@ -188,7 +188,8 @@ async function checkAuthStatus() {
       let errBody
       try {
         errBody = await res.json()
-      } catch (_) {
+      } catch (error) {
+        void error
         // 忽略解析错误
       }
       console.warn(
@@ -210,13 +211,19 @@ async function checkAuthStatus() {
   }
 }
 
-async function updateProfile(ID, newPassword, newEmail, newPhone) {
+async function updateProfile(
+  ID,
+  newPassword,
+  newEmail,
+  newPhone,
+  verifyCode = null
+) {
   try {
     const token = localStorage.getItem("access_token")
     if (!token) {
       return { success: false, message: "未登录" }
     }
-    const res = await fetch(`${host}/api/update_password`, {
+    const res = await fetch(`${host}/api/update_profile`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -227,6 +234,7 @@ async function updateProfile(ID, newPassword, newEmail, newPhone) {
         new_password: newPassword,
         new_email: newEmail,
         new_phone: newPhone,
+        verify_code: verifyCode,
       }),
     })
     const data = await res.json()
@@ -252,21 +260,6 @@ async function sendResetCode(user_name, method) {
   }
 }
 
-// 重置密码
-async function resetPassword(user_name, code, newPassword) {
-  try {
-    const res = await fetch(`${host}/api/reset_password`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_name, code, new_password: newPassword }),
-    })
-    return await res.json()
-  } catch (error) {
-    console.error("重置密码错误:", error)
-    return { success: false, message: "网络或服务器错误" }
-  }
-}
-
 export {
   login,
   register,
@@ -274,5 +267,4 @@ export {
   checkAuthStatus,
   updateProfile,
   sendResetCode,
-  resetPassword,
 }

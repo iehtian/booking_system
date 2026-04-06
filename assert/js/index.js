@@ -5,17 +5,23 @@ import {
   checkAuthStatus,
   updateProfile,
   sendResetCode,
-  resetPassword,
 } from "./user_manager.js"
 import { marked } from "marked"
 import { host } from "./config.js"
 import Swal from "sweetalert2"
 
+// 包装 Swal.fire 以打印调试调用栈
+const debugSwal = async (...args) => {
+  console.trace("Swal.fire 调用栈")
+  return Swal.fire(...args)
+}
+
 const loginItem = document.querySelector("#menu-login")
 const registerItem = document.querySelector("#menu-register")
 const resetPasswordItem = document.querySelector("#menu-reset-password")
 const logoutItem = document.querySelector("#menu-logout")
-const UpdateProfileItem = document.querySelector("#menu-update-profile")
+const UpdateEmailItem = document.querySelector("#menu-update-email")
+const UpdatePasswordItem = document.querySelector("#menu-update-password")
 const deleteAccountItem = document.querySelector("#menu-delete-account")
 
 loginItem?.addEventListener("click", (event) => {
@@ -45,9 +51,14 @@ logoutItem?.addEventListener("click", (event) => {
     })
 })
 
-UpdateProfileItem?.addEventListener("click", (event) => {
+UpdateEmailItem?.addEventListener("click", (event) => {
   event.preventDefault()
-  handleUpdateProfile().catch(console.error)
+  handleUpdateEmail().catch(console.error)
+})
+
+UpdatePasswordItem?.addEventListener("click", (event) => {
+  event.preventDefault()
+  handleUpdatePassword().catch(console.error)
 })
 
 deleteAccountItem?.addEventListener("click", (event) => {
@@ -80,7 +91,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   await initUser().catch(console.error)
   await setupAnnouncements().catch(console.error)
   setupUserMenuAria()
-  await Forced_add_email()
 })
 
 function setupUserMenuAria() {
@@ -95,8 +105,88 @@ function setupUserMenuAria() {
   menu.addEventListener("mouseleave", () => setExpanded(false))
 }
 
+function getVerificationModalStyleBlock() {
+  return `
+    <style>
+      .verification-container {
+        padding: 0 20px;
+      }
+      .verification-form-group {
+        margin-bottom: 12px;
+        text-align: center;
+      }
+      .verification-radio-group {
+        display: flex;
+        gap: 32px;
+        justify-content: center;
+        align-items: center;
+      }
+      .verification-radio-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #666;
+      }
+      .verification-radio-label input[type="radio"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+      }
+      .verification-code-group {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        max-width: 100%;
+      }
+      .verification-code-input {
+        flex: 1;
+        margin: 0 !important;
+        height: 42px !important;
+        box-sizing: border-box !important;
+      }
+      .verification-send-btn {
+        padding: 0 20px !important;
+        margin: 0 !important;
+        font-size: 14px !important;
+        white-space: nowrap;
+        height: 42px !important;
+        border-radius: 6px !important;
+        flex-shrink: 0;
+        line-height: 1 !important;
+      }
+      .verification-status {
+        margin: 6px 0 0;
+        font-size: 13px;
+        min-height: 16px;
+        text-align: center;
+      }
+      .swal2-input {
+        border: 1px solid #ddd !important;
+        border-radius: 6px !important;
+        padding: 10px 14px !important;
+        font-size: 14px !important;
+        transition: border-color 0.3s ease !important;
+        height: 42px !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        margin: 0 !important;
+      }
+      .swal2-input:focus {
+        border-color: #3085d6 !important;
+        box-shadow: 0 0 0 3px rgba(48, 133, 214, 0.1) !important;
+      }
+      .swal2-html-container {
+        margin: 0 !important;
+        padding: 15px 0 !important;
+      }
+    </style>
+  `
+}
+
 async function openLoginModal() {
-  const result = await Swal.fire({
+  const result = await debugSwal({
     title: "登录",
     html: `
       <input id="sw-login-username" class="swal2-input" placeholder="姓名" autocomplete="username" />
@@ -131,18 +221,40 @@ async function openLoginModal() {
 
   if (!result.isConfirmed) return
 
-  await checkAuthStatus()
-  await Swal.fire({
-    icon: "success",
-    title: "登录成功",
-    timer: 1200,
+  debugSwal({
+    title: "登录中",
+    text: "正在同步登录状态...",
+    allowOutsideClick: false,
+    allowEscapeKey: false,
     showConfirmButton: false,
+    didOpen: () => {
+      Swal.showLoading()
+    },
   })
+
+  try {
+    await checkAuthStatus()
+    await debugSwal({
+      icon: "success",
+      title: "登录成功",
+      timer: 1200,
+      showConfirmButton: false,
+    })
+  } catch (error) {
+    await debugSwal({
+      icon: "error",
+      title: "登录状态刷新失败",
+      text: "请稍后重试或手动刷新页面。",
+      confirmButtonText: "知道了",
+    })
+    throw error
+  }
+
   window.location.reload()
 }
 
 async function openRegisterModal() {
-  const result = await Swal.fire({
+  const result = await debugSwal({
     title: "注册",
     html: `
       <input id="sw-register-username" class="swal2-input" placeholder="姓名" />
@@ -186,7 +298,7 @@ async function openRegisterModal() {
   if (!result.isConfirmed) return
 
   await checkAuthStatus()
-  await Swal.fire({
+  await debugSwal({
     icon: "success",
     title: "注册成功",
     text: "已自动登录，如未登录请再试一次。",
@@ -197,104 +309,30 @@ async function openRegisterModal() {
 }
 
 async function openResetPasswordModal() {
-  const result = await Swal.fire({
+  const result = await debugSwal({
     title: "重置密码",
     html: `
-      <style>
-        .reset-container {
-          padding: 0 20px;
-        }
-        .reset-form-group {
-          margin-bottom: 12px;
-          text-align: center;
-        }
-        .reset-radio-group {
-          display: flex;
-          gap: 32px;
-          justify-content: center;
-          align-items: center;
-        }
-        .reset-radio-label {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          cursor: pointer;
-          font-size: 14px;
-          color: #666;
-        }
-        .reset-radio-label input[type="radio"] {
-          width: 16px;
-          height: 16px;
-          cursor: pointer;
-        }
-        .reset-code-group {
-          display: flex;
-          gap: 10px;
-          align-items: center;
-          max-width: 100%;
-        }
-        .reset-code-input {
-          flex: 1;
-          margin: 0 !important;
-          height: 42px !important;
-          box-sizing: border-box !important;
-        }
-        .reset-send-btn {
-          padding: 0 20px !important;
-          margin: 0 !important;
-          font-size: 14px !important;
-          white-space: nowrap;
-          height: 42px !important;
-          border-radius: 6px !important;
-          flex-shrink: 0;
-          line-height: 1 !important;
-        }
-        .reset-status {
-          margin: 6px 0 0;
-          font-size: 13px;
-          min-height: 16px;
-          text-align: center;
-        }
-        .swal2-input {
-          border: 1px solid #ddd !important;
-          border-radius: 6px !important;
-          padding: 10px 14px !important;
-          font-size: 14px !important;
-          transition: border-color 0.3s ease !important;
-          height: 42px !important;
-          box-sizing: border-box !important;
-          width: 100% !important;
-          margin: 0 !important;
-        }
-        .swal2-input:focus {
-          border-color: #3085d6 !important;
-          box-shadow: 0 0 0 3px rgba(48, 133, 214, 0.1) !important;
-        }
-        .swal2-html-container {
-          margin: 0 !important;
-          padding: 15px 0 !important;
-        }
-      </style>
-      <div class="reset-container">
-        <div class="reset-form-group">
+      ${getVerificationModalStyleBlock()}
+      <div class="verification-container">
+        <div class="verification-form-group">
           <input id="sw-user_name" class="swal2-input" placeholder="姓名" />
         </div>
-        <div class="reset-form-group">
-          <div class="reset-radio-group">
-            <label class="reset-radio-label">
+        <div class="verification-form-group">
+          <div class="verification-radio-group">
+            <label class="verification-radio-label">
               <input type="radio" name="sw-method" value="email"  checked/> 邮箱
             </label>
 
           </div>
         </div>
-        <div class="reset-form-group">
-          <div class="reset-code-group">
-            <input id="sw-code" class="swal2-input reset-code-input" placeholder="验证码" />
-            <button type="button" id="sw-send-code" class="swal2-confirm swal2-styled reset-send-btn">发送验证码</button>
+        <div class="verification-form-group">
+          <div class="verification-code-group">
+            <input id="sw-code" class="swal2-input verification-code-input" placeholder="验证码" />
+            <button type="button" id="sw-send-code" class="swal2-confirm swal2-styled verification-send-btn">发送验证码</button>
           </div>
-          <div id="sw-code-status" class="reset-status"></div>
+          <div id="sw-code-status" class="verification-status"></div>
         </div>
-        <div class="reset-form-group">
+        <div class="verification-form-group">
           <input id="sw-new-password" type="password" class="swal2-input" placeholder="新密码" />
         </div>
       </div>
@@ -422,7 +460,7 @@ async function openResetPasswordModal() {
   })
 
   if (result.isConfirmed) {
-    await Swal.fire({
+    await debugSwal({
       icon: "success",
       title: "密码重置成功",
       text: "请使用新密码重新登录。",
@@ -434,17 +472,31 @@ async function openResetPasswordModal() {
   }
 }
 
-async function handleUpdateProfile() {
-  const result = await Swal.fire({
-    title: "更新个人信息",
+async function handleUpdatePassword() {
+  const result = await debugSwal({
+    title: "更新密码",
     html: `
-      <div style="font-size: 14px; color: #888; margin-bottom: 15px;">
-        无需更新的项可以留空
+      ${getVerificationModalStyleBlock()}
+      <div class="verification-container">
+        <div style="font-size: 14px; color: #888; margin-bottom: 12px; text-align: center;">
+          将向已绑定邮箱发送验证码
+        </div>
+        <div class="verification-form-group">
+          <div class="verification-code-group">
+            <input id="sw-update-password-code" class="swal2-input verification-code-input" placeholder="验证码" />
+            <button type="button" id="sw-update-password-send-code" class="swal2-confirm swal2-styled verification-send-btn">发送验证码</button>
+          </div>
+          <div id="sw-update-password-code-status" class="verification-status"></div>
+        </div>
+        <div class="verification-form-group">
+          <input id="newpassword" type="password" class="swal2-input" placeholder="新密码" autocomplete="new-password">
+        </div>
+        <div class="verification-form-group">
+          <input id="confirmnewpassword" type="password" class="swal2-input" placeholder="确认新密码" autocomplete="new-password">
+        </div>
       </div>
-      <input id="newpassword" type="password" class="swal2-input" placeholder="新密码">
-      <input id="newemail" type="email" class="swal2-input" placeholder="新邮箱">
     `,
-    confirmButtonText: "确认更新",
+    confirmButtonText: "确认更新密码",
     showCancelButton: true,
     cancelButtonText: "取消",
     showLoaderOnConfirm: true,
@@ -465,52 +517,280 @@ async function handleUpdateProfile() {
         return false
       }
 
+      const userName = auth?.user?.user_name
+      if (!userName) {
+        showTempValidationMessage("未能获取当前用户名，请重新登录后再试")
+        return false
+      }
+
+      const code = document
+        .getElementById("sw-update-password-code")
+        .value.trim()
       const newPassword = document.getElementById("newpassword").value.trim()
-      const newEmail = document.getElementById("newemail").value.trim()
-      const newPhone = null
+      const confirmNewPassword = document
+        .getElementById("confirmnewpassword")
+        .value.trim()
 
-      if (!newPassword && !newEmail && !newPhone) {
-        showTempValidationMessage("请至少填写一项需要更新的信息")
+      if (!code) {
+        showTempValidationMessage("请填写验证码")
         return false
       }
 
-      if (newEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
-        showTempValidationMessage("请输入有效的邮箱地址")
+      if (!newPassword) {
+        showTempValidationMessage("请输入新密码")
         return false
       }
 
-      if (newPhone && !/^1[3-9]\d{9}$/.test(newPhone)) {
-        showTempValidationMessage("请输入有效的手机号码")
+      if (newPassword.length < 6) {
+        showTempValidationMessage("新密码长度不能少于 6 位")
+        return false
+      }
+
+      if (newPassword !== confirmNewPassword) {
+        showTempValidationMessage("两次输入的新密码不一致")
         return false
       }
 
       try {
-        const res = await updateProfile(
-          userId,
-          newPassword || null,
-          newEmail || null,
-          newPhone || null
-        )
+        const res = await updateProfile(userId, newPassword, null, null, code)
 
         if (!res.success) {
-          showTempValidationMessage(res.message || "更新失败，请稍后再试")
+          showTempValidationMessage(
+            res.message || res.error || "密码更新失败，请稍后再试"
+          )
           return false
         }
 
         return { success: true } // 成功后才关闭对话框
       } catch (error) {
-        console.error("更新个人信息错误:", error)
-        showTempValidationMessage("更新过程中出现错误，请稍后再试")
+        console.error("更新密码错误:", error)
+        showTempValidationMessage("密码更新过程中出现错误，请稍后再试")
         return false
       }
+    },
+    didOpen: () => {
+      const sendBtn = document.getElementById("sw-update-password-send-code")
+      const statusEl = document.getElementById("sw-update-password-code-status")
+      const codeInput = document.getElementById("sw-update-password-code")
+
+      const showStatus = (text, isError = false) => {
+        if (!statusEl) return
+        statusEl.textContent = text
+        statusEl.style.color = isError ? "#d33" : "#3085d6"
+      }
+
+      const sendCode = async () => {
+        const auth = JSON.parse(sessionStorage.getItem("userAuth") || "null")
+        const userName = auth?.user?.user_name
+
+        if (!userName) {
+          showStatus("未获取到当前用户名，请重新登录", true)
+          return
+        }
+
+        sendBtn.disabled = true
+        const originalText = sendBtn.textContent
+        sendBtn.textContent = "发送中..."
+
+        try {
+          const res = await sendResetCode(userName, "email")
+          if (res.success) {
+            showStatus("验证码已发送，请查收邮箱")
+            codeInput.focus()
+
+            let countdown = 60
+            const timer = setInterval(() => {
+              countdown--
+              if (countdown > 0) {
+                sendBtn.textContent = `${countdown}秒后重发`
+              } else {
+                clearInterval(timer)
+                sendBtn.disabled = false
+                sendBtn.textContent = originalText
+              }
+            }, 1000)
+          } else {
+            showStatus(res.message || res.error || "发送失败，请稍后再试", true)
+            sendBtn.disabled = false
+            sendBtn.textContent = originalText
+          }
+        } catch (error) {
+          console.error("发送更新密码验证码错误:", error)
+          showStatus("发送请求出错", true)
+          sendBtn.disabled = false
+          sendBtn.textContent = originalText
+        }
+      }
+
+      sendBtn?.addEventListener("click", sendCode)
     },
   })
 
   if (result.isConfirmed) {
-    await Swal.fire({
+    await debugSwal({
       icon: "success",
-      title: "更新成功",
-      text: "个人信息更新成功！",
+      title: "密码更新成功",
+      text: "请使用新密码重新登录。",
+      timer: 1500,
+      timerProgressBar: true,
+      showConfirmButton: false,
+    })
+    await logout()
+    window.location.reload()
+  }
+}
+
+async function handleUpdateEmail() {
+  const result = await debugSwal({
+    title: "更新邮箱",
+    html: `
+      ${getVerificationModalStyleBlock()}
+      <div class="verification-container">
+        <div style="font-size: 14px; color: #888; margin-bottom: 12px; text-align: center;">
+          将向当前已绑定邮箱发送验证码
+        </div>
+        <div class="verification-form-group">
+          <div class="verification-code-group">
+            <input id="sw-update-email-code" class="swal2-input verification-code-input" placeholder="验证码" />
+            <button type="button" id="sw-update-email-send-code" class="swal2-confirm swal2-styled verification-send-btn">发送验证码</button>
+          </div>
+          <div id="sw-update-email-code-status" class="verification-status"></div>
+        </div>
+        <div class="verification-form-group">
+          <input id="sw-update-email-new" type="email" class="swal2-input" placeholder="新邮箱" autocomplete="email">
+        </div>
+        <div class="verification-form-group">
+          <input id="sw-update-email-confirm" type="email" class="swal2-input" placeholder="确认新邮箱" autocomplete="email">
+        </div>
+      </div>
+    `,
+    confirmButtonText: "确认更新邮箱",
+    showCancelButton: true,
+    cancelButtonText: "取消",
+    showLoaderOnConfirm: true,
+    allowOutsideClick: () => !Swal.isLoading(),
+    preConfirm: async () => {
+      const showTempValidationMessage = (message) => {
+        Swal.showValidationMessage(message)
+        setTimeout(() => {
+          Swal.resetValidationMessage()
+        }, 3000)
+      }
+
+      const auth = JSON.parse(sessionStorage.getItem("userAuth") || "null")
+      const userId = auth?.user?.ID ?? auth?.user?.id ?? auth?.user?.username
+
+      if (!userId) {
+        showTempValidationMessage("未能获取当前用户 ID，请重新登录后再试")
+        return false
+      }
+
+      const code = document.getElementById("sw-update-email-code").value.trim()
+      const newEmail = document
+        .getElementById("sw-update-email-new")
+        .value.trim()
+      const confirmNewEmail = document
+        .getElementById("sw-update-email-confirm")
+        .value.trim()
+
+      if (!code) {
+        showTempValidationMessage("请填写验证码")
+        return false
+      }
+
+      if (!newEmail) {
+        showTempValidationMessage("请输入新邮箱")
+        return false
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+        showTempValidationMessage("请输入有效的邮箱地址")
+        return false
+      }
+
+      if (newEmail !== confirmNewEmail) {
+        showTempValidationMessage("两次输入的新邮箱不一致")
+        return false
+      }
+
+      try {
+        const res = await updateProfile(userId, null, newEmail, null, code)
+        if (!res.success) {
+          showTempValidationMessage(
+            res.message || res.error || "邮箱更新失败，请稍后再试"
+          )
+          return false
+        }
+        return { success: true }
+      } catch (error) {
+        console.error("更新邮箱错误:", error)
+        showTempValidationMessage("邮箱更新过程中出现错误，请稍后再试")
+        return false
+      }
+    },
+    didOpen: () => {
+      const sendBtn = document.getElementById("sw-update-email-send-code")
+      const statusEl = document.getElementById("sw-update-email-code-status")
+      const codeInput = document.getElementById("sw-update-email-code")
+
+      const showStatus = (text, isError = false) => {
+        if (!statusEl) return
+        statusEl.textContent = text
+        statusEl.style.color = isError ? "#d33" : "#3085d6"
+      }
+
+      const sendCode = async () => {
+        const auth = JSON.parse(sessionStorage.getItem("userAuth") || "null")
+        const userName = auth?.user?.user_name
+
+        if (!userName) {
+          showStatus("未获取到当前用户名，请重新登录", true)
+          return
+        }
+
+        sendBtn.disabled = true
+        const originalText = sendBtn.textContent
+        sendBtn.textContent = "发送中..."
+
+        try {
+          const res = await sendResetCode(userName, "email")
+          if (res.success) {
+            showStatus("验证码已发送，请查收邮箱")
+            codeInput.focus()
+
+            let countdown = 60
+            const timer = setInterval(() => {
+              countdown--
+              if (countdown > 0) {
+                sendBtn.textContent = `${countdown}秒后重发`
+              } else {
+                clearInterval(timer)
+                sendBtn.disabled = false
+                sendBtn.textContent = originalText
+              }
+            }, 1000)
+          } else {
+            showStatus(res.message || res.error || "发送失败，请稍后再试", true)
+            sendBtn.disabled = false
+            sendBtn.textContent = originalText
+          }
+        } catch (error) {
+          console.error("发送更新邮箱验证码错误:", error)
+          showStatus("发送请求出错", true)
+          sendBtn.disabled = false
+          sendBtn.textContent = originalText
+        }
+      }
+
+      sendBtn?.addEventListener("click", sendCode)
+    },
+  })
+
+  if (result.isConfirmed) {
+    await debugSwal({
+      icon: "success",
+      title: "邮箱更新成功",
+      text: "新邮箱已保存。",
       timer: 1500,
       timerProgressBar: true,
       showConfirmButton: false,
@@ -634,30 +914,5 @@ async function setupAnnouncements() {
       : marked.parse(changelogText || "")
     content.innerHTML = latestHtml
     open()
-  }
-}
-
-async function Forced_add_email() {
-  const userAuth = JSON.parse(sessionStorage.getItem("userAuth") || "null")
-  if (!userAuth) return
-  const res = await fetch(
-    `${host}/api/is_email_configured?user_name=${encodeURIComponent(userAuth.user.user_name)}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  )
-  const data = await res.json()
-  console.log("邮箱配置状态:", data)
-  if (!data.is_email_configured) {
-    await Swal.fire({
-      icon: "warning",
-      title: "请设置邮箱",
-      text: "为了保障账号安全，请尽快在个人资料中设置邮箱地址。",
-      confirmButtonText: "去设置",
-    })
-    await handleUpdateProfile()
   }
 }

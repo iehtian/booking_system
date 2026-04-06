@@ -48,48 +48,93 @@ function synchronizeNavHeightVar() {
   window.addEventListener("resize", apply)
 }
 
-function wireUserMenuHover() {
+// 构建时注入的维护模式配置（在 vite.config.mjs 中定义）
+const MAINTENANCE = __MAINTENANCE__ === true
+
+function checkMaintenance() {
+  if (MAINTENANCE) {
+    document.body.innerHTML = `
+      <div style="
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: #f5f5f5;
+      ">
+        <div style="
+          text-align: center;
+          padding: 40px;
+        ">
+          <h1 style="color: #e74c3c; font-size: 32px; margin-bottom: 20px;">
+            正在更新，暂不可用
+          </h1>
+          <p style="color: #666; font-size: 18px;">
+            系统正在维护中，请稍后再试...
+          </p>
+        </div>
+      </div>
+    `
+  }
+  return Promise.resolve()
+}
+
+function wireUserMenu() {
   const menu = document.querySelector(".user-menu")
   const trigger = menu?.querySelector(".user-menu-trigger")
   const panel = document.querySelector(".user-menu-panel")
   if (!menu || !panel) return
 
-  let closeTimer
+  const canHover = window.matchMedia(
+    "(hover: hover) and (pointer: fine)"
+  ).matches
 
-  const open = () => {
-    window.clearTimeout(closeTimer)
-    panel.style.opacity = "1"
-    panel.style.pointerEvents = "auto"
-    panel.style.transform = "translateY(0)"
-    menu.classList.add("is-open")
-    trigger?.setAttribute("aria-expanded", "true")
+  const syncExpanded = () => {
+    const isExpanded =
+      menu.classList.contains("is-pinned") ||
+      (canHover && menu.matches(":hover"))
+    trigger?.setAttribute("aria-expanded", isExpanded ? "true" : "false")
   }
 
-  const close = () => {
-    window.clearTimeout(closeTimer)
-    closeTimer = window.setTimeout(() => {
-      panel.style.opacity = ""
-      panel.style.pointerEvents = ""
-      panel.style.transform = ""
-      menu.classList.remove("is-open")
-      trigger?.setAttribute("aria-expanded", "false")
-    }, 80)
+  trigger?.addEventListener("click", () => {
+    const isPinned = menu.classList.toggle("is-pinned")
+    if (!isPinned) {
+      trigger.blur()
+    }
+    syncExpanded()
+  })
+
+  if (canHover) {
+    menu.addEventListener("mouseenter", syncExpanded)
+    menu.addEventListener("mouseleave", syncExpanded)
   }
 
-  menu.addEventListener("mouseenter", open)
-  menu.addEventListener("mouseleave", close)
-  panel.addEventListener("mouseenter", open)
-  panel.addEventListener("mouseleave", close)
+  menu.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape") {
+      menu.classList.remove("is-pinned")
+      syncExpanded()
+      trigger?.focus()
+    }
+  })
+
+  document.addEventListener("click", (ev) => {
+    if (!menu.contains(ev.target)) {
+      menu.classList.remove("is-pinned")
+      syncExpanded()
+    }
+  })
+
+  syncExpanded()
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const header = document.querySelector("header.navbar")
   if (!header) {
     console.warn("header.navbar not found; header behaviors skipped.")
     return
   }
 
+  await checkMaintenance().catch(console.error)
   wireLogoNavigation()
-  wireUserMenuHover()
+  wireUserMenu()
   synchronizeNavHeightVar()
 })
