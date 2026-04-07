@@ -671,8 +671,10 @@ function renderMobileSlots() {
     )
 
     let cls = "available"
-    if (isBookedByOthers) cls = "booked"
-    if (isPast) cls = "disabled"
+    // 只有没有被预约的才根据时间显示状态，被预约的一律显示对应颜色
+    if (!bookingInfo && isPast) {
+      cls = "disabled"
+    }
     if (isSelected) cls = "selected"
 
     const item = document.createElement("button")
