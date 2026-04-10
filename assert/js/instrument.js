@@ -313,6 +313,20 @@ function isPastSlot(dateKey, slotId) {
 }
 
 /**
+ * 统一应用已预约 slot 的视觉样式。
+ *
+ * @param {HTMLElement | null} element 目标元素。
+ * @param {{ color?: string, dimmed?: boolean }} options 样式参数。
+ * @returns {void}
+ */
+function applyBookedSlotStyle(element, { color, dimmed = false } = {}) {
+  if (!element || !color) return
+  element.style.background = color
+  element.style.backgroundColor = color
+  element.style.opacity = dimmed ? "0.75" : ""
+}
+
+/**
  * 刷新桌面端已选信息栏。
  *
  * @returns {void}
@@ -390,7 +404,9 @@ function resetWeekColumns(week) {
     const labels = col.querySelectorAll("label.slot-item")
     labels.forEach((label, i) => {
       const slot = slots[i]
+      label.style.background = ""
       label.style.backgroundColor = ""
+      label.style.opacity = ""
       label.dataset.time = slot.time
       label.dataset.slotid = slot.id
       label.dataset.date = key
@@ -511,8 +527,7 @@ const renderBookedGroups = (dayBookings, dayIdx, container, my_name) => {
             input.disabled = true
             parent.classList.replace("available", "disabled")
           }
-
-          parent.style.backgroundColor = color // 设置背景色
+          applyBookedSlotStyle(parent, { color })
           // 如果是第一个slot，添加用户信息
           if (slotId === firstSlot) {
             const span = parent.querySelector("span.slot-time")
@@ -684,11 +699,11 @@ function renderMobileSlots() {
       .join(" ")
 
     if (bookingInfo) {
-      if (bookingInfo.color) {
-        // 已预约时，优先使用服务端返回颜色，避免被选中态样式覆盖。
-        item.style.background = bookingInfo.color
-      }
-      item.style.opacity = isBookedByMe ? "1" : "0.75"
+      // 已预约时，统一使用共享样式入口。
+      applyBookedSlotStyle(item, {
+        color: bookingInfo.color,
+        dimmed: !isBookedByMe,
+      })
     }
 
     if (bookingInfo) {
