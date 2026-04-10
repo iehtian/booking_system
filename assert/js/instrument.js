@@ -683,8 +683,11 @@ function renderMobileSlots() {
       .filter(Boolean)
       .join(" ")
 
-    if (bookingInfo && !isSelected) {
-      item.style.backgroundColor = bookingInfo.color
+    if (bookingInfo) {
+      if (bookingInfo.color) {
+        // 已预约时，优先使用服务端返回颜色，避免被选中态样式覆盖。
+        item.style.background = bookingInfo.color
+      }
       item.style.opacity = isBookedByMe ? "1" : "0.75"
     }
 
