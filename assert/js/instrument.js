@@ -265,6 +265,17 @@ function getCurrentUserName() {
 }
 
 /**
+ * 判断当前是否处于登录态。
+ *
+ * @returns {boolean} 已登录返回 true。
+ */
+function isUserLoggedIn() {
+  const stateUserName = State.get().user_name
+  const token = localStorage.getItem("access_token")
+  return Boolean(stateUserName && token)
+}
+
+/**
  * 根据日期键找到该日期在当前周中的索引。
  *
  * @param {string} dateKey 日期键，格式为 YYYY-MM-DD。
@@ -357,6 +368,31 @@ function updateMobileSelectionUI() {
 
   panel.style.display = "block"
   setSelectedText(document.getElementById("mobileSelectedInfo"), selectedRes)
+}
+
+/**
+ * 未登录时，锁定桌面端周视图所有 slot，防止点击和选中。
+ *
+ * @returns {void}
+ */
+function applyUnauthenticatedSlotLock() {
+  if (isUserLoggedIn()) return
+  const labels = document.querySelectorAll(
+    "#weeklyView .day-column label.slot-item"
+  )
+  labels.forEach((label) => {
+    label.classList.remove("available", "selected")
+    label.classList.add("disabled")
+    const input = label.querySelector("input[type=checkbox]")
+    if (input) {
+      input.checked = false
+      input.disabled = true
+    }
+  })
+  State.set({ selectedRes: [] })
+  selected = null
+  updateDesktopSelectionUI()
+  updateMobileSelectionUI()
 }
 
 /**
@@ -486,6 +522,7 @@ async function init(selectedDate) {
   State.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
     renderBookedGroups(dayBookings, dayIdx, container, State.get().user_name)
   })
+  applyUnauthenticatedSlotLock()
 }
 
 /**
@@ -606,6 +643,7 @@ async function weekChangeDay(selectedDate) {
   State.get().bookinged_slots.forEach((dayBookings, dayIdx) => {
     renderBookedGroups(dayBookings, dayIdx, container, State.get().user_name)
   })
+  applyUnauthenticatedSlotLock()
 }
 
 /**
@@ -668,6 +706,7 @@ function renderMobileSlots() {
   )
   const daySlots = weekData
   const myName = State.get().user_name
+  const loggedIn = isUserLoggedIn()
   const dayBookings = getBookingsByDateKey(key)
 
   container.innerHTML = ""
@@ -679,7 +718,7 @@ function renderMobileSlots() {
     const isBookedByMe = bookingInfo && bookingInfo.user_name === myName
     const isBookedByOthers = bookingInfo && bookingInfo.user_name !== myName
     const isPast = isPastSlot(key, slot.id)
-    const unavailable = isPast || isBookedByOthers
+    const unavailable = !loggedIn || isPast || isBookedByOthers
 
     const isSelected = State.get().selectedRes.some(
       (s) => s.date === key && s.id === slot.id
@@ -734,6 +773,10 @@ function renderMobileSlots() {
  * @returns {void}
  */
 window.mobileSelect = function (date, id) {
+  if (!isUserLoggedIn()) {
+    alert("请先登录")
+    return
+  }
   if (booking) return
   const { weekData, selectedRes } = State.get()
   const slot = weekData.find((s) => s.id === id)
@@ -766,6 +809,11 @@ window.mobileSelect = function (date, id) {
  * @returns {void}
  */
 function select(date, event) {
+  if (!isUserLoggedIn()) {
+    event.target.checked = false
+    alert("请先登录")
+    return
+  }
   const { weekData, selectedRes } = State.get()
   let id = parseInt(event.target.dataset.slotid, 10)
   if (event.target.checked) {
@@ -811,6 +859,10 @@ window.select = select
  * @returns {void}
  */
 function confirm() {
+  if (!isUserLoggedIn()) {
+    alert("请先登录")
+    return
+  }
   const { selectedRes } = State.get()
   if (!selectedRes || selectedRes.length === 0) {
     alert("请先选择时间段")
@@ -861,6 +913,10 @@ function confirm() {
  * @returns {void}
  */
 function cancel() {
+  if (!isUserLoggedIn()) {
+    alert("请先登录")
+    return
+  }
   const { selectedRes } = State.get()
   if (!selectedRes || selectedRes.length === 0) {
     alert("请先选择时间段")
