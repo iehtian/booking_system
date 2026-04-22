@@ -2,7 +2,7 @@ function mergeBookings(bookings) {
   // 先对时间段排序（按开始时间）
   console.log("Bookings to merge:", bookings)
   const sorted = Object.entries(bookings).sort(([a], [b]) => {
-    return a.localeCompare(b)
+    return Number(a) - Number(b)
   })
 
   const groups = []
@@ -12,12 +12,13 @@ function mergeBookings(bookings) {
 
   sorted.forEach(([time_slot_id, value]) => {
     const { user_name, color } = value
+    const slotId = Number(time_slot_id)
 
-    if (lastEnd + 1 === Number(time_slot_id) && lastName === user_name) {
+    if (lastEnd !== null && lastEnd + 1 === slotId && lastName === user_name) {
       // 连续且同名 → 合并到当前 group
       console.log("Merging into current group")
       currentGroup.push({
-        time_slot_id: Number(time_slot_id),
+        time_slot_id: slotId,
         user_name,
         color,
       })
@@ -26,9 +27,9 @@ function mergeBookings(bookings) {
       if (currentGroup.length > 0) {
         groups.push(currentGroup)
       }
-      currentGroup = [{ time_slot_id: Number(time_slot_id), user_name, color }]
+      currentGroup = [{ time_slot_id: slotId, user_name, color }]
     }
-    lastEnd = Number(time_slot_id)
+    lastEnd = slotId
     lastName = user_name
   })
 
