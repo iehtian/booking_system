@@ -9,3 +9,5 @@ __pycache__
 logs/
 dist/
 dump.rdb
+./backups/
+wal_archive

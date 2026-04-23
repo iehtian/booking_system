@@ -1,18 +1,4 @@
 services:
-  dateplan-db:
-    image: mysql
-    container_name: dateplan-db
-    environment:
-      MYSQL_ROOT_PASSWORD: iehtian
-      MYSQL_DATABASE: dateplan
-      MYSQL_USER: dateplan_user
-      MYSQL_PASSWORD: dateplan_pass
-    ports:
-      - '3308:3306'
-    volumes:
-      - dateplan-db-data:/var/lib/mysql
-    restart: unless-stopped
-
   user_order-db:
     image: postgres:latest
     container_name: user_order-db
@@ -23,9 +9,18 @@ services:
     ports:
       - '5434:5432'
     volumes:
-      - user_order-db-data:/var/lib/postgresql
+      - user_order-db-data:/var/lib/postgresql/18/docker
+      - ./wal_archive:/var/lib/postgresql/wal_archive   # 新增：WAL 归档目录
+      - ./backups:/var/lib/postgresql/backups           # 新增：base backup 目录
+    command: >
+      postgres
+      -c wal_level=logical
+      -c max_wal_senders=10
+      -c max_replication_slots=10
+      -c archive_mode=on
+      -c archive_command='test ! -f /var/lib/postgresql/wal_archive/%f && cp %p /var/lib/postgresql/wal_archive/%f'
+      -c archive_timeout=600
     restart: unless-stopped
 
 volumes:
-  dateplan-db-data:
   user_order-db-data:
